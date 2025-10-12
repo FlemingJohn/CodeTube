@@ -2,10 +2,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Youtube, Sparkles, Code, FileEdit, Github, UploadCloud } from 'lucide-react';
+import { Youtube, Sparkles, Code, FileEdit, Github, UploadCloud, Database, BrainCircuit } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import AuthHeader from '@/components/auth/AuthHeader';
+import { SiFirebase, SiNextdotjs } from '@icons-pack/react-simple-icons';
 
 const features = [
   {
@@ -43,9 +44,23 @@ const howItWorks = [
   },
 ]
 
-const techStack = [
-  'Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Firebase', 'Genkit', 'ShadCN UI', 'Lucide', 'Octokit'
-];
+const mainTech = [
+    {
+      icon: <SiNextdotjs className="h-10 w-10" />,
+      title: 'Next.js & React',
+      description: 'The application is built with the latest Next.js App Router for a fast, modern, and server-driven user experience.',
+    },
+    {
+      icon: <SiFirebase className="h-10 w-10 text-primary" />,
+      title: 'Firebase',
+      description: 'Firebase provides secure user authentication and a scalable Firestore database for storing course data.',
+    },
+    {
+      icon: <BrainCircuit className="h-10 w-10 text-primary" />,
+      title: 'Genkit & Google AI',
+      description: 'Google\'s Gemini models power the AI features, such as chapter summaries, through the Genkit framework.',
+    },
+  ];
 
 export default function LandingPage() {
   const heroImage = PlaceHolderImages.find(p => p.id === 'landing-hero');
@@ -157,11 +172,19 @@ export default function LandingPage() {
                 Leveraging the best tools for a fast, scalable, and intelligent application.
               </p>
             </div>
-            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 max-w-4xl mx-auto">
-              {techStack.map((tech) => (
-                <div key={tech} className="flex items-center gap-2 bg-background py-2 px-4 rounded-full border shadow-sm">
-                  <span className="font-medium">{tech}</span>
-                </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {mainTech.map((tech) => (
+                <Card key={tech.title} className="text-center">
+                  <CardHeader>
+                    <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
+                      {tech.icon}
+                    </div>
+                    <CardTitle className="font-headline text-xl pt-4">{tech.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{tech.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
