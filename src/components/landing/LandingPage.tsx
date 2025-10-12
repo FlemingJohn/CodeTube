@@ -32,8 +32,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Header />
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" asChild>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" asChild className="hidden sm:inline-flex">
               <Link href="/creator">Creator Studio</Link>
             </Button>
             <Button asChild>
@@ -47,10 +47,10 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="container grid lg:grid-cols-2 gap-12 items-center py-20 md:py-32">
           <div className="space-y-6">
-            <h1 className="text-4xl md:text-6xl font-bold font-headline tracking-tighter">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tighter">
               Turn YouTube Videos into Interactive Courses
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground">
+            <p className="text-lg text-muted-foreground md:text-xl">
               Effortlessly create engaging learning experiences with AI-powered summaries, code snippets, and more. Transform passive viewing into active learning.
             </p>
             <Button size="lg" asChild>
@@ -113,7 +113,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t">
-        <div className="container flex items-center justify-between py-6 text-sm text-muted-foreground">
+        <div className="container flex flex-col sm:flex-row items-center justify-between py-6 gap-4 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} CodeTube. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <Link href="#" className="hover:text-foreground">Privacy Policy</Link>
