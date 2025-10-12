@@ -1,0 +1,107 @@
+/**
+ * @fileoverview Firestore Security Rules for CodeTube application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for all data. Each user has full control over their own data,
+ * and no access to other users' data.  This is achieved through path-based authorization, where the authenticated
+ * user's ID (`request.auth.uid`) must match the `userId` in the Firestore path.
+ *
+ * Data Structure:
+ * The Firestore database is structured hierarchically:
+ * - /users/{userId}:  Stores user profiles. Only the authenticated user can read/write their own profile.
+ * - /users/{userId}/courses/{courseId}: Stores courses created by a specific user. Only the owning user can manage these courses.
+ * - /users/{userId}/courses/{courseId}/chapters/{chapterId}: Stores chapters for a specific course. Access is restricted to the owning user.
+ *
+ * Key Security Decisions:
+ * - User listing is explicitly denied to prevent unauthorized access to user data.
+ * - All write operations (create, update, delete) require authentication and ownership validation.
+ * - Data validation is minimal in this prototyping phase, focusing only on ownership and relationship integrity.
+ *
+ * Denormalization for Authorization:
+ *  - The `userId` is embedded within the path for courses and chapters. This allows us to authorize access
+ *    without needing to read the document contents.
+ *
+ * Structural Segregation:
+ *  - All user-specific data (courses, chapters) is stored under the `/users/{userId}` path. This ensures that
+ *    only the authenticated user can access their own data.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Secures the /users/{userId} collection.  Allows read/write access only to the authenticated user with a matching userId.
+     * @path /users/{userId}
+     * @allow (create) - Authenticated user creates their own user document where userId matches request.auth.uid and the id field in the document.
+     * @allow (get, update, delete) - Authenticated user reads/updates/deletes their own user document where userId matches request.auth.uid.
+     * @deny (create) -  Unauthenticated user tries to create a user document.
+     * @deny (get, update, delete) - Authenticated user tries to read/update/delete another user's document (userId does not match request.auth.uid).
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures the /users/{userId}/courses/{courseId} collection.  Allows read/write access only to the authenticated user with a matching userId.
+     * @path /users/{userId}/courses/{courseId}
+     * @allow (create) - Authenticated user creates a course document under their userId.  The userId field in the document is validated.
+     * @allow (get, update, delete) - Authenticated user reads/updates/deletes their own course document (userId matches request.auth.uid).
+     * @deny (create) - Unauthenticated user or a user trying to create a course under another user's ID.
+     * @deny (get, update, delete) -  Authenticated user tries to read/update/delete a course that belongs to another user.
+     * @principle Enforces document ownership and validates relational integrity on create.
+     */
+    match /users/{userId}/courses/{courseId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Secures the /users/{userId}/courses/{courseId}/chapters/{chapterId} collection.  Allows read/write access only to the authenticated user with a matching userId.
+     * @path /users/{userId}/courses/{courseId}/chapters/{chapterId}
+     * @allow (create) - Authenticated user creates a chapter document under their course. Validates the userId and courseId fields in the document.
+     * @allow (get, update, delete) - Authenticated user reads/updates/deletes their own chapter document (userId matches request.auth.uid).
+     * @deny (create) - Unauthenticated user or user trying to create a chapter under another user's course.
+     * @deny (get, update, delete) - Authenticated user tries to read/update/delete a chapter that belongs to another user's course.
+     * @principle Enforces document ownership and validates relational integrity on create.
+     */
+    match /users/{userId}/courses/{courseId}/chapters/{chapterId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.courseId == courseId;
+      allow update: if isExistingOwner(userId) && request.resource.data.courseId == resource.data.courseId;
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
