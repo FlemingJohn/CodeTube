@@ -33,9 +33,6 @@ export default function LandingPage() {
         <div className="container flex h-16 items-center justify-between">
           <Header />
           <div className="flex items-center gap-2 sm:gap-4">
-            <Button variant="ghost" asChild className="hidden sm:inline-flex">
-              <Link href="/creator">Creator Studio</Link>
-            </Button>
             <Button asChild>
               <Link href="/creator">Get Started</Link>
             </Button>
