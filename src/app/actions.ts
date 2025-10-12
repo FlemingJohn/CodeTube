@@ -50,15 +50,21 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
-export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], error?: string }> {
+export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string }> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/youtube-chapters?videoId=${videoId}`);
+    // In a server environment, NEXT_PUBLIC_URL might not be set.
+    // We should call the API route using its absolute path if running on the server.
+    // For simplicity and since this is a small app, we'll assume NEXT_PUBLIC_URL is available.
+    // A more robust solution might involve direct function calls or a different architecture.
+    const apiUrl = process.env.NEXT_PUBLIC_URL ? `${process.env.NEXT_PUBLIC_URL}/api/youtube-chapters?videoId=${videoId}` : `/api/youtube-chapters?videoId=${videoId}`;
+    const response = await fetch(apiUrl);
+    
     if (!response.ok) {
       const errorData = await response.json();
       return { error: errorData.error || 'Failed to fetch chapters from YouTube API.' };
     }
     const data = await response.json();
-    return { chapters: data.chapters };
+    return { chapters: data.chapters, videoTitle: data.videoTitle };
   } catch (error) {
     console.error('Error fetching youtube chapters:', error);
     return { error: 'An unexpected error occurred.' };

@@ -46,11 +46,19 @@ export default function YoutubeImport({ setChapters, setCourseTitle }: YoutubeIm
         });
       } else if (result.chapters && result.videoTitle) {
         setChapters(result.chapters);
-        setCourseTitle(result.videoTitle)
-        toast({
-          title: 'Chapters Detected!',
-          description: 'We found chapters in the video and added them.',
-        });
+        setCourseTitle(result.videoTitle);
+        
+        if (result.chapters.length > 0) {
+          toast({
+            title: 'Chapters Detected!',
+            description: 'We found chapters in the video and added them.',
+          });
+        } else {
+          toast({
+            title: 'Video Title Imported',
+            description: "We couldn't find chapters, but we've set your course title.",
+          });
+        }
       }
     });
   }

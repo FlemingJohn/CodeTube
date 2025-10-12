@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
   if (!apiKey) {
     return NextResponse.json(
-      {error: 'YouTube API key is not configured'},
+      {error: 'YouTube API key is not configured in environment variables.'},
       {status: 500}
     );
   }
@@ -73,10 +73,9 @@ export async function GET(req: NextRequest) {
     const chapters = parseChaptersFromDescription(description);
 
     if (chapters.length === 0) {
-      return NextResponse.json(
-        {error: 'No chapters found in the video description.'},
-        {status: 404}
-      );
+      // Still return the video title even if no chapters are found.
+      // This allows the user to manually create chapters for videos without them.
+       return NextResponse.json({chapters: [], videoTitle});
     }
 
     return NextResponse.json({chapters, videoTitle});
