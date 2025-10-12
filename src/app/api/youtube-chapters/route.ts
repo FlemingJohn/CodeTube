@@ -28,7 +28,7 @@ function parseChaptersFromDescription(description: string): Chapter[] {
 export async function GET(req: NextRequest) {
   const {searchParams} = new URL(req.url);
   const videoId = searchParams.get('videoId');
-  const apiKey = process.env.YOUTUBE_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
   if (!videoId) {
     return NextResponse.json({error: 'Video ID is required'}, {status: 400});
