@@ -39,8 +39,8 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container py-20 md:py-32">
-          <div className="grid gap-12 items-center justify-items-center">
+        <section className="w-full py-20 md:py-32">
+          <div className="container grid gap-12 items-center justify-items-center">
             <div className="flex flex-col items-center text-center space-y-6">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tighter">
                 Turn YouTube Videos into Interactive Courses
@@ -68,7 +68,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="bg-secondary/50 py-20 md:py-28">
+        <section className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">Why CodeTube?</h2>
@@ -95,7 +95,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 md:py-28">
+        <section className="w-full py-20 md:py-28">
           <div className="container text-center max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">Ready to Get Started?</h2>
             <p className="text-lg text-muted-foreground mt-4 mb-8">
@@ -108,7 +108,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t">
+      <footer className="w-full border-t">
         <div className="container flex flex-col sm:flex-row items-center justify-between py-6 gap-4 text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} CodeTube. All rights reserved.</p>
           <div className="flex items-center gap-4">
