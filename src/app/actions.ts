@@ -52,11 +52,11 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
 
 export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string }> {
   try {
-    // In a server environment, NEXT_PUBLIC_URL might not be set.
-    // We should call the API route using its absolute path if running on the server.
-    // For simplicity and since this is a small app, we'll assume NEXT_PUBLIC_URL is available.
-    // A more robust solution might involve direct function calls or a different architecture.
-    const apiUrl = process.env.NEXT_PUBLIC_URL ? `${process.env.NEXT_PUBLIC_URL}/api/youtube-chapters?videoId=${videoId}` : `/api/youtube-chapters?videoId=${videoId}`;
+    const vercelUrl = process.env.VERCEL_URL;
+    const protocol = vercelUrl ? 'https' : 'http';
+    const host = vercelUrl || process.env.NEXT_PUBLIC_URL || 'localhost:9002';
+    const apiUrl = `${protocol}://${host}/api/youtube-chapters?videoId=${videoId}`;
+
     const response = await fetch(apiUrl);
     
     if (!response.ok) {
