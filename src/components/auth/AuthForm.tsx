@@ -14,13 +14,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { login, signup } from '@/app/auth-actions';
 import { useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '../codetube/Header';
+import { useAuth } from '@/firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -35,6 +39,7 @@ export default function AuthForm({ type }: AuthFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const auth = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,21 +51,23 @@ export default function AuthForm({ type }: AuthFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
-      const action = type === 'login' ? login : signup;
-      const result = await action(values);
-
-      if (result.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Authentication Error',
-          description: result.error,
-        });
-      } else {
+      try {
+        if (type === 'login') {
+          await signInWithEmailAndPassword(auth, values.email, values.password);
+        } else {
+          await createUserWithEmailAndPassword(auth, values.email, values.password);
+        }
         toast({
           title: type === 'login' ? 'Login Successful' : 'Signup Successful',
           description: `Welcome! Redirecting you now...`,
         });
         router.push('/creator');
+      } catch (error: any) {
+        toast({
+          variant: 'destructive',
+          title: 'Authentication Error',
+          description: error.message || 'An unexpected error occurred.',
+        });
       }
     });
   }
