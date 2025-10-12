@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Youtube, Sparkles, Code, FileEdit, Github, UploadCloud, Database, BrainCircuit } from 'lucide-react';
+import { Youtube, Sparkles, Code, FileEdit, UploadCloud, BrainCircuit } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -140,26 +140,21 @@ export default function LandingPage() {
                 Create an interactive course from any YouTube video in just three simple steps.
               </p>
             </div>
-            <div className="relative">
-              {/* Dashed line */}
-              <div
-                className="absolute left-0 right-0 top-1/2 -translate-y-1/2 hidden md:block"
-                aria-hidden="true"
-              >
-                <div className="w-full border-t-2 border-dashed border-border"></div>
-              </div>
-              <div className="relative grid md:grid-cols-3 gap-12">
+            <div className="grid md:grid-cols-3 gap-8">
                 {howItWorks.map((step) => (
-                  <div key={step.title} className="flex flex-col items-center text-center">
-                    <div className="mb-4 bg-background p-3 border-2 border-dashed rounded-full z-10">
+                  <Card key={step.title} className="text-center">
+                  <CardHeader>
+                    <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
                       {step.icon}
                     </div>
-                    <h3 className="text-xl font-bold font-headline mb-2">{step.title}</h3>
+                    <CardTitle className="font-headline text-xl pt-4">{step.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <p className="text-muted-foreground">{step.description}</p>
-                  </div>
+                  </CardContent>
+                </Card>
                 ))}
               </div>
-            </div>
           </div>
         </section>
 
