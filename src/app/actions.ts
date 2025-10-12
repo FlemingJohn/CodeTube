@@ -2,6 +2,7 @@
 
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
+import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 
 const generateSummarySchema = z.object({
@@ -45,5 +46,20 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   } catch (e) {
     console.error(e);
     return { error: 'Failed to generate suggestions. Please try again.' };
+  }
+}
+
+export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], error?: string }> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/youtube-chapters?videoId=${videoId}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { error: errorData.error || 'Failed to fetch chapters from YouTube API.' };
+    }
+    const data = await response.json();
+    return { chapters: data.chapters };
+  } catch (error) {
+    console.error('Error fetching youtube chapters:', error);
+    return { error: 'An unexpected error occurred.' };
   }
 }

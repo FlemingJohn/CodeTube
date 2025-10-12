@@ -1,30 +1,55 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Youtube } from 'lucide-react';
+import { Loader2, Youtube } from 'lucide-react';
 import type { Chapter } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { getYoutubeChapters } from '@/app/actions';
 
 interface YoutubeImportProps {
   setChapters: React.Dispatch<React.SetStateAction<Chapter[]>>;
 }
 
+function getYouTubeVideoId(url: string): string | null {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
 export default function YoutubeImport({ setChapters }: YoutubeImportProps) {
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   
   const handleAutoDetect = () => {
-    // This is a simulation. In a real app, you'd fetch this data.
-    const detectedChapters: Chapter[] = [
-      { id: '101', timestamp: '00:15', title: 'Project Setup', summary: '', code: 'npm create-next-app@latest', transcript: 'First, lets set up our project using create next app.' },
-      { id: '102', timestamp: '02:30', title: 'Component Creation', summary: '', code: 'export default function MyComponent() { return <div></div> }', transcript: 'Now we will create our first React component.' },
-      { id: '103', timestamp: '05:45', title: 'Styling with Tailwind', summary: '', code: '<div className="p-4 bg-blue-500"></div>', transcript: 'Next, lets add some styling using Tailwind CSS utility classes.' },
-    ];
-    setChapters(detectedChapters);
-    toast({
-      title: 'Chapters Detected!',
-      description: 'We found chapters in the video and added them.',
+    const videoId = getYouTubeVideoId(youtubeUrl);
+    if (!videoId) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid YouTube URL',
+        description: 'Please paste a valid YouTube video URL.',
+      });
+      return;
+    }
+    
+    startTransition(async () => {
+      const result = await getYoutubeChapters(videoId);
+      
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error Detecting Chapters',
+          description: result.error,
+        });
+      } else if (result.chapters) {
+        setChapters(result.chapters);
+        toast({
+          title: 'Chapters Detected!',
+          description: 'We found chapters in the video and added them.',
+        });
+      }
     });
   }
   
@@ -32,9 +57,16 @@ export default function YoutubeImport({ setChapters }: YoutubeImportProps) {
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <Youtube className="w-5 h-5 text-muted-foreground" />
-        <Input placeholder="Paste YouTube link here..." />
+        <Input 
+          placeholder="Paste YouTube link here..." 
+          value={youtubeUrl}
+          onChange={(e) => setYoutubeUrl(e.target.value)}
+        />
       </div>
-      <Button variant="outline" className="w-full" onClick={handleAutoDetect}>
+      <Button variant="outline" className="w-full" onClick={handleAutoDetect} disabled={isPending || !youtubeUrl}>
+        {isPending ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : null}
         Auto-Detect Chapters
       </Button>
     </div>
