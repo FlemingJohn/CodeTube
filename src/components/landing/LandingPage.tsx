@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Youtube, Sparkles, Code } from 'lucide-react';
+import { Youtube, Sparkles, Code, FileEdit, Github, UploadCloud } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -23,6 +23,28 @@ const features = [
     title: 'Interactive Code Snippets',
     description: 'Embed editable code snippets for hands-on practice directly within your course.',
   },
+];
+
+const howItWorks = [
+  {
+    icon: <Youtube className="h-8 w-8 text-primary" />,
+    title: '1. Import Video',
+    description: 'Paste a YouTube video link to automatically pull in the title and chapters.',
+  },
+  {
+    icon: <FileEdit className="h-8 w-8 text-primary" />,
+    title: '2. Add Content',
+    description: 'Enrich each chapter with AI-generated notes and relevant code snippets.',
+  },
+  {
+    icon: <UploadCloud className="h-8 w-8 text-primary" />,
+    title: '3. Export & Share',
+    description: 'Export the entire course to a new GitHub repository with a single click.',
+  },
+]
+
+const techStack = [
+  'Next.js', 'React', 'TypeScript', 'Tailwind CSS', 'Firebase', 'Genkit', 'ShadCN UI', 'Lucide', 'Octokit'
 ];
 
 export default function LandingPage() {
@@ -94,12 +116,63 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* How It Works Section */}
+        <section className="w-full py-20 md:py-28">
+          <div className="container">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold font-headline">How It Works</h2>
+              <p className="text-lg text-muted-foreground mt-4">
+                Create an interactive course from any YouTube video in just three simple steps.
+              </p>
+            </div>
+            <div className="relative">
+              {/* Dashed line */}
+              <div
+                className="absolute left-0 right-0 top-1/2 -translate-y-1/2 hidden md:block"
+                aria-hidden="true"
+              >
+                <div className="w-full border-t-2 border-dashed border-border"></div>
+              </div>
+              <div className="relative grid md:grid-cols-3 gap-12">
+                {howItWorks.map((step) => (
+                  <div key={step.title} className="flex flex-col items-center text-center">
+                    <div className="mb-4 bg-background p-3 border-2 border-dashed rounded-full z-10">
+                      {step.icon}
+                    </div>
+                    <h3 className="text-xl font-bold font-headline mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground">{step.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Tech Stack Section */}
+        <section className="w-full bg-secondary/50 py-20 md:py-28">
+          <div className="container">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold font-headline">Built With a Modern Tech Stack</h2>
+              <p className="text-lg text-muted-foreground mt-4">
+                Leveraging the best tools for a fast, scalable, and intelligent application.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 max-w-4xl mx-auto">
+              {techStack.map((tech) => (
+                <div key={tech} className="flex items-center gap-2 bg-background py-2 px-4 rounded-full border shadow-sm">
+                  <span className="font-medium">{tech}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="w-full py-20 md:py-28">
           <div className="container text-center max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">Ready to Get Started?</h2>
             <p className="text-lg text-muted-foreground mt-4 mb-8">
-              Begin creating your first interactive course in just a few clicks. No sign-up required.
+              Begin creating your first interactive course in just a few clicks.
             </p>
             <Button size="lg" asChild>
               <Link href="/creator">Launch Creator Studio</Link>
