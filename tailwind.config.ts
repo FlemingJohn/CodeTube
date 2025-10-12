@@ -11,7 +11,7 @@ export default {
     extend: {
       fontFamily: {
         headline: ['Roboto', 'sans-serif'],
-        body: ['Arial', 'sans-serif'],
+        body: ['sans-serif'],
         code: ['"Source Code Pro"', 'monospace'],
       },
       colors: {

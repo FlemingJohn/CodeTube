@@ -24,24 +24,13 @@ import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 
-const initialChapters: Chapter[] = [
-  {
-    id: '1',
-    timestamp: '00:00',
-    title: 'Introduction',
-    summary: 'This is an introductory chapter. Replace this with an AI-generated summary.',
-    code: 'console.log("Welcome to CodeTube!");',
-    transcript: 'Welcome to this course! In this first chapter, we will give you an overview of what to expect. We will cover the basics and set you up for success. Lets get started.',
-  },
-];
-
 export default function CodeTubeApp() {
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(initialChapters[0]?.id || null);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [courseTitle, setCourseTitle] = useState('My CodeTube Course');
 
@@ -80,66 +69,68 @@ export default function CodeTubeApp() {
   }
 
   return (
-    <SidebarProvider
-      defaultOpen={true}
-      collapsible="icon"
-      style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
-    >
-      <Sidebar>
-        <SidebarHeader>
-          <Header />
-        </SidebarHeader>
+    <div className="h-screen bg-background">
+      <SidebarProvider
+        defaultOpen={true}
+        collapsible="icon"
+        style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
+      >
+        <Sidebar>
+          <SidebarHeader>
+            <Header />
+          </SidebarHeader>
 
-        <SidebarContent>
-          <div className="flex flex-col gap-4 p-2">
-            <YoutubeImport setChapters={setChapters} setCourseTitle={setCourseTitle} />
-            <ChapterList
-              chapters={chapters}
-              setChapters={setChapters}
-              selectedChapterId={selectedChapterId}
-              setSelectedChapterId={setSelectedChapterId}
-            />
-          </div>
-        </SidebarContent>
-
-        <SidebarFooter className="p-2">
-          <Button variant="ghost" className="justify-start gap-2" onClick={() => setGithubDialogOpen(true)}>
-            <Github />
-            <span className="group-data-[collapsible=icon]:hidden">Export to GitHub</span>
-          </Button>
-          <Button variant="ghost" className="justify-start gap-2" onClick={handleSignOut}>
-            <LogOut />
-            <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
-          </Button>
-        </SidebarFooter>
-      </Sidebar>
-
-      <SidebarInset>
-        <main className="flex-1 p-4 md:p-6">
-          {selectedChapter ? (
-            <ChapterEditor
-              key={selectedChapter.id}
-              chapter={selectedChapter}
-              onUpdateChapter={handleUpdateChapter}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center text-muted-foreground">
-                <h2 className="text-xl font-semibold">No Chapter Selected</h2>
-                <p>Select a chapter from the sidebar to view or edit its content.</p>
-              </div>
+          <SidebarContent>
+            <div className="flex flex-col gap-4 p-2">
+              <YoutubeImport setChapters={setChapters} setCourseTitle={setCourseTitle} setSelectedChapterId={setSelectedChapterId} />
+              <ChapterList
+                chapters={chapters}
+                setChapters={setChapters}
+                selectedChapterId={selectedChapterId}
+                setSelectedChapterId={setSelectedChapterId}
+              />
             </div>
-          )}
-        </main>
-      </SidebarInset>
-      
-      <GithubExportDialog
-        isOpen={isGithubDialogOpen}
-        setIsOpen={setGithubDialogOpen}
-        chapters={chapters}
-        courseTitle={courseTitle}
-      />
-      
-    </SidebarProvider>
+          </SidebarContent>
+
+          <SidebarFooter className="p-2">
+            <Button variant="ghost" className="justify-start gap-2" onClick={() => setGithubDialogOpen(true)}>
+              <Github />
+              <span className="group-data-[collapsible=icon]:hidden">Export to GitHub</span>
+            </Button>
+            <Button variant="ghost" className="justify-start gap-2" onClick={handleSignOut}>
+              <LogOut />
+              <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
+            </Button>
+          </SidebarFooter>
+        </Sidebar>
+
+        <SidebarInset>
+          <main className="flex-1 p-4 md:p-6 bg-muted/20">
+            {selectedChapter ? (
+              <ChapterEditor
+                key={selectedChapter.id}
+                chapter={selectedChapter}
+                onUpdateChapter={handleUpdateChapter}
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted">
+                <div className="text-center text-muted-foreground">
+                  <h2 className="text-xl font-semibold">No Chapter Selected</h2>
+                  <p>Import a YouTube video or add a chapter to get started.</p>
+                </div>
+              </div>
+            )}
+          </main>
+        </SidebarInset>
+        
+        <GithubExportDialog
+          isOpen={isGithubDialogOpen}
+          setIsOpen={setGithubDialogOpen}
+          chapters={chapters}
+          courseTitle={courseTitle}
+        />
+        
+      </SidebarProvider>
+    </div>
   );
 }
