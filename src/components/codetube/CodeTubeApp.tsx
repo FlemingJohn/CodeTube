@@ -10,13 +10,12 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Github, FileText, BrainCircuit } from 'lucide-react';
+import { Github, FileText } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import ResumeExportDialog from './ResumeExportDialog';
-import LandingPageEnhancerDialog from './LandingPageEnhancerDialog';
 import type { Chapter } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,7 +35,6 @@ export default function CodeTubeApp() {
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(initialChapters[0]?.id || null);
   const [isResumeDialogOpen, setResumeDialogOpen] = useState(false);
-  const [isEnhancerDialogOpen, setEnhancerDialogOpen] = useState(false);
 
   const selectedChapter = useMemo(
     () => chapters.find(c => c.id === selectedChapterId),
@@ -88,10 +86,6 @@ export default function CodeTubeApp() {
             <FileText />
             <span className="group-data-[collapsible=icon]:hidden">Export for Résumé</span>
           </Button>
-          <Button variant="ghost" className="justify-start gap-2" onClick={() => setEnhancerDialogOpen(true)}>
-            <BrainCircuit />
-            <span className="group-data-[collapsible=icon]:hidden">Landing Page Enhancer</span>
-          </Button>
         </SidebarFooter>
       </Sidebar>
 
@@ -120,10 +114,6 @@ export default function CodeTubeApp() {
         chapters={chapters} 
       />
       
-      <LandingPageEnhancerDialog 
-        isOpen={isEnhancerDialogOpen} 
-        setIsOpen={setEnhancerDialogOpen}
-      />
     </SidebarProvider>
   );
 }
