@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -10,7 +10,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Github, FileText } from 'lucide-react';
+import { Github, FileText, LogOut } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
@@ -18,6 +18,11 @@ import ChapterEditor from './ChapterEditor';
 import ResumeExportDialog from './ResumeExportDialog';
 import type { Chapter } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'firebase/auth';
+import { useAuth } from '@/firebase';
+import { Loader2 } from 'lucide-react';
 
 const initialChapters: Chapter[] = [
   {
@@ -32,9 +37,18 @@ const initialChapters: Chapter[] = [
 
 export default function CodeTubeApp() {
   const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(initialChapters[0]?.id || null);
   const [isResumeDialogOpen, setResumeDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   const selectedChapter = useMemo(
     () => chapters.find(c => c.id === selectedChapterId),
@@ -52,6 +66,23 @@ export default function CodeTubeApp() {
       title: "Exported to GitHub",
       description: "Your course has been pushed to your GitHub repository.",
     });
+  }
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    toast({
+      title: "Signed Out",
+      description: "You have been successfully signed out.",
+    });
+    router.push('/');
+  };
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -85,6 +116,10 @@ export default function CodeTubeApp() {
           <Button variant="ghost" className="justify-start gap-2" onClick={() => setResumeDialogOpen(true)}>
             <FileText />
             <span className="group-data-[collapsible=icon]:hidden">Export for Résumé</span>
+          </Button>
+          <Button variant="ghost" className="justify-start gap-2" onClick={handleSignOut}>
+            <LogOut />
+            <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
           </Button>
         </SidebarFooter>
       </Sidebar>

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Youtube, Sparkles, Code } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import AuthHeader from '@/components/auth/AuthHeader';
 
 const features = [
   {
@@ -32,11 +33,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Header />
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Button asChild>
-              <Link href="/creator">Get Started</Link>
-            </Button>
-          </div>
+          <AuthHeader />
         </div>
       </header>
 
