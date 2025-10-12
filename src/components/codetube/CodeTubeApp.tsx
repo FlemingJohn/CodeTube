@@ -10,12 +10,11 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Github, FileText, LogOut } from 'lucide-react';
+import { Github, LogOut } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
-import ResumeExportDialog from './ResumeExportDialog';
 import GithubExportDialog from './GithubExportDialog';
 import type { Chapter } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -43,7 +42,6 @@ export default function CodeTubeApp() {
   const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(initialChapters[0]?.id || null);
-  const [isResumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [courseTitle, setCourseTitle] = useState('My CodeTube Course');
 
@@ -109,10 +107,6 @@ export default function CodeTubeApp() {
             <Github />
             <span className="group-data-[collapsible=icon]:hidden">Export to GitHub</span>
           </Button>
-          <Button variant="ghost" className="justify-start gap-2" onClick={() => setResumeDialogOpen(true)}>
-            <FileText />
-            <span className="group-data-[collapsible=icon]:hidden">Export for Résumé</span>
-          </Button>
           <Button variant="ghost" className="justify-start gap-2" onClick={handleSignOut}>
             <LogOut />
             <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
@@ -139,12 +133,6 @@ export default function CodeTubeApp() {
         </main>
       </SidebarInset>
       
-      <ResumeExportDialog 
-        isOpen={isResumeDialogOpen} 
-        setIsOpen={setResumeDialogOpen} 
-        chapters={chapters} 
-      />
-
       <GithubExportDialog
         isOpen={isGithubDialogOpen}
         setIsOpen={setGithubDialogOpen}
