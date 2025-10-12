@@ -46,7 +46,7 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="container grid lg:grid-cols-2 gap-12 items-center py-20 md:py-32">
-          <div className="space-y-6">
+          <div className="space-y-6 text-center lg:text-left">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tighter">
               Turn YouTube Videos into Interactive Courses
             </h1>
