@@ -1,0 +1,126 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Youtube, Sparkles, Code } from 'lucide-react';
+import Header from '@/components/codetube/Header';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+
+const features = [
+  {
+    icon: <Youtube className="h-10 w-10 text-primary" />,
+    title: 'Import from YouTube',
+    description: 'Paste any YouTube link and automatically detect chapters and generate transcripts.',
+  },
+  {
+    icon: <Sparkles className="h-10 w-10 text-primary" />,
+    title: 'AI-Powered Notes',
+    description: 'Generate concise, AI-powered summaries for each chapter to enhance learning.',
+  },
+  {
+    icon: <Code className="h-10 w-10 text-primary" />,
+    title: 'Interactive Code Snippets',
+    description: 'Embed editable code snippets for hands-on practice directly within your course.',
+  },
+];
+
+export default function LandingPage() {
+  const heroImage = PlaceHolderImages.find(p => p.id === 'landing-hero');
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <Header />
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" asChild>
+              <Link href="/creator">Creator Studio</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/creator">Get Started</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="container grid lg:grid-cols-2 gap-12 items-center py-20 md:py-32">
+          <div className="space-y-6">
+            <h1 className="text-4xl md:text-6xl font-bold font-headline tracking-tighter">
+              Turn YouTube Videos into Interactive Courses
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground">
+              Effortlessly create engaging learning experiences with AI-powered summaries, code snippets, and more. Transform passive viewing into active learning.
+            </p>
+            <Button size="lg" asChild>
+              <Link href="/creator">Start Creating for Free</Link>
+            </Button>
+          </div>
+          <div className="flex justify-center">
+            {heroImage && (
+                <Image
+                    src={heroImage.imageUrl}
+                    alt={heroImage.description}
+                    width={600}
+                    height={400}
+                    data-ai-hint={heroImage.imageHint}
+                    className="rounded-lg shadow-2xl"
+                />
+            )}
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="bg-secondary/50 py-20 md:py-28">
+          <div className="container">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold font-headline">Why CodeTube?</h2>
+              <p className="text-lg text-muted-foreground mt-4">
+                We provide powerful, AI-driven tools to make course creation simple and effective.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {features.map((feature) => (
+                <Card key={feature.title} className="text-center">
+                  <CardHeader>
+                    <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
+                      {feature.icon}
+                    </div>
+                    <CardTitle className="font-headline text-xl pt-4">{feature.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 md:py-28">
+          <div className="container text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold font-headline">Ready to Get Started?</h2>
+            <p className="text-lg text-muted-foreground mt-4 mb-8">
+              Begin creating your first interactive course in just a few clicks. No sign-up required.
+            </p>
+            <Button size="lg" asChild>
+              <Link href="/creator">Launch Creator Studio</Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t">
+        <div className="container flex items-center justify-between py-6 text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} CodeTube. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href="#" className="hover:text-foreground">Privacy Policy</Link>
+            <Link href="#" className="hover:text-foreground">Terms of Service</Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

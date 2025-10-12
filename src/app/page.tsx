@@ -1,5 +1,5 @@
-import CodeTubeApp from '@/components/codetube/CodeTubeApp';
+import LandingPage from '@/components/landing/LandingPage';
 
 export default function Home() {
-  return <CodeTubeApp />;
+  return <LandingPage />;
 }
