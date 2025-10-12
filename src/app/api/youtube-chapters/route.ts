@@ -53,14 +53,24 @@ export async function GET(req: NextRequest) {
     });
 
     const video = response.data.items?.[0];
-    if (!video || !video.snippet?.description) {
+    if (!video || !video.snippet) {
       return NextResponse.json(
-        {error: 'Video not found or has no description'},
+        {error: 'Video not found.'},
+        {status: 404}
+      );
+    }
+    
+    const videoTitle = video.snippet.title;
+    const description = video.snippet.description;
+
+    if (!description) {
+      return NextResponse.json(
+        {error: 'Video has no description.'},
         {status: 404}
       );
     }
 
-    const chapters = parseChaptersFromDescription(video.snippet.description);
+    const chapters = parseChaptersFromDescription(description);
 
     if (chapters.length === 0) {
       return NextResponse.json(
@@ -69,7 +79,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({chapters});
+    return NextResponse.json({chapters, videoTitle});
   } catch (error: any) {
     console.error('Error fetching from YouTube API:', error);
     return NextResponse.json(

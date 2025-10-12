@@ -10,6 +10,7 @@ import { getYoutubeChapters } from '@/app/actions';
 
 interface YoutubeImportProps {
   setChapters: React.Dispatch<React.SetStateAction<Chapter[]>>;
+  setCourseTitle: React.Dispatch<React.SetStateAction<string>>;
 }
 
 function getYouTubeVideoId(url: string): string | null {
@@ -18,7 +19,7 @@ function getYouTubeVideoId(url: string): string | null {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function YoutubeImport({ setChapters }: YoutubeImportProps) {
+export default function YoutubeImport({ setChapters, setCourseTitle }: YoutubeImportProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -43,8 +44,9 @@ export default function YoutubeImport({ setChapters }: YoutubeImportProps) {
           title: 'Error Detecting Chapters',
           description: result.error,
         });
-      } else if (result.chapters) {
+      } else if (result.chapters && result.videoTitle) {
         setChapters(result.chapters);
+        setCourseTitle(result.videoTitle)
         toast({
           title: 'Chapters Detected!',
           description: 'We found chapters in the video and added them.',

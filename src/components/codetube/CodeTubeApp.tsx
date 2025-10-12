@@ -16,6 +16,7 @@ import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import ResumeExportDialog from './ResumeExportDialog';
+import GithubExportDialog from './GithubExportDialog';
 import type { Chapter } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
@@ -43,6 +44,8 @@ export default function CodeTubeApp() {
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(initialChapters[0]?.id || null);
   const [isResumeDialogOpen, setResumeDialogOpen] = useState(false);
+  const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
+  const [courseTitle, setCourseTitle] = useState('My CodeTube Course');
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -60,13 +63,6 @@ export default function CodeTubeApp() {
       prevChapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c))
     );
   };
-  
-  const handleGithubExport = () => {
-    toast({
-      title: "Exported to GitHub",
-      description: "Your course has been pushed to your GitHub repository.",
-    });
-  }
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -98,7 +94,7 @@ export default function CodeTubeApp() {
 
         <SidebarContent>
           <div className="flex flex-col gap-4 p-2">
-            <YoutubeImport setChapters={setChapters} />
+            <YoutubeImport setChapters={setChapters} setCourseTitle={setCourseTitle} />
             <ChapterList
               chapters={chapters}
               setChapters={setChapters}
@@ -109,7 +105,7 @@ export default function CodeTubeApp() {
         </SidebarContent>
 
         <SidebarFooter className="p-2">
-          <Button variant="ghost" className="justify-start gap-2" onClick={handleGithubExport}>
+          <Button variant="ghost" className="justify-start gap-2" onClick={() => setGithubDialogOpen(true)}>
             <Github />
             <span className="group-data-[collapsible=icon]:hidden">Export to GitHub</span>
           </Button>
@@ -147,6 +143,13 @@ export default function CodeTubeApp() {
         isOpen={isResumeDialogOpen} 
         setIsOpen={setResumeDialogOpen} 
         chapters={chapters} 
+      />
+
+      <GithubExportDialog
+        isOpen={isGithubDialogOpen}
+        setIsOpen={setGithubDialogOpen}
+        chapters={chapters}
+        courseTitle={courseTitle}
       />
       
     </SidebarProvider>
