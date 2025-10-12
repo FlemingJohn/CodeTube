@@ -45,29 +45,31 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container grid lg:grid-cols-2 gap-12 items-center py-20 md:py-32">
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-6">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tighter">
-              Turn YouTube Videos into Interactive Courses
-            </h1>
-            <p className="text-lg text-muted-foreground md:text-xl max-w-xl">
-              Effortlessly create engaging learning experiences with AI-powered summaries, code snippets, and more. Transform passive viewing into active learning.
-            </p>
-            <Button size="lg" asChild>
-              <Link href="/creator">Start Creating for Free</Link>
-            </Button>
-          </div>
-          <div className="flex justify-center">
-            {heroImage && (
-                <Image
-                    src={heroImage.imageUrl}
-                    alt={heroImage.description}
-                    width={600}
-                    height={400}
-                    data-ai-hint={heroImage.imageHint}
-                    className="rounded-lg shadow-2xl"
-                />
-            )}
+        <section className="container py-20 md:py-32">
+          <div className="grid gap-12 items-center justify-items-center">
+            <div className="flex flex-col items-center text-center space-y-6">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tighter">
+                Turn YouTube Videos into Interactive Courses
+              </h1>
+              <p className="text-lg text-muted-foreground md:text-xl max-w-3xl">
+                Effortlessly create engaging learning experiences with AI-powered summaries, code snippets, and more. Transform passive viewing into active learning.
+              </p>
+              <Button size="lg" asChild>
+                <Link href="/creator">Start Creating for Free</Link>
+              </Button>
+            </div>
+            <div className="flex justify-center">
+              {heroImage && (
+                  <Image
+                      src={heroImage.imageUrl}
+                      alt={heroImage.description}
+                      width={600}
+                      height={400}
+                      data-ai-hint={heroImage.imageHint}
+                      className="rounded-lg shadow-2xl"
+                  />
+              )}
+            </div>
           </div>
         </section>
 
