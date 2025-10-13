@@ -1,89 +1,16 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {google} from 'googleapis';
-import type {Chapter} from '@/lib/types';
 
-function parseChaptersFromDescription(description: string): Chapter[] {
-  const chapterLines = description.match(/(\d{1,2}:)?\d{1,2}:\d{2}.*/g) || [];
-  const chapters: Chapter[] = [];
-
-  chapterLines.forEach((line, index) => {
-    const match = line.match(/((\d{1,2}:)?\d{1,2}:\d{2})\s(.+)/);
-    if (match) {
-      const timestamp = match[1];
-      const title = match[3].trim();
-      chapters.push({
-        id: Date.now().toString() + index,
-        timestamp,
-        title,
-        summary: '',
-        code: '',
-        transcript: `Placeholder transcript for ${title}`,
-      });
-    }
-  });
-
-  return chapters;
-}
-
+/**
+ * This API route is no longer in use. The logic has been moved directly into a server action
+ * in src/app/actions.ts for better reliability in serverless environments like Vercel.
+ * This file can be safely deleted.
+ */
 export async function GET(req: NextRequest) {
-  const {searchParams} = new URL(req.url);
-  const videoId = searchParams.get('videoId');
-  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-
-  if (!videoId) {
-    return NextResponse.json({error: 'Video ID is required'}, {status: 400});
-  }
-
-  if (!apiKey) {
-    return NextResponse.json(
-      {error: 'YouTube API key is not configured in environment variables.'},
-      {status: 500}
-    );
-  }
-
-  try {
-    const youtube = google.youtube({
-      version: 'v3',
-      auth: apiKey,
-    });
-
-    const response = await youtube.videos.list({
-      part: ['snippet'],
-      id: [videoId],
-    });
-
-    const video = response.data.items?.[0];
-    if (!video || !video.snippet) {
-      return NextResponse.json(
-        {error: 'Video not found.'},
-        {status: 404}
-      );
-    }
-    
-    const videoTitle = video.snippet.title;
-    const description = video.snippet.description;
-
-    if (!description) {
-      return NextResponse.json(
-        {error: 'Video has no description.'},
-        {status: 404}
-      );
-    }
-
-    const chapters = parseChaptersFromDescription(description);
-
-    if (chapters.length === 0) {
-      // Still return the video title even if no chapters are found.
-      // This allows the user to manually create chapters for videos without them.
-       return NextResponse.json({chapters: [], videoTitle});
-    }
-
-    return NextResponse.json({chapters, videoTitle});
-  } catch (error: any) {
-    console.error('Error fetching from YouTube API:', error);
-    return NextResponse.json(
-      {error: error.message || 'Failed to fetch chapters from YouTube API.'},
-      {status: 500}
-    );
-  }
+  return NextResponse.json(
+    {
+      error:
+        'This API endpoint is deprecated. Please use the getYoutubeChapters server action instead.',
+    },
+    {status: 410}
+  );
 }

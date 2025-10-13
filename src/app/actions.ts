@@ -5,6 +5,7 @@ import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
+import { google } from 'googleapis';
 
 const generateSummarySchema = z.object({
   transcript: z.string(),
@@ -50,24 +51,67 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
-export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string }> {
-  try {
-    const vercelUrl = process.env.VERCEL_URL;
-    const protocol = vercelUrl ? 'https' : 'http';
-    const host = vercelUrl || process.env.NEXT_PUBLIC_URL || 'localhost:9002';
-    const apiUrl = `${protocol}://${host}/api/youtube-chapters?videoId=${videoId}`;
+function parseChaptersFromDescription(description: string): Chapter[] {
+  const chapterLines = description.match(/(\d{1,2}:)?\d{1,2}:\d{2}.*/g) || [];
+  const chapters: Chapter[] = [];
 
-    const response = await fetch(apiUrl);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      return { error: errorData.error || 'Failed to fetch chapters from YouTube API.' };
+  chapterLines.forEach((line, index) => {
+    const match = line.match(/((\d{1,2}:)?\d{1,2}:\d{2})\s(.+)/);
+    if (match) {
+      const timestamp = match[1];
+      const title = match[3].trim();
+      chapters.push({
+        id: Date.now().toString() + index,
+        timestamp,
+        title,
+        summary: '',
+        code: '',
+        transcript: `Placeholder transcript for ${title}`,
+      });
     }
-    const data = await response.json();
-    return { chapters: data.chapters, videoTitle: data.videoTitle };
-  } catch (error) {
-    console.error('Error fetching youtube chapters:', error);
-    return { error: 'An unexpected error occurred.' };
+  });
+
+  return chapters;
+}
+
+
+export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string }> {
+  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+
+  if (!apiKey) {
+    return { error: 'YouTube API key is not configured in environment variables.' };
+  }
+
+  try {
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: apiKey,
+    });
+
+    const response = await youtube.videos.list({
+      part: ['snippet'],
+      id: [videoId],
+    });
+
+    const video = response.data.items?.[0];
+    if (!video || !video.snippet) {
+      return { error: 'Video not found.' };
+    }
+    
+    const videoTitle = video.snippet.title;
+    const description = video.snippet.description;
+
+    if (!description) {
+      // Return title even if there's no description for manual chapter creation
+      return { chapters: [], videoTitle };
+    }
+
+    const chapters = parseChaptersFromDescription(description);
+
+    return { chapters, videoTitle };
+  } catch (error: any) {
+    console.error('Error fetching from YouTube API:', error);
+    return { error: error.message || 'Failed to fetch chapters from YouTube API.' };
   }
 }
 
