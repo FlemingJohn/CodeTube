@@ -163,18 +163,19 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
         </div>
 
         {localChapter.codeExplanation && (
-          <div className="space-y-2">
-            <Label htmlFor="codeExplanation">AI-Powered Code Explanation</Label>
-            <Textarea
-              id="codeExplanation"
-              name="codeExplanation"
-              value={localChapter.codeExplanation}
-              onChange={handleChange}
-              readOnly
-              className="bg-muted/50 font-sans text-sm"
-              rows={8}
-            />
-          </div>
+           <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Wand2 className="h-4 w-4" />
+              AI-Powered Code Explanation
+            </Label>
+             <Card className="bg-muted/40">
+               <CardContent className="p-4">
+                 <p className="text-sm font-sans whitespace-pre-wrap">
+                  {localChapter.codeExplanation}
+                 </p>
+               </CardContent>
+             </Card>
+           </div>
         )}
       </CardContent>
     </Card>
