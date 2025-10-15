@@ -29,6 +29,13 @@ import {
 import BeforeAfterSlider from './BeforeAfterSlider';
 import AnimateOnScroll from './AnimateOnScroll';
 import FeaturedCourse from './FeaturedCourse';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
+import React from 'react';
 
 const features = [
   {
@@ -112,6 +119,18 @@ const testimonials = [
     name: 'Michael B.',
     title: 'Junior Backend Developer',
   },
+  {
+    quote:
+      'CodeTube transformed the way I follow along with coding tutorials. The automatic chapter detection is a game-changer!',
+    name: 'Alex Johnson',
+    title: 'Frontend Developer',
+  },
+  {
+    quote:
+      'The ability to export my notes and code to GitHub is an incredible feature for building my portfolio.',
+    name: 'Jessica Rodriguez',
+    title: 'Aspiring Full-Stack Developer',
+  },
 ];
 
 const faqs = [
@@ -139,6 +158,9 @@ const faqs = [
 
 export default function LandingPage() {
   const heroImage = PlaceHolderImages.find(p => p.id === 'landing-hero');
+  const autoplayPlugin = React.useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: true })
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -329,31 +351,42 @@ export default function LandingPage() {
                 See what people are saying about their experience with CodeTube.
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {testimonials.map((testimonial, index) => (
-                <AnimateOnScroll key={testimonial.name} delay={index * 100}>
-                  <Card className="transition-all duration-300 hover:scale-105 hover:-translate-y-2">
-                    <CardContent className="pt-6">
-                      <div className="flex gap-1 mb-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className="h-5 w-5 text-yellow-400 fill-yellow-400"
-                          />
-                        ))}
-                      </div>
-                      <p className="text-foreground italic mb-4">
-                        "{testimonial.quote}"
-                      </p>
-                      <div className="font-semibold">{testimonial.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {testimonial.title}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </AnimateOnScroll>
-              ))}
-            </div>
+            <Carousel
+              plugins={[autoplayPlugin.current]}
+              onMouseEnter={autoplayPlugin.current.stop}
+              onMouseLeave={autoplayPlugin.current.reset}
+              className="w-full max-w-4xl mx-auto"
+            >
+              <CarouselContent>
+                {testimonials.map((testimonial, index) => (
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+                    <div className="p-1 h-full">
+                      <Card className="h-full flex flex-col justify-between">
+                        <CardContent className="pt-6">
+                          <div className="flex gap-1 mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className="h-5 w-5 text-yellow-400 fill-yellow-400"
+                              />
+                            ))}
+                          </div>
+                          <p className="text-foreground italic mb-4">
+                            "{testimonial.quote}"
+                          </p>
+                        </CardContent>
+                        <CardHeader className="pt-0">
+                          <div className="font-semibold">{testimonial.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {testimonial.title}
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
           </div>
         </section>
 
