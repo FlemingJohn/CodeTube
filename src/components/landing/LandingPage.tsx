@@ -25,8 +25,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import LandingPageEnhancerDialog from '../codetube/LandingPageEnhancerDialog';
-import { useState } from 'react';
 
 const features = [
   {
@@ -137,7 +135,6 @@ const faqs = [
 
 export default function LandingPage() {
   const heroImage = PlaceHolderImages.find(p => p.id === 'landing-hero');
-  const [isEnhancerOpen, setEnhancerOpen] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -418,20 +415,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button onClick={() => setEnhancerOpen(true)}>
-          <Sparkles className="mr-2 h-4 w-4" />
-          Enhance This Page
-        </Button>
-      </div>
-
-      <LandingPageEnhancerDialog
-        isOpen={isEnhancerOpen}
-        setIsOpen={setEnhancerOpen}
-      />
     </div>
   );
 }
-
-    
