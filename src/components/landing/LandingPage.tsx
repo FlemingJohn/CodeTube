@@ -25,6 +25,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import BeforeAfterSlider from './BeforeAfterSlider';
 
 const features = [
   {
@@ -83,7 +84,7 @@ const mainTech = [
   },
   {
     icon: <BrainCircuit className="h-10 w-10 text-primary" />,
-    title: "Genkit & Google AI",
+    title: "Powered by Google AI",
     description:
       "Google's Gemini models power the AI features, such as chapter summaries, through the Genkit framework.",
   },
@@ -193,6 +194,21 @@ export default function LandingPage() {
                 <path d="M415 265L455 265" stroke="hsl(var(--muted-foreground))" strokeOpacity="0.5" strokeWidth="10" strokeLinecap="round"/>
               </svg>
             </div>
+          </div>
+        </section>
+        
+        {/* Before/After Slider Section */}
+        <section id="demo" className="w-full py-20 md:py-28">
+          <div className="container">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold font-headline">
+                See the Transformation
+              </h2>
+              <p className="text-lg text-muted-foreground mt-4">
+                Drag the slider to see how a standard YouTube video becomes an interactive CodeTube course.
+              </p>
+            </div>
+            <BeforeAfterSlider />
           </div>
         </section>
 
@@ -418,3 +434,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+    
