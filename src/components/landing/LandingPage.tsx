@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -26,6 +27,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import BeforeAfterSlider from './BeforeAfterSlider';
+import AnimateOnScroll from './AnimateOnScroll';
 
 const features = [
   {
@@ -225,22 +227,24 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              {features.map(feature => (
-                <Card key={feature.title} className="text-center">
-                  <CardHeader>
-                    <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
-                      {feature.icon}
-                    </div>
-                    <CardTitle className="font-headline text-xl pt-4">
-                      {feature.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
+              {features.map((feature, index) => (
+                <AnimateOnScroll key={feature.title} delay={index * 100}>
+                  <Card className="text-center h-full">
+                    <CardHeader>
+                      <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
+                        {feature.icon}
+                      </div>
+                      <CardTitle className="font-headline text-xl pt-4">
+                        {feature.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">
+                        {feature.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </AnimateOnScroll>
               ))}
             </div>
           </div>
@@ -292,26 +296,28 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
-              {testimonials.map(testimonial => (
-                <Card key={testimonial.name}>
-                  <CardContent className="pt-6">
-                    <div className="flex gap-1 mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-5 w-5 text-yellow-400 fill-yellow-400"
-                        />
-                      ))}
-                    </div>
-                    <p className="text-foreground italic mb-4">
-                      "{testimonial.quote}"
-                    </p>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.title}
-                    </div>
-                  </CardContent>
-                </Card>
+              {testimonials.map((testimonial, index) => (
+                <AnimateOnScroll key={testimonial.name} delay={index * 100}>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex gap-1 mb-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className="h-5 w-5 text-yellow-400 fill-yellow-400"
+                          />
+                        ))}
+                      </div>
+                      <p className="text-foreground italic mb-4">
+                        "{testimonial.quote}"
+                      </p>
+                      <div className="font-semibold">{testimonial.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {testimonial.title}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </AnimateOnScroll>
               ))}
             </div>
           </div>
