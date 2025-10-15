@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/accordion';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import AnimateOnScroll from './AnimateOnScroll';
+import FeaturedCourse from './FeaturedCourse';
 
 const features = [
   {
@@ -284,8 +285,24 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Featured Course Section */}
+        <section id="featured-course" className="w-full bg-secondary/50 py-20 md:py-28">
+          <div className="container">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold font-headline">
+                A Glimpse of the Final Product
+              </h2>
+              <p className="text-lg text-muted-foreground mt-4">
+                Here’s what your interactive course could look like.
+              </p>
+            </div>
+            <FeaturedCourse />
+          </div>
+        </section>
+
+
         {/* Testimonials Section */}
-        <section className="w-full bg-secondary/50 py-20 md:py-28">
+        <section className="w-full py-20 md:py-28">
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
@@ -324,7 +341,7 @@ export default function LandingPage() {
         </section>
 
         {/* Tech Stack Section */}
-        <section className="w-full py-20 md:py-28">
+        <section className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font headline">
@@ -358,7 +375,7 @@ export default function LandingPage() {
         </section>
         
         {/* FAQ Section */}
-        <section id="faq" className="w-full bg-secondary/50 py-20 md:py-28">
+        <section id="faq" className="w-full py-20 md:py-28">
           <div className="container max-w-3xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
@@ -381,7 +398,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="w-full py-20 md:py-28">
+        <section className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container text-center max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">
               Ready to Get Started?
@@ -396,7 +413,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="w-full border-t bg-secondary/50">
+      <footer className="w-full border-t">
         <div className="container py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="flex flex-col gap-2">
@@ -440,5 +457,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
