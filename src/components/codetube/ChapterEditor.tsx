@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2 } from 'lucide-react';
-import { handleGenerateSummary } from '@/app/actions';
+import { Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { handleGenerateSummary, handleExplainCode } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChapterEditorProps {
@@ -19,7 +19,8 @@ interface ChapterEditorProps {
 export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [isSummaryPending, startSummaryTransition] = useTransition();
+  const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -29,7 +30,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
   };
 
   const onGenerateSummary = () => {
-    startTransition(async () => {
+    startSummaryTransition(async () => {
       const result = await handleGenerateSummary({ transcript: localChapter.transcript });
       if (result.error) {
         toast({
@@ -44,6 +45,35 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
         toast({
           title: 'Summary Generated',
           description: 'The AI-powered summary has been added.',
+        });
+      }
+    });
+  };
+
+  const onExplainCode = () => {
+    if (!localChapter.code) {
+      toast({
+        variant: 'destructive',
+        title: 'No Code Found',
+        description: 'Please add a code snippet before explaining.',
+      });
+      return;
+    }
+    startCodeExplanationTransition(async () => {
+      const result = await handleExplainCode({ code: localChapter.code });
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error,
+        });
+      } else if (result.explanation) {
+        const updatedChapter = { ...localChapter, codeExplanation: result.explanation };
+        setLocalChapter(updatedChapter);
+        onUpdateChapter(updatedChapter);
+        toast({
+          title: 'Code Explained',
+          description: 'The AI-powered explanation has been generated.',
         });
       }
     });
@@ -82,8 +112,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="summary">AI-Generated Notes</Label>
-            <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isPending}>
-              {isPending ? (
+            <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
+              {isSummaryPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
@@ -97,22 +127,52 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
             value={localChapter.summary}
             onChange={handleChange}
             placeholder="Click 'Generate Summary' or write your own notes."
-            rows={8}
+            rows={5}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="code">Code Snippet</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="code">Code Snippet</Label>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onExplainCode}
+              disabled={isCodeExplanationPending || !localChapter.code}
+            >
+              {isCodeExplanationPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="mr-2 h-4 w-4" />
+              )}
+              Explain Code
+            </Button>
+          </div>
           <Textarea
             id="code"
             name="code"
             value={localChapter.code}
             onChange={handleChange}
             placeholder="Add relevant code for this chapter."
-            rows={10}
+            rows={8}
             className="font-code text-sm"
           />
         </div>
+
+        {localChapter.codeExplanation && (
+          <div className="space-y-2">
+            <Label htmlFor="codeExplanation">AI-Powered Code Explanation</Label>
+            <Textarea
+              id="codeExplanation"
+              name="codeExplanation"
+              value={localChapter.codeExplanation}
+              onChange={handleChange}
+              readOnly
+              className="bg-muted/50 font-sans text-sm"
+              rows={8}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

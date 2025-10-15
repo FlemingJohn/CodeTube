@@ -4,6 +4,7 @@ export type Chapter = {
   title: string;
   summary: string;
   code: string;
+  codeExplanation: string;
   // A placeholder for the actual transcript for AI summary generation
   transcript: string;
 };

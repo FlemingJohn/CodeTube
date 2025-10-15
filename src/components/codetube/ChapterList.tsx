@@ -25,6 +25,7 @@ export default function ChapterList({
       title: 'New Chapter',
       summary: '',
       code: '',
+      codeExplanation: '',
       transcript: 'This is a new chapter. Please add a transcript.',
     };
     setChapters(prev => [...prev, newChapter]);

@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/suggest-landing-page-improvements.ts';
 import '@/ai/flows/generate-chapter-summary.ts';
+import '@/ai/flows/explain-code.ts';

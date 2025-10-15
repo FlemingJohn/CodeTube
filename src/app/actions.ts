@@ -2,6 +2,7 @@
 
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
+import { explainCode } from '@/ai/flows/explain-code';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -24,6 +25,26 @@ export async function handleGenerateSummary(values: z.infer<typeof generateSumma
   } catch (e) {
     console.error(e);
     return { error: 'Failed to generate summary. Please try again.' };
+  }
+}
+
+const explainCodeSchema = z.object({
+  code: z.string(),
+});
+
+export async function handleExplainCode(values: z.infer<typeof explainCodeSchema>) {
+  const validatedFields = explainCodeSchema.safeParse(values);
+
+  if (!validatedFields.success || !validatedFields.data.code) {
+    return { error: 'Invalid fields: Code cannot be empty.' };
+  }
+
+  try {
+    const result = await explainCode({ code: validatedFields.data.code });
+    return { explanation: result.explanation };
+  } catch (e) {
+    console.error(e);
+    return { error: 'Failed to explain code. Please try again.' };
   }
 }
 
@@ -66,6 +87,7 @@ function parseChaptersFromDescription(description: string): Chapter[] {
         title,
         summary: '',
         code: '',
+        codeExplanation: '',
         transcript: `Placeholder transcript for ${title}`,
       });
     }
@@ -129,6 +151,9 @@ function chapterToMarkdown(chapter: Chapter) {
   }
   if (chapter.code) {
     content += `### Code Snippet\n\`\`\`javascript\n${chapter.code}\n\`\`\`\n`;
+  }
+  if (chapter.codeExplanation) {
+    content += `### Code Explanation\n${chapter.codeExplanation}\n\n`;
   }
   return content;
 }
