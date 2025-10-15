@@ -148,9 +148,9 @@ export default function LandingPage() {
             <Header />
           </div>
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-            <Link href="#features" className="transition-colors hover:text-foreground/80 text-foreground/60">Features</Link>
-            <Link href="#how-it-works" className="transition-colors hover:text-foreground/80 text-foreground/60">How It Works</Link>
-            <Link href="#faq" className="transition-colors hover:text-foreground/80 text-foreground/60">FAQ</Link>
+            <Link href="#features" className="transition-all hover:text-foreground/80 text-foreground/60 hover:scale-105">Features</Link>
+            <Link href="#how-it-works" className="transition-all hover:text-foreground/80 text-foreground/60 hover:scale-105">How It Works</Link>
+            <Link href="#faq" className="transition-all hover:text-foreground/80 text-foreground/60 hover:scale-105">FAQ</Link>
           </nav>
           <div className="flex items-center justify-end ml-auto">
             <AuthHeader />
@@ -172,7 +172,7 @@ export default function LandingPage() {
                 into active learning.
               </p>
               <div className="flex flex-col items-center gap-2">
-                <Button size="lg" asChild>
+                <Button size="lg" asChild className="transition-transform hover:scale-105">
                   <Link href="/creator">Start Your Free Course</Link>
                 </Button>
                 <p className="text-xs text-muted-foreground">
@@ -245,7 +245,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {features.map((feature, index) => (
                 <AnimateOnScroll key={feature.title} delay={index * 100}>
-                  <Card className="text-center h-full">
+                  <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                     <CardHeader>
                       <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
                         {feature.icon}
@@ -281,7 +281,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {howItWorks.map((step, index) => (
                 <AnimateOnScroll key={step.title} delay={index * 100}>
-                  <Card className="text-center h-full">
+                  <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                     <CardHeader>
                       <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
                         {step.icon}
@@ -332,7 +332,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {testimonials.map((testimonial, index) => (
                 <AnimateOnScroll key={testimonial.name} delay={index * 100}>
-                  <Card>
+                  <Card className="transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                     <CardContent className="pt-6">
                       <div className="flex gap-1 mb-2">
                         {[...Array(5)].map((_, i) => (
@@ -372,7 +372,7 @@ export default function LandingPage() {
             <div className="grid md:grid-cols-3 gap-8">
               {mainTech.map((tech, index) => (
                 <AnimateOnScroll key={tech.title} delay={index * 100}>
-                  <Card className="text-center h-full">
+                  <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                     <CardHeader>
                       <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
                         {tech.icon}
@@ -425,7 +425,7 @@ export default function LandingPage() {
             <p className="text-lg text-muted-foreground mt-4 mb-8">
               Begin creating your first interactive course in just a few clicks.
             </p>
-            <Button size="lg" asChild>
+            <Button size="lg" asChild className="transition-transform hover:scale-105">
               <Link href="/creator">Launch Your Creator Studio</Link>
             </Button>
           </div>
@@ -444,21 +444,21 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-2">Navigate</h4>
               <ul className="space-y-2">
-                <li><Link href="#features" className="text-sm text-muted-foreground hover:text-foreground">Features</Link></li>
-                <li><Link href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground">How it Works</Link></li>
-                <li><Link href="#faq" className="text-sm text-muted-foreground hover:text-foreground">FAQs</Link></li>
+                <li><Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link></li>
+                <li><Link href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How it Works</Link></li>
+                <li><Link href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQs</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-2">Legal</h4>
               <ul className="space-y-2">
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link></li>
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</Link></li>
+                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-2">Get Started</h4>
-              <Button asChild>
+              <Button asChild className="transition-transform hover:scale-105">
                 <Link href="/creator">Launch Creator Studio</Link>
               </Button>
             </div>
