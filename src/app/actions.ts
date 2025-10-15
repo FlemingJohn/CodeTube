@@ -3,6 +3,7 @@
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
 import { explainCode } from '@/ai/flows/explain-code';
+import { generateCodeFromTranscript } from '@/ai/flows/generate-code-from-transcript';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -45,6 +46,26 @@ export async function handleExplainCode(values: z.infer<typeof explainCodeSchema
   } catch (e) {
     console.error(e);
     return { error: 'Failed to explain code. Please try again.' };
+  }
+}
+
+const generateCodeSchema = z.object({
+  transcript: z.string(),
+});
+
+export async function handleGenerateCodeFromTranscript(values: z.infer<typeof generateCodeSchema>) {
+  const validatedFields = generateCodeSchema.safeParse(values);
+
+  if (!validatedFields.success || !validatedFields.data.transcript) {
+    return { error: 'Invalid fields: Transcript cannot be empty.' };
+  }
+
+  try {
+    const result = await generateCodeFromTranscript({ transcript: validatedFields.data.transcript });
+    return { code: result.code };
+  } catch (e) {
+    console.error(e);
+    return { error: 'Failed to generate code from transcript. Please try again.' };
   }
 }
 

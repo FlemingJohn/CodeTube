@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, Wand2 } from 'lucide-react';
-import { handleGenerateSummary, handleExplainCode } from '@/app/actions';
+import { Sparkles, Loader2, Wand2, Code } from 'lucide-react';
+import { handleGenerateSummary, handleExplainCode, handleGenerateCodeFromTranscript } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChapterEditorProps {
@@ -21,6 +21,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
   const { toast } = useToast();
   const [isSummaryPending, startSummaryTransition] = useTransition();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
+  const [isCodeGenerationPending, startCodeGenerationTransition] = useTransition();
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -45,6 +47,27 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
         toast({
           title: 'Summary Generated',
           description: 'The AI-powered summary has been added.',
+        });
+      }
+    });
+  };
+
+  const onGenerateCode = () => {
+    startCodeGenerationTransition(async () => {
+      const result = await handleGenerateCodeFromTranscript({ transcript: localChapter.transcript });
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error,
+        });
+      } else if (result.code) {
+        const updatedChapter = { ...localChapter, code: result.code };
+        setLocalChapter(updatedChapter);
+        onUpdateChapter(updatedChapter);
+        toast({
+          title: 'Code Generated',
+          description: 'The AI-powered code snippet has been added.',
         });
       }
     });
@@ -132,21 +155,36 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <Label htmlFor="code">Code Snippet</Label>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onExplainCode}
-              disabled={isCodeExplanationPending || !localChapter.code}
-            >
-              {isCodeExplanationPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="mr-2 h-4 w-4" />
-              )}
-              Explain Code
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onGenerateCode}
+                disabled={isCodeGenerationPending}
+              >
+                {isCodeGenerationPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Code className="mr-2 h-4 w-4" />
+                )}
+                Generate Code
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onExplainCode}
+                disabled={isCodeExplanationPending || !localChapter.code}
+              >
+                {isCodeExplanationPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Wand2 className="mr-2 h-4 w-4" />
+                )}
+                Explain Code
+              </Button>
+            </div>
           </div>
           <Textarea
             id="code"
