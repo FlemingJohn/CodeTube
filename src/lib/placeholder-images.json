@@ -3,8 +3,8 @@
     {
       "id": "landing-hero",
       "description": "A hero image showing a stylized representation of a video turning into an interactive course.",
-      "imageUrl": "https://picsum.photos/seed/3/600/400",
-      "imageHint": "code editor"
+      "imageUrl": "https://picsum.photos/seed/programmer/600/400",
+      "imageHint": "programmer youtube"
     }
   ]
 }
