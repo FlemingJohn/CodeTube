@@ -89,21 +89,21 @@ const mainTech = [
 const testimonials = [
   {
     quote:
-      'CodeTube transformed my static videos into a dynamic learning experience. The AI summary feature is a game-changer!',
-    name: 'Alex Johnson',
-    title: 'Frontend Developer & Educator',
+      'The AI code explanation is a lifesaver. It breaks down complex snippets into easy-to-understand steps, which has been amazing for my learning.',
+    name: 'Chris Patel',
+    title: 'Self-Taught Programmer',
   },
   {
     quote:
-      'As a visual learner, being able to see the code and notes side-by-side with the video is incredibly helpful. I wish I had this sooner!',
-    name: 'Maria Garcia',
-    title: 'Software Engineering Student',
+      'As a student, being able to see the code, notes, and video side-by-side is incredibly helpful. I wish all my tutorials used a tool like this!',
+    name: 'Samantha Lee',
+    title: 'Computer Science Student',
   },
   {
     quote:
-      'The GitHub export feature is pure magic. It saved me hours of manual work and created a professional-looking repository for my students.',
-    name: 'David Chen',
-    title: 'DevOps Instructor',
+      'I use this to review tutorials before job interviews. The AI summaries and GitHub export help me create a quick portfolio piece. It\'s brilliant.',
+    name: 'Michael B.',
+    title: 'Junior Backend Developer',
   },
 ];
 
@@ -261,7 +261,7 @@ export default function LandingPage() {
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
-                Loved by Creators and Students
+                Loved by Developers and Students
               </h2>
               <p className="text-lg text-muted-foreground mt-4">
                 See what people are saying about their experience with CodeTube.
