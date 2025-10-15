@@ -3,7 +3,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,7 +16,6 @@ import {
   ArrowUp,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import AuthHeader from '@/components/auth/AuthHeader';
 import { SiFirebase, SiNextdotjs } from '@icons-pack/react-simple-icons';
 import {
@@ -157,7 +155,6 @@ const faqs = [
 ];
 
 export default function LandingPage() {
-  const heroImage = PlaceHolderImages.find(p => p.id === 'landing-hero');
   const autoplayPlugin = React.useRef(
     Autoplay({ delay: 3000, stopOnInteraction: true })
   );
@@ -202,18 +199,69 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            {heroImage && (
-              <AnimateOnScroll className="w-full max-w-4xl" delay={200}>
-                <Image
-                  src={heroImage.imageUrl}
-                  alt={heroImage.description}
-                  width={600}
-                  height={400}
-                  className="rounded-lg shadow-2xl mx-auto"
-                  data-ai-hint={heroImage.imageHint}
+            <AnimateOnScroll className="w-full max-w-4xl" delay={200}>
+              <svg
+                viewBox="0 0 600 400"
+                className="rounded-lg shadow-2xl mx-auto"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient
+                    id="grad1"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop
+                      offset="0%"
+                      style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }}
+                    />
+                    <stop
+                      offset="100%"
+                      style={{ stopColor: 'hsl(var(--accent))', stopOpacity: 1 }}
+                    />
+                  </linearGradient>
+                  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="8" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <rect width="600" height="400" rx="8" fill="hsl(var(--card))" />
+
+                {/* Left Side: Video Player */}
+                <rect x="30" y="50" width="250" height="150" rx="8" fill="hsl(var(--muted))" />
+                <circle cx="155" cy="125" r="30" fill="hsl(var(--background))" />
+                <path d="M 145 110 L 175 125 L 145 140 Z" fill="hsl(var(--primary))" />
+                <rect x="30" y="220" width="250" height="12" rx="6" fill="hsl(var(--muted))" />
+                <rect x="30" y="220" width="100" height="12" rx="6" fill="hsl(var(--primary))" />
+
+                {/* Arrow */}
+                <path
+                  d="M 300 190 L 340 190 L 340 180 L 360 200 L 340 220 L 340 210 L 300 210 Z"
+                  fill="url(#grad1)"
+                  filter="url(#glow)"
                 />
-              </AnimateOnScroll>
-            )}
+
+                {/* Right Side: Course UI */}
+                <rect x="380" y="50" width="200" height="300" rx="8" fill="hsl(var(--muted))" />
+                <rect x="390" y="60" width="180" height="20" rx="4" fill="hsl(var(--background))" />
+                <rect x="390" y="90" width="180" height="40" rx="4" fill="hsl(var(--primary))" fillOpacity="0.1" />
+                 <rect x="400" y="98" width="80" height="8" rx="2" fill="hsl(var(--primary))" />
+                 <rect x="400" y="112" width="40" height="6" rx="2" fill="hsl(var(--primary))" fillOpacity="0.5" />
+                <rect x="390" y="140" width="180" height="60" rx="4" fill="hsl(var(--background))" />
+                 <rect x="400" y="150" width="160" height="8" rx="2" fill="hsl(var(--muted-foreground))" fillOpacity="0.3" />
+                 <rect x="400" y="162" width="140" height="8" rx="2" fill="hsl(var(--muted-foreground))" fillOpacity="0.3" />
+                 <rect x="400" y="174" width="160" height="8" rx="2" fill="hsl(var(--muted-foreground))" fillOpacity="0.3" />
+                <rect x="390" y="210" width="180" height="80" rx="4" fill="hsl(var(--background))" />
+                 <rect x="400" y="220" width="40" height="8" rx="2" fill="hsl(var(--primary))" fillOpacity="0.6" />
+                 <rect x="400" y="235" width="150" height="6" rx="2" fill="hsl(var(--muted-foreground))" fillOpacity="0.3" />
+                 <rect x="400" y="245" width="120" height="6" rx="2" fill="hsl(var(--muted-foreground))_foreground)" fillOpacity="0.3" />
+              </svg>
+            </AnimateOnScroll>
           </div>
         </section>
         
