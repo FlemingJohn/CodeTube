@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Sparkles, Loader2, Wand2, Bot } from 'lucide-react';
 import { handleGenerateSummary, handleExplainCode } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +15,40 @@ interface ChapterEditorProps {
   chapter: Chapter;
   onUpdateChapter: (chapter: Chapter) => void;
 }
+
+const FormattedExplanation = ({ text }: { text: string }) => {
+    // Split text into paragraphs by newline characters
+    const paragraphs = text.split(/\n+/);
+  
+    // Regex to find code snippets enclosed in backticks
+    const codeRegex = /`([^`]+)`/g;
+  
+    return (
+      <div className="space-y-4">
+        {paragraphs.map((paragraph, pIndex) => {
+          // Split paragraph by code snippets to interleave text and code
+          const parts = paragraph.split(codeRegex);
+          
+          return (
+            <p key={pIndex} className="text-sm font-sans leading-relaxed">
+              {parts.map((part, index) => {
+                // Every odd index is a code snippet
+                if (index % 2 === 1) {
+                  return (
+                    <code key={index} className="bg-muted text-foreground font-code px-1 py-0.5 rounded-sm text-xs">
+                      {part}
+                    </code>
+                  );
+                }
+                return part;
+              })}
+            </p>
+          );
+        })}
+      </div>
+    );
+  };
+  
 
 export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
@@ -165,14 +199,12 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
         {localChapter.codeExplanation && (
            <div className="space-y-2">
             <Label className="flex items-center gap-2">
-              <Wand2 className="h-4 w-4" />
+              <Bot className="h-4 w-4" />
               AI-Powered Code Explanation
             </Label>
              <Card className="bg-muted/40">
                <CardContent className="p-4">
-                 <p className="text-sm font-sans whitespace-pre-wrap">
-                  {localChapter.codeExplanation}
-                 </p>
+                 <FormattedExplanation text={localChapter.codeExplanation} />
                </CardContent>
              </Card>
            </div>
