@@ -80,13 +80,13 @@ const mainTech = [
       'The application is built with the latest Next.js App Router for a fast, modern, and server-driven user experience.',
   },
   {
-    icon: <SiFirebase className="h-10 w-10 text-primary" />,
+    icon: <SiFirebase className="h-10 w-10 text-orange-500" />,
     title: 'Firebase',
     description:
       'Firebase provides secure user authentication and a scalable Firestore database for storing course data.',
   },
   {
-    icon: <BrainCircuit className="h-10 w-10 text-primary" />,
+    icon: <BrainCircuit className="h-10 w-10 text-blue-500" />,
     title: "Powered by Google AI",
     description:
       "Google's Gemini models power the AI features, such as chapter summaries, through the Genkit framework.",
@@ -374,7 +374,7 @@ export default function LandingPage() {
                 <AnimateOnScroll key={tech.title} delay={index * 100}>
                   <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                     <CardHeader>
-                      <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
+                      <div className="mx-auto p-4 rounded-full w-fit">
                         {tech.icon}
                       </div>
                       <CardTitle className="font-headline text-xl pt-4">
