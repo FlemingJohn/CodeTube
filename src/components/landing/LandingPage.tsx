@@ -173,17 +173,22 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="flex justify-center">
-              {heroImage && (
-                <Image
-                  src={heroImage.imageUrl}
-                  alt={heroImage.description}
-                  width={600}
-                  height={400}
-                  data-ai-hint={heroImage.imageHint}
-                  className="rounded-lg shadow-2xl"
-                />
-              )}
+            <div className="flex justify-center p-4">
+              <svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-2xl bg-secondary/50">
+                <rect x="50" y="80" width="250" height="150" rx="12" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="2"/>
+                <path d="M140 145.5L180 170.5L140 195.5V145.5Z" stroke="hsl(var(--primary))" strokeWidth="6" strokeLinejoin="round"/>
+                <path d="M315 155L365 155" stroke="hsl(var(--accent-foreground))" strokeWidth="10" strokeLinecap="round" strokeDasharray="1 20"/>
+                <path d="M315 175L365 175" stroke="hsl(var(--accent-foreground))" strokeWidth="10" strokeLinecap="round" strokeDasharray="1 20"/>
+                <path d="M315 195L365 195" stroke="hsl(var(--accent-foreground))" strokeWidth="10" strokeLinecap="round" strokeDasharray="1 20"/>
+                <path d="M340 145C340 125.67 355.67 110 375 110C394.33 110 410 125.67 410 145L340 145Z" fill="hsl(var(--primary))" fillOpacity="0.2"/>
+                <path d="M375 110C375 125 365 135 350 145" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round"/>
+                <rect x="390" y="160" width="160" height="140" rx="12" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="2"/>
+                <path d="M420 195L440 205" stroke="hsl(var(--accent-foreground))" strokeWidth="3" strokeLinecap="round"/>
+                <path d="M450 195L470 205" stroke="hsl(var(--accent-foreground))" strokeWidth="3" strokeLinecap="round"/>
+                <path d="M415 225L475 225" stroke="hsl(var(--muted-foreground))" strokeOpacity="0.5" strokeWidth="10" strokeLinecap="round"/>
+                <path d="M415 245L495 245" stroke="hsl(var(--muted-foreground))" strokeOpacity="0.5" strokeWidth="10" strokeLinecap="round"/>
+                <path d="M415 265L455 265" stroke="hsl(var(--muted-foreground))" strokeOpacity="0.5" strokeWidth="10" strokeLinecap="round"/>
+              </svg>
             </div>
           </div>
         </section>
