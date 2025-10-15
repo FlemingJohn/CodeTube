@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +9,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { BrainCircuit, Loader2 } from 'lucide-react';
@@ -29,10 +29,29 @@ export default function LandingPageEnhancerDialog({
   const [htmlContent, setHtmlContent] = useState('');
   const [suggestions, setSuggestions] = useState('');
 
+  useEffect(() => {
+    if (isOpen) {
+      // Get the outer HTML of the entire document
+      setHtmlContent(document.documentElement.outerHTML);
+      // Automatically trigger suggestions when dialog opens
+      onGetSuggestions();
+    }
+  }, [isOpen]);
+  
   const onGetSuggestions = () => {
     startTransition(async () => {
-      setSuggestions('');
-      const result = await handleSuggestImprovements({ htmlContent });
+      setSuggestions(''); // Clear previous suggestions
+      const content = document.documentElement.outerHTML;
+      if (!content) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Could not get page content.',
+        });
+        return;
+      }
+
+      const result = await handleSuggestImprovements({ htmlContent: content });
       if (result.error) {
         toast({
           variant: 'destructive',
@@ -55,29 +74,24 @@ export default function LandingPageEnhancerDialog({
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl">Landing Page Enhancer</DialogTitle>
           <DialogDescription>
-            Paste your landing page content (HTML) below and get AI-powered suggestions for improvement.
+            Here are AI-powered suggestions for improving this landing page based on its current content.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Textarea
-            placeholder="Paste your landing page HTML here..."
-            rows={10}
-            value={htmlContent}
-            onChange={(e) => setHtmlContent(e.target.value)}
-          />
-          <Button onClick={onGetSuggestions} disabled={isPending || !htmlContent}>
-            {isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <BrainCircuit className="mr-2 h-4 w-4" />
-            )}
-            Suggest Improvements
-          </Button>
+          {isPending && (
+            <div className="flex items-center justify-center p-8">
+              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+              <p>Analyzing page...</p>
+            </div>
+          )}
           {suggestions && (
             <Card>
               <CardContent className="p-6">
-                <h4 className="font-semibold mb-2">Suggestions:</h4>
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                <h4 className="font-semibold mb-2 flex items-center">
+                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    AI Suggestions
+                </h4>
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap rounded-lg bg-muted/40 p-4">
                   {suggestions}
                 </div>
               </CardContent>
@@ -88,3 +102,5 @@ export default function LandingPageEnhancerDialog({
     </Dialog>
   );
 }
+
+    
