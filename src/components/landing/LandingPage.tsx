@@ -10,6 +10,7 @@ import {
   UploadCloud,
   BrainCircuit,
   Star,
+  ArrowUp,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -135,15 +136,24 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <Header />
-          <AuthHeader />
+        <div className="container flex h-16 items-center">
+          <div className="mr-auto md:mr-4 flex">
+            <Header />
+          </div>
+          <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+            <Link href="#features" className="transition-colors hover:text-foreground/80 text-foreground/60">Features</Link>
+            <Link href="#how-it-works" className="transition-colors hover:text-foreground/80 text-foreground/60">How It Works</Link>
+            <Link href="#faq" className="transition-colors hover:text-foreground/80 text-foreground/60">FAQ</Link>
+          </nav>
+          <div className="flex items-center justify-end ml-auto">
+            <AuthHeader />
+          </div>
         </div>
       </header>
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full py-20 md:py-32">
+        <section id="hero" className="w-full py-20 md:py-32">
           <div className="container grid gap-12 items-center justify-items-center">
             <div className="flex flex-col items-center text-center space-y-6">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tighter">
@@ -179,7 +189,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="w-full bg-secondary/50 py-20 md:py-28">
+        <section id="features" className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
@@ -213,7 +223,7 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works Section */}
-        <section className="w-full py-20 md:py-28">
+        <section id="how-it-works" className="w-full py-20 md:py-28">
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
@@ -318,7 +328,7 @@ export default function LandingPage() {
         </section>
         
         {/* FAQ Section */}
-        <section className="w-full bg-secondary/50 py-20 md:py-28">
+        <section id="faq" className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container max-w-3xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
@@ -356,21 +366,47 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="w-full border-t">
-        <div className="container flex flex-col sm:flex-row items-center justify-between py-6 gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} CodeTube. All rights reserved.</p>
-          <div className="flex items-center gap-4">
-            <Link href="#" className="hover:text-foreground">
-              Privacy Policy
-            </Link>
-            <Link href="#" className="hover:text-foreground">
-              Terms of Service
-            </Link>
+      <footer className="w-full border-t bg-secondary/50">
+        <div className="container py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="flex flex-col gap-2">
+              <Header />
+              <p className="text-sm text-muted-foreground">
+                Turn YouTube videos into interactive courses.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Navigate</h4>
+              <ul className="space-y-2">
+                <li><Link href="#features" className="text-sm text-muted-foreground hover:text-foreground">Features</Link></li>
+                <li><Link href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground">How it Works</Link></li>
+                <li><Link href="#faq" className="text-sm text-muted-foreground hover:text-foreground">FAQs</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Legal</h4>
+              <ul className="space-y-2">
+                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Privacy Policy</Link></li>
+                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Terms of Service</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Get Started</h4>
+              <Button asChild>
+                <Link href="/creator">Launch Creator Studio</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="mt-8 border-t pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} CodeTube. All rights reserved.</p>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="#hero" className="flex items-center gap-2">
+                Back to top <ArrowUp className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-
-    
