@@ -61,14 +61,22 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
           title: 'Error',
           description: result.error,
         });
-      } else if (result.code) {
+      } else if (typeof result.code === 'string') {
         const updatedChapter = { ...localChapter, code: result.code };
         setLocalChapter(updatedChapter);
         onUpdateChapter(updatedChapter);
-        toast({
-          title: 'Code Generated',
-          description: 'The AI-powered code snippet has been added.',
-        });
+        
+        if (result.code) {
+          toast({
+            title: 'Code Generated',
+            description: 'The AI-powered code snippet has been added.',
+          });
+        } else {
+          toast({
+            title: 'No Code Found',
+            description: 'The AI could not find a suitable code snippet in the transcript.',
+          });
+        }
       }
     });
   };
