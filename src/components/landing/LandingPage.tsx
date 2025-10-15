@@ -202,38 +202,18 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="flex justify-center p-4">
-              <svg width="600" height="400" viewBox="0 0 600 400" className="rounded-lg shadow-2xl bg-secondary/50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="600" height="400" rx="8" fill="var(--background)"/>
-                {/* Left Side: Video Player */}
-                <rect x="50" y="80" width="220" height="240" rx="8" fill="hsl(var(--card))"/>
-                <circle cx="160" cy="180" r="30" fill="hsl(var(--muted))"/>
-                <path d="M150 165L175 180L150 195V165Z" fill="hsl(var(--foreground))"/>
-                <rect x="70" y="270" width="180" height="12" rx="6" fill="hsl(var(--muted))"/>
-                <rect x="70" y="270" width="80" height="12" rx="6" fill="hsl(var(--primary))"/>
-                
-                {/* Arrow */}
-                <path d="M290 190L310 210L290 230" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="300" y1="210" x2="330" y2="210" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="4 4"/>
-                
-                {/* Right Side: CodeTube UI */}
-                <rect x="350" y="60" width="200" height="280" rx="8" fill="hsl(var(--card))"/>
-                <rect x="360" y="75" width="40" height="8" rx="4" fill="hsl(var(--muted-foreground))"/>
-                <rect x="360" y="95" width="180" height="30" rx="4" fill="hsl(var(--primary))" fillOpacity="0.1"/>
-                <rect x="370" y="102" width="120" height="8" rx="4" fill="hsl(var(--primary))"/>
-                <rect x="370" y="114" width="30" height="6" rx="3" fill="hsl(var(--primary))" fillOpacity="0.5"/>
-
-                <rect x="360" y="135" width="180" height="30" rx="4" fill="hsl(var(--muted))"/>
-                <rect x="370" y="142" width="100" height="8" rx="4" fill="hsl(var(--foreground))" fillOpacity="0.6"/>
-                <rect x="370" y="154" width="30" height="6" rx="3" fill="hsl(var(--muted-foreground))"/>
-                
-                <rect x="360" y="180" width="180" height="150" rx="4" fill="hsl(var(--muted))"/>
-                <rect x="370" y="190" width="50" height="8" rx="4" fill="hsl(var(--primary))"/>
-                <rect x="370" y="210" width="160" height="60" rx="4" fill="hsl(var(--background))"/>
-                <rect x="380" y="220" width="140" height="6" rx="3" fill="hsl(var(--foreground))" fillOpacity="0.5"/>
-                <rect x="380" y="230" width="120" height="6" rx="3" fill="hsl(var(--foreground))" fillOpacity="0.5"/>
-              </svg>
-            </div>
+            {heroImage && (
+              <AnimateOnScroll className="w-full max-w-4xl" delay={200}>
+                <Image
+                  src={heroImage.imageUrl}
+                  alt={heroImage.description}
+                  width={600}
+                  height={400}
+                  className="rounded-lg shadow-2xl mx-auto"
+                  data-ai-hint={heroImage.imageHint}
+                />
+              </AnimateOnScroll>
+            )}
           </div>
         </section>
         
@@ -361,7 +341,7 @@ export default function LandingPage() {
                 {testimonials.map((testimonial, index) => (
                   <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
                     <div className="p-1 h-full">
-                      <Card className="h-full flex flex-col justify-between">
+                      <Card className="h-full flex flex-col justify-between transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                         <CardContent className="pt-6">
                           <div className="flex gap-1 mb-2">
                             {[...Array(5)].map((_, i) => (
