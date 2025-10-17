@@ -45,9 +45,9 @@ const prompt = ai.definePrompt({
   The title of the chapter is: "{{chapterTitle}}".
 
   Analyze the following transcript and extract the most relevant and complete code snippet related to the chapter title.
-  - Only return the code itself.
-  - Do not include any explanations or surrounding text.
-  - If no relevant code is present, return an empty string.
+  - Return your best guess for the most relevant code snippet.
+  - Only return the code itself. Do not include any explanations or surrounding text.
+  - If you are absolutely certain no code is present, return an empty string.
 
   Transcript:
   \`\`\`

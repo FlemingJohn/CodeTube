@@ -121,6 +121,12 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
                 title: 'Code Snippet Found!',
                 description: 'The AI has added a code snippet to this chapter.',
             });
+        } else {
+            toast({
+                variant: 'default',
+                title: 'No Code Found',
+                description: 'The AI could not find a relevant code snippet in this chapter.',
+            });
         }
     });
   };

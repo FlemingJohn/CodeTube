@@ -68,9 +68,6 @@ export async function handleFindCodeInTranscript(values: z.infer<typeof findCode
             transcript: validatedFields.data.transcript,
             chapterTitle: validatedFields.data.chapterTitle,
         });
-        if (!result.code) {
-            return { error: 'Could not find a relevant code snippet in this chapter.' };
-        }
         return { code: result.code };
     } catch (e) {
         console.error(e);
