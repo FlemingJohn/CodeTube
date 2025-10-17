@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
+import VideoPlayer from './VideoPlayer';
 
 export default function CodeTubeApp() {
   const { toast } = useToast();
@@ -33,6 +34,7 @@ export default function CodeTubeApp() {
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [courseTitle, setCourseTitle] = useState('My CodeTube Course');
+  const [videoId, setVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -82,7 +84,12 @@ export default function CodeTubeApp() {
 
           <SidebarContent>
             <div className="flex flex-col gap-4 p-2">
-              <YoutubeImport setChapters={setChapters} setCourseTitle={setCourseTitle} setSelectedChapterId={setSelectedChapterId} />
+              <YoutubeImport 
+                setChapters={setChapters} 
+                setCourseTitle={setCourseTitle} 
+                setSelectedChapterId={setSelectedChapterId}
+                setVideoId={setVideoId}
+              />
               <ChapterList
                 chapters={chapters}
                 setChapters={setChapters}
@@ -105,7 +112,9 @@ export default function CodeTubeApp() {
         </Sidebar>
 
         <SidebarInset>
-          <main className="flex-1 p-4 md:p-6 bg-muted/20">
+          <main className="flex-1 p-4 md:p-6 bg-muted/20 flex flex-col gap-4">
+            {videoId && <VideoPlayer videoId={videoId} />}
+
             {selectedChapter ? (
               <ChapterEditor
                 key={selectedChapter.id}
@@ -113,7 +122,7 @@ export default function CodeTubeApp() {
                 onUpdateChapter={handleUpdateChapter}
               />
             ) : (
-              <div className="flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted">
+              <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted">
                 <div className="text-center text-muted-foreground">
                   <h2 className="text-xl font-semibold">No Chapter Selected</h2>
                   <p>Import a YouTube video or add a chapter to get started.</p>

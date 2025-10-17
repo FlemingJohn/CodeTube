@@ -12,6 +12,7 @@ interface YoutubeImportProps {
   setChapters: React.Dispatch<React.SetStateAction<Chapter[]>>;
   setCourseTitle: React.Dispatch<React.SetStateAction<string>>;
   setSelectedChapterId: React.Dispatch<React.SetStateAction<string | null>>;
+  setVideoId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 function getYouTubeVideoId(url: string): string | null {
@@ -20,7 +21,7 @@ function getYouTubeVideoId(url: string): string | null {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function YoutubeImport({ setChapters, setCourseTitle, setSelectedChapterId }: YoutubeImportProps) {
+export default function YoutubeImport({ setChapters, setCourseTitle, setSelectedChapterId, setVideoId }: YoutubeImportProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -46,6 +47,7 @@ export default function YoutubeImport({ setChapters, setCourseTitle, setSelected
           description: result.error,
         });
       } else if (result.chapters && result.videoTitle) {
+        setVideoId(videoId);
         setChapters(result.chapters);
         setCourseTitle(result.videoTitle);
         setSelectedChapterId(result.chapters[0]?.id || null);
