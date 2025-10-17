@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Youtube } from 'lucide-react';
+import { Loader2, Youtube, Search } from 'lucide-react';
 import type { Chapter } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { getYoutubeChapters } from '@/app/actions';
@@ -13,6 +13,7 @@ interface YoutubeImportProps {
   setCourseTitle: React.Dispatch<React.SetStateAction<string>>;
   setSelectedChapterId: React.Dispatch<React.SetStateAction<string | null>>;
   setVideoId: React.Dispatch<React.SetStateAction<string | null>>;
+  setSearchDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function getYouTubeVideoId(url: string): string | null {
@@ -21,7 +22,7 @@ function getYouTubeVideoId(url: string): string | null {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function YoutubeImport({ setChapters, setCourseTitle, setSelectedChapterId, setVideoId }: YoutubeImportProps) {
+export default function YoutubeImport({ setChapters, setCourseTitle, setSelectedChapterId, setVideoId, setSearchDialogOpen }: YoutubeImportProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -77,12 +78,18 @@ export default function YoutubeImport({ setChapters, setCourseTitle, setSelected
           onChange={(e) => setYoutubeUrl(e.target.value)}
         />
       </div>
-      <Button variant="outline" className="w-full" onClick={handleAutoDetect} disabled={isPending || !youtubeUrl}>
-        {isPending ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : null}
-        Auto-Detect Chapters
-      </Button>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" className="w-full" onClick={handleAutoDetect} disabled={isPending || !youtubeUrl}>
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : null}
+          Import Link
+        </Button>
+        <Button variant="secondary" className="w-full" onClick={() => setSearchDialogOpen(true)}>
+            <Search className="mr-2 h-4 w-4" />
+            Search
+        </Button>
+      </div>
     </div>
   );
 }

@@ -24,6 +24,7 @@ import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
+import VideoSearchDialog from './VideoSearchDialog';
 
 export default function CodeTubeApp() {
   const { toast } = useToast();
@@ -35,6 +36,7 @@ export default function CodeTubeApp() {
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [courseTitle, setCourseTitle] = useState('My CodeTube Course');
   const [videoId, setVideoId] = useState<string | null>(null);
+  const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -89,6 +91,7 @@ export default function CodeTubeApp() {
                 setCourseTitle={setCourseTitle} 
                 setSelectedChapterId={setSelectedChapterId}
                 setVideoId={setVideoId}
+                setSearchDialogOpen={setSearchDialogOpen}
               />
               <ChapterList
                 chapters={chapters}
@@ -137,6 +140,15 @@ export default function CodeTubeApp() {
           setIsOpen={setGithubDialogOpen}
           chapters={chapters}
           courseTitle={courseTitle}
+        />
+
+        <VideoSearchDialog
+          isOpen={isSearchDialogOpen}
+          setIsOpen={setSearchDialogOpen}
+          setChapters={setChapters}
+          setCourseTitle={setCourseTitle}
+          setSelectedChapterId={setSelectedChapterId}
+          setVideoId={setVideoId}
         />
         
       </SidebarProvider>

@@ -3,6 +3,7 @@
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
 import { explainCode } from '@/ai/flows/explain-code';
+import { youtubeSearch } from '@/ai/flows/youtube-search';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -227,4 +228,24 @@ export async function handleGithubExport(values: z.infer<typeof githubExportSche
     console.error('GitHub Export Error:', error);
     return { error: error.message || 'Failed to export to GitHub.' };
   }
+}
+
+const youtubeSearchSchema = z.object({
+    query: z.string().min(1, 'Search query is required.'),
+});
+
+export async function handleYoutubeSearch(values: z.infer<typeof youtubeSearchSchema>) {
+    const validatedFields = youtubeSearchSchema.safeParse(values);
+    
+    if (!validatedFields.success) {
+        return { error: 'Invalid search query.' };
+    }
+    
+    try {
+        const result = await youtubeSearch({ query: validatedFields.data.query });
+        return { videos: result.videos };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || 'Failed to search YouTube.' };
+    }
 }
