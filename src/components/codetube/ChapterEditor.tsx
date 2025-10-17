@@ -144,27 +144,16 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
           </div>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="summary">AI-Generated Notes</Label>
+        <div className="flex items-center justify-end">
             <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
               {isSummaryPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
               )}
-              Generate Summary
+              Generate Notes in Left Panel
             </Button>
           </div>
-          <Textarea
-            id="summary"
-            name="summary"
-            value={localChapter.summary}
-            onChange={handleChange}
-            placeholder="Click 'Generate Summary' or write your own notes."
-            rows={5}
-          />
-        </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-2">

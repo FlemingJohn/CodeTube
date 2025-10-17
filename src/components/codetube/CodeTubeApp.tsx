@@ -10,7 +10,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Github, LogOut } from 'lucide-react';
+import { Github, LogOut, Sparkles } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
@@ -25,6 +25,9 @@ import { useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import VideoSearchDialog from './VideoSearchDialog';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 
 export default function CodeTubeApp() {
   const { toast } = useToast();
@@ -54,6 +57,13 @@ export default function CodeTubeApp() {
       prevChapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c))
     );
   };
+  
+  const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!selectedChapter) return;
+    const updatedChapter = { ...selectedChapter, summary: e.target.value };
+    handleUpdateChapter(updatedChapter);
+  };
+
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -126,6 +136,27 @@ export default function CodeTubeApp() {
                     <p>Import a YouTube video to get started.</p>
                   </div>
                 </div>
+              )}
+               {selectedChapter && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                      <Sparkles className="w-6 h-6 text-primary" />
+                      AI-Generated Notes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Textarea
+                        id="summary"
+                        name="summary"
+                        value={selectedChapter.summary}
+                        onChange={handleSummaryChange}
+                        placeholder="Click 'Generate Summary' in the chapter editor or write your own notes here."
+                        rows={8}
+                        className="text-base"
+                    />
+                  </CardContent>
+                </Card>
               )}
             </div>
             
