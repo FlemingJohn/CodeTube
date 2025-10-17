@@ -63,8 +63,13 @@ const findCodeSchema = z.object({
 export async function handleFindCodeInTranscript(values: z.infer<typeof findCodeSchema>) {
     const validatedFields = findCodeSchema.safeParse(values);
 
-    if (!validatedFields.success || !validatedFields.data.transcript) {
-      return { code: '' }; // Return empty code, don't show error
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields to find code.' };
+    }
+    
+    // Return empty if transcript is missing, but don't show an error.
+    if (!validatedFields.data.transcript) {
+        return { code: '' }; 
     }
 
     try {
@@ -147,9 +152,9 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
     
     const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
 
-    if (chapterData.length === 0) {
+    if (chapterData.length === 0 && fullTranscript.length > 0) {
         // If no chapters found, treat the whole video as a single chapter
-        const videoDuration = fullTranscript.length > 0 ? fullTranscript[fullTranscript.length - 1].offset / 1000 + fullTranscript[fullTranscript.length - 1].duration / 1000 : Infinity;
+        const videoDuration = fullTranscript[fullTranscript.length - 1].offset / 1000 + fullTranscript[fullTranscript.length - 1].duration / 1000;
         
         chapters.push({
             id: `${Date.now()}-0`,
@@ -205,23 +210,12 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
       auth: apiKey,
     });
     
-    let transcriptResponse: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>> = [];
-    let transcriptWarning: string | undefined = undefined;
+    const videoResponse = await youtube.videos.list({
+        part: ['snippet'],
+        id: [videoId],
+    });
     
-    const [videoResponse, transcriptResult] = await Promise.allSettled([
-        youtube.videos.list({
-            part: ['snippet'],
-            id: [videoId],
-        }),
-        YoutubeTranscript.fetchTranscript(videoId),
-    ]);
-
-    if (videoResponse.status === 'rejected') {
-        // This is a critical error (e.g., API key issue, video not found)
-        throw videoResponse.reason;
-    }
-    
-    const video = videoResponse.value.data.items?.[0];
+    const video = videoResponse.data.items?.[0];
     if (!video || !video.snippet) {
       return { error: 'Video not found.' };
     }
@@ -229,11 +223,14 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
     const videoTitle = video.snippet.title;
     const description = video.snippet.description;
 
-    if (transcriptResult.status === 'fulfilled') {
-        transcriptResponse = transcriptResult.value;
-    } else {
-        console.warn('Could not fetch transcript:', transcriptResult.reason);
-        transcriptWarning = "Could not get a transcript for this video. Code extraction may be less accurate.";
+    let transcriptResponse: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>> = [];
+    let transcriptWarning: string | undefined = undefined;
+
+    try {
+      transcriptResponse = await YoutubeTranscript.fetchTranscript(videoId);
+    } catch (e) {
+      console.warn('Could not fetch transcript:', e);
+      transcriptWarning = "Could not get a transcript for this video. Code extraction may be less accurate.";
     }
 
     const chapters = parseChaptersFromDescription(description || '', transcriptResponse);
@@ -242,6 +239,9 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
 
   } catch (error: any) {
     console.error('Error fetching from YouTube API:', error);
+    if (error.message.includes('transcripts disabled')) {
+         return { error: 'Transcripts are disabled for this video. Please choose another one.' };
+    }
     return { error: error.message || 'Failed to fetch video data from YouTube API.' };
   }
 }
