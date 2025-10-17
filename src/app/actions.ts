@@ -73,32 +73,41 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
 }
 
 function parseChaptersFromDescription(description: string): Chapter[] {
-  const chapters: Chapter[] = [];
-  const lines = description.split('\n');
-  const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
+    const chapters: Chapter[] = [];
+    if (!description) return chapters;
 
-  lines.forEach((line, index) => {
-    const match = line.match(timestampRegex);
-    if (match) {
-      const timestamp = match[0];
-      // The title is whatever comes after the timestamp, trimmed of whitespace and non-alphanumeric leading characters.
-      const title = line.substring(match.index! + timestamp.length).replace(/^[\s\-)\]]*/, '').trim();
+    const lines = description.split('\n');
+    // Regex to find timestamps like 00:00, 0:00, 00:00:00, (0:00), [0:00]
+    const timestampRegex = /(?:(\d{1,2}:)?\d{1,2}:\d{2})/;
+    const chapterLineRegex = /([\(\[]?)((?:\d{1,2}:)?\d{1,2}:\d{2})([\)\]]?)/;
 
-      if (title) {
-        chapters.push({
-          id: Date.now().toString() + index,
-          timestamp,
-          title,
-          summary: '',
-          code: '',
-          codeExplanation: '',
-          transcript: `Placeholder transcript for ${title}`,
-        });
-      }
-    }
-  });
 
-  return chapters;
+    lines.forEach((line, index) => {
+        const match = line.match(chapterLineRegex);
+
+        if (match) {
+            const timestamp = match[2];
+            let title = line.substring(line.indexOf(timestamp) + timestamp.length).trim();
+
+            // Clean up common leading characters for titles
+            title = title.replace(/^[\s\-)\]]+/, '');
+            
+            // Sometimes there's no title on the same line, just the timestamp. We'll ignore those for now.
+            if (title) {
+                chapters.push({
+                    id: `${Date.now()}-${index}`, // More unique ID
+                    timestamp,
+                    title,
+                    summary: '',
+                    code: '',
+                    codeExplanation: '',
+                    transcript: `Placeholder transcript for chapter: ${title}`,
+                });
+            }
+        }
+    });
+
+    return chapters;
 }
 
 
