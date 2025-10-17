@@ -1,3 +1,4 @@
+
 'use server';
 
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
@@ -225,15 +226,21 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
 
     let transcriptResponse: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>> = [];
     let transcriptWarning: string | undefined = undefined;
+    let transcriptError = false;
 
     try {
       transcriptResponse = await YoutubeTranscript.fetchTranscript(videoId);
     } catch (e) {
       console.warn('Could not fetch transcript:', e);
-      transcriptWarning = "Could not get a transcript for this video. Code extraction may be less accurate.";
+      transcriptError = true;
     }
 
     const chapters = parseChaptersFromDescription(description || '', transcriptResponse);
+
+    // Only warn if transcript fetch failed AND there are no chapters in the description
+    if (transcriptError && chapters.length === 0) {
+        transcriptWarning = "Could not get a transcript for this video. Code extraction may be less accurate.";
+    }
 
     return { chapters, videoTitle, warning: transcriptWarning };
 
