@@ -164,7 +164,7 @@ export default function CodeTubeApp() {
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2 font-headline text-2xl">
                       <Sparkles className="w-6 h-6 text-primary" />
-                      AI-Generated Notes
+                      Take notes
                     </CardTitle>
                     <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
                         {isSummaryPending ? (
@@ -181,7 +181,7 @@ export default function CodeTubeApp() {
                         name="summary"
                         value={selectedChapter.summary}
                         onChange={handleSummaryChange}
-                        placeholder="Click 'Generate Notes' or write your own notes here."
+                        placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
                         rows={8}
                         className="text-base"
                     />
