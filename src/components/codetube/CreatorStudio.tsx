@@ -41,32 +41,22 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const auth = useAuth();
   const router = useRouter();
 
-  const [chapters, setChapters] = useState<Chapter[]>(course.chapters);
-  const [courseTitle, setCourseTitle] = useState(course.title);
-  const [videoId, setVideoId] = useState<string | null>(course.videoId);
-
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(course.chapters[0]?.id || null);
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
 
+  // Effect to auto-select the first chapter when the course chapters change (e.g., after import)
   useEffect(() => {
-    // This effect ensures that if the user selects a different course from the dashboard,
-    // or if the course data is updated from an import, the editor's state updates.
-    setCourseTitle(course.title);
-    setChapters(course.chapters);
-    setVideoId(course.videoId);
-  }, [course]);
-  
-  useEffect(() => {
-      // This effect ensures that after a new video is imported (and chapters are populated),
-      // the first chapter is automatically selected.
-      if (course.chapters.length > 0) {
-          setSelectedChapterId(course.chapters[0].id);
-      } else {
-          setSelectedChapterId(null);
+    if (course.chapters.length > 0) {
+      // If no chapter is selected OR the selected one is no longer in the list
+      if (!selectedChapterId || !course.chapters.some(c => c.id === selectedChapterId)) {
+        setSelectedChapterId(course.chapters[0].id);
       }
-  }, [course.chapters]);
+    } else {
+      setSelectedChapterId(null);
+    }
+  }, [course.chapters, selectedChapterId]);
 
   useEffect(() => {
     if (isNewCourse) {
@@ -74,42 +64,18 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     }
   }, [isNewCourse]);
 
-  // This is the function that will be called to update the parent
-  const updateParentCourse = (updatedData: Partial<Course>) => {
-    const updatedCourse = {
-        ...course,
-        title: courseTitle,
-        chapters,
-        videoId,
-        ...updatedData,
-    };
-    onCourseUpdate(updatedCourse);
+  const handleSetCourseData = (updatedData: Partial<Course>) => {
+    onCourseUpdate({ ...course, ...updatedData });
   };
   
-  const handleSetVideoId = (newVideoId: string | null) => {
-    setVideoId(newVideoId);
-    updateParentCourse({ videoId: newVideoId });
-  };
-  
-  const handleSetCourseTitle = (newTitle: string) => {
-    setCourseTitle(newTitle);
-    updateParentCourse({ title: newTitle });
-  };
-
-  const handleSetChapters = (newChapters: Chapter[] | ((prev: Chapter[]) => Chapter[])) => {
-    const updatedChapters = typeof newChapters === 'function' ? newChapters(chapters) : newChapters;
-    setChapters(updatedChapters);
-    updateParentCourse({ chapters: updatedChapters });
-  };
-
   const selectedChapter = useMemo(
-    () => chapters.find(c => c.id === selectedChapterId),
-    [chapters, selectedChapterId]
+    () => course.chapters.find(c => c.id === selectedChapterId),
+    [course.chapters, selectedChapterId]
   );
 
   const handleUpdateChapter = (updatedChapter: Chapter) => {
-    const newChapters = chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
-    handleSetChapters(newChapters);
+    const newChapters = course.chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
+    handleSetCourseData({ chapters: newChapters });
   };
   
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -142,7 +108,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     });
   };
 
-
   const handleSignOut = async () => {
     await signOut(auth);
     toast({
@@ -151,6 +116,18 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     });
     router.push('/');
   };
+
+  const handleSetChapters = (newChapters: Chapter[]) => {
+      handleSetCourseData({ chapters: newChapters });
+  }
+
+  const handleSetCourseTitle = (newTitle: string) => {
+      handleSetCourseData({ title: newTitle });
+  }
+  
+  const handleSetVideoId = (newVideoId: string | null) => {
+      handleSetCourseData({ videoId: newVideoId });
+  }
 
   return (
     <div className="h-screen bg-background">
@@ -174,8 +151,11 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <ChapterList
-                chapters={chapters}
-                setChapters={handleSetChapters}
+                chapters={course.chapters}
+                setChapters={(updater) => {
+                    const newChapters = typeof updater === 'function' ? updater(course.chapters) : updater;
+                    handleSetChapters(newChapters);
+                }}
                 selectedChapterId={selectedChapterId}
                 setSelectedChapterId={setSelectedChapterId}
               />
@@ -201,8 +181,8 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
         <SidebarInset>
           <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="flex flex-col gap-6">
-              {videoId ? (
-                <VideoPlayer videoId={videoId} />
+              {course.videoId ? (
+                <VideoPlayer videoId={course.videoId} />
               ) : (
                 <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
                   <div className="text-center text-muted-foreground">
@@ -266,8 +246,8 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
         <GithubExportDialog
           isOpen={isGithubDialogOpen}
           setIsOpen={setGithubDialogOpen}
-          chapters={chapters}
-          courseTitle={courseTitle}
+          chapters={course.chapters}
+          courseTitle={course.title}
         />
 
         <VideoSearchDialog
