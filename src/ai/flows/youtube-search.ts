@@ -2,7 +2,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import Youtube from 'youtube-v3-api';
 
 const YoutubeSearchInputSchema = z.object({
   query: z.string().describe('The query to search for on YouTube.'),
@@ -38,6 +37,9 @@ const youtubeSearchFlow = ai.defineFlow(
     if (!apiKey) {
       throw new Error('YouTube API key is not configured.');
     }
+
+    // Use dynamic import to fix constructor issue with Turbopack
+    const Youtube = (await import('youtube-v3-api')).default;
 
     const api = new Youtube(apiKey);
     const response = await api.search(query, {
