@@ -84,6 +84,15 @@ export default function VideoSearchDialog({
           title: 'Video Imported!',
           description: `"${result.videoTitle}" has been loaded.`,
         });
+
+        if (result.warning) {
+          toast({
+            variant: 'default',
+            title: 'Note',
+            description: result.warning,
+          })
+        }
+
         setIsOpen(false);
         setSearchQuery('');
         setSearchResults([]);

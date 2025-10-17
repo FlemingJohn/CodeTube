@@ -44,7 +44,7 @@ export default function YoutubeImport({ setChapters, setCourseTitle, setSelected
       if (result.error) {
         toast({
           variant: 'destructive',
-          title: 'Error Detecting Chapters',
+          title: 'Error Importing Video',
           description: result.error,
         });
       } else if (result.chapters && result.videoTitle) {
@@ -55,14 +55,22 @@ export default function YoutubeImport({ setChapters, setCourseTitle, setSelected
         
         if (result.chapters.length > 0) {
           toast({
-            title: 'Chapters Detected!',
-            description: 'We found chapters in the video and added them.',
+            title: 'Video Imported!',
+            description: `"${result.videoTitle}" has been loaded.`,
           });
         } else {
           toast({
-            title: 'Video Title Imported',
-            description: "We couldn't find chapters, but we've set your course title.",
+            title: 'Video Imported',
+            description: `"${result.videoTitle}" has been loaded. We couldn't find chapters in the description.`,
           });
+        }
+        
+        if (result.warning) {
+            toast({
+                variant: 'default',
+                title: 'Note',
+                description: result.warning,
+            })
         }
       }
     });

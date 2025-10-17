@@ -71,7 +71,8 @@ export async function handleFindCodeInTranscript(values: z.infer<typeof findCode
         return { code: result.code };
     } catch (e) {
         console.error(e);
-        return { error: 'Failed to find code. Please try again.' };
+        // If AI fails, still return empty code so UI doesn't show an error
+        return { code: '' };
     }
 }
 
@@ -139,11 +140,13 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
     
     // Sort by start time to ensure correct order
     chapterData.sort((a, b) => a.startTime - b.startTime);
+    
+    const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
 
     if (chapterData.length === 0) {
         // If no chapters found, treat the whole video as a single chapter
         const videoDuration = fullTranscript.length > 0 ? fullTranscript[fullTranscript.length - 1].offset / 1000 + fullTranscript[fullTranscript.length - 1].duration / 1000 : Infinity;
-        const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
+        
         chapters.push({
             id: `${Date.now()}-0`,
             timestamp: '00:00',
@@ -151,7 +154,7 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
             summary: '',
             code: '',
             codeExplanation: '',
-            transcript: `Video Description:\n${description}\n\nTranscript:\n${fullTranscriptText}` || 'No transcript available for this video.',
+            transcript: `Video Description:\n${description || ''}\n\nTranscript:\n${fullTranscriptText}` || 'No transcript available for this video.',
         });
         return chapters;
     }
@@ -185,7 +188,7 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
 }
 
 
-export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string }> {
+export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string, warning?: string }> {
   const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
   if (!apiKey) {
@@ -199,7 +202,7 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
     });
     
     let transcriptResponse: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>> = [];
-    let transcriptError: string | null = null;
+    let transcriptWarning: string | undefined = undefined;
     
     const [videoResponse, transcriptResult] = await Promise.allSettled([
         youtube.videos.list({
@@ -210,6 +213,7 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
     ]);
 
     if (videoResponse.status === 'rejected') {
+        // This is a critical error (e.g., API key issue, video not found)
         throw videoResponse.reason;
     }
     
@@ -225,29 +229,16 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
         transcriptResponse = transcriptResult.value;
     } else {
         console.warn('Could not fetch transcript:', transcriptResult.reason);
-        transcriptError = "Could not get a transcript for this video. Code extraction may be less accurate.";
+        transcriptWarning = "Could not get a transcript for this video. Code extraction may be less accurate.";
     }
 
+    const chapters = parseChaptersFromDescription(description || '', transcriptResponse);
 
-    if (!description) {
-        if(transcriptError) return { error: transcriptError };
-        return { chapters: [], videoTitle };
-    }
+    return { chapters, videoTitle, warning: transcriptWarning };
 
-    const chapters = parseChaptersFromDescription(description, transcriptResponse);
-
-    // If there's a transcript error but we still have a video title, return that info.
-    if (transcriptError) {
-        return { chapters, videoTitle, error: transcriptError };
-    }
-
-    return { chapters, videoTitle };
   } catch (error: any) {
     console.error('Error fetching from YouTube API:', error);
-    if (error.message?.includes('Could not get a transcript for this video')) {
-        return { error: "Could not get a transcript for this video. Code extraction may be less accurate." };
-    }
-    return { error: error.message || 'Failed to fetch chapters from YouTube API.' };
+    return { error: error.message || 'Failed to fetch video data from YouTube API.' };
   }
 }
 
