@@ -57,7 +57,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     setChapters(course.chapters);
     setVideoId(course.videoId);
     setSelectedChapterId(course.chapters[0]?.id || null);
-  }, [course]);
+  }, [course, course.videoId]);
 
   useEffect(() => {
     if (isNewCourse) {
