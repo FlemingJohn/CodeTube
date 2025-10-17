@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useTransition } from 'react';
@@ -10,43 +11,54 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Github, LogOut, Sparkles } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import GithubExportDialog from './GithubExportDialog';
-import type { Chapter } from '@/lib/types';
+import type { Chapter, Course } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
-import { Loader2 } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import VideoSearchDialog from './VideoSearchDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import { handleGenerateSummary } from '@/app/actions';
 
-export default function CodeTubeApp() {
+interface CreatorStudioProps {
+    course: Course;
+    onCourseUpdate: (course: Course) => void;
+    onBackToDashboard: () => void;
+}
+
+export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboard }: CreatorStudioProps) {
   const { toast } = useToast();
-  const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
+
+  const [chapters, setChapters] = useState<Chapter[]>(course.chapters);
+  const [courseTitle, setCourseTitle] = useState(course.title);
+  const [videoId, setVideoId] = useState<string | null>(course.videoId);
+
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(course.chapters[0]?.id || null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
-  const [courseTitle, setCourseTitle] = useState('My CodeTube Course');
-  const [videoId, setVideoId] = useState<string | null>(null);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
 
+  // Effect to update parent component when course data changes
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, isUserLoading, router]);
+    onCourseUpdate({
+        ...course,
+        title: courseTitle,
+        chapters,
+        videoId,
+    });
+  }, [chapters, courseTitle, videoId, onCourseUpdate, course]);
+
 
   const selectedChapter = useMemo(
     () => chapters.find(c => c.id === selectedChapterId),
@@ -99,14 +111,6 @@ export default function CodeTubeApp() {
     router.push('/');
   };
 
-  if (isUserLoading || !user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="h-screen bg-background">
       <SidebarProvider
@@ -138,6 +142,10 @@ export default function CodeTubeApp() {
           </SidebarContent>
 
           <SidebarFooter className="p-2">
+            <Button variant="ghost" className="justify-start gap-2" onClick={onBackToDashboard}>
+              <ArrowLeft />
+              <span className="group-data-[collapsible=icon]:hidden">My Courses</span>
+            </Button>
             <Button variant="ghost" className="justify-start gap-2" onClick={() => setGithubDialogOpen(true)}>
               <Github />
               <span className="group-data-[collapsible=icon]:hidden">Export to GitHub</span>
@@ -234,3 +242,4 @@ export default function CodeTubeApp() {
     </div>
   );
 }
+
