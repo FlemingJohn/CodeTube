@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot } from 'lucide-react';
-import { handleExplainCode } from '@/app/actions';
+import { Loader2, Wand2, Bot, SearchCode } from 'lucide-react';
+import { handleExplainCode, handleFindCodeInTranscript } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChapterEditorProps {
@@ -54,6 +54,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
+  const [isFindCodePending, startFindCodeTransition] = useTransition();
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -92,6 +93,35 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
     });
   };
 
+  const onFindCode = () => {
+    if (!localChapter.transcript) {
+        toast({
+            variant: 'destructive',
+            title: 'No Transcript Found',
+            description: 'A transcript is needed to find code. Import a video with transcripts available.',
+        });
+        return;
+    }
+    startFindCodeTransition(async () => {
+        const result = await handleFindCodeInTranscript({ transcript: localChapter.transcript });
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Could Not Find Code',
+                description: result.error,
+            });
+        } else if (result.code) {
+            const updatedChapter = { ...localChapter, code: result.code };
+            setLocalChapter(updatedChapter);
+            onUpdateChapter(updatedChapter);
+            toast({
+                title: 'Code Snippet Found!',
+                description: 'The AI has added a code snippet to this chapter.',
+            });
+        }
+    });
+  };
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -126,19 +156,32 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
           <div className="flex items-center justify-between flex-wrap gap-2">
             <Label htmlFor="code">Code Snippet</Label>
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onExplainCode}
-                disabled={isCodeExplanationPending || !localChapter.code}
-              >
-                {isCodeExplanationPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Wand2 className="mr-2 h-4 w-4" />
-                )}
-                Explain Code
-              </Button>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onFindCode}
+                    disabled={isFindCodePending || isCodeExplanationPending}
+                >
+                    {isFindCodePending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <SearchCode className="mr-2 h-4 w-4" />
+                    )}
+                    Find Code
+                </Button>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onExplainCode}
+                    disabled={isCodeExplanationPending || isFindCodePending || !localChapter.code}
+                >
+                    {isCodeExplanationPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    )}
+                    Explain Code
+                </Button>
             </div>
           </div>
           <Textarea
@@ -146,7 +189,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
             name="code"
             value={localChapter.code}
             onChange={handleChange}
-            placeholder="Add relevant code for this chapter."
+            placeholder="Click 'Find Code' to get a snippet from the transcript, or paste your own."
             rows={8}
             className="font-code text-sm"
           />

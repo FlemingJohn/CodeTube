@@ -4,10 +4,12 @@ import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
 import { explainCode } from '@/ai/flows/explain-code';
 import { youtubeSearch } from '@/ai/flows/youtube-search';
+import { findCodeInTranscript } from '@/ai/flows/find-code-in-transcript';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { google } from 'googleapis';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 const generateSummarySchema = z.object({
   transcript: z.string(),
@@ -49,6 +51,30 @@ export async function handleExplainCode(values: z.infer<typeof explainCodeSchema
   }
 }
 
+const findCodeSchema = z.object({
+  transcript: z.string(),
+});
+
+export async function handleFindCodeInTranscript(values: z.infer<typeof findCodeSchema>) {
+    const validatedFields = findCodeSchema.safeParse(values);
+
+    if (!validatedFields.success || !validatedFields.data.transcript) {
+        return { error: 'Invalid fields: Transcript cannot be empty.' };
+    }
+
+    try {
+        const result = await findCodeInTranscript({ transcript: validatedFields.data.transcript });
+        if (!result.code) {
+            return { error: 'Could not find a code snippet in this chapter.' };
+        }
+        return { code: result.code };
+    } catch (e) {
+        console.error(e);
+        return { error: 'Failed to find code. Please try again.' };
+    }
+}
+
+
 const suggestImprovementsSchema = z.object({
   htmlContent: z.string(),
 });
@@ -73,39 +99,62 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
-function parseChaptersFromDescription(description: string): Chapter[] {
+function parseChaptersFromDescription(description: string, fullTranscript: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>): Chapter[] {
     const chapters: Chapter[] = [];
     if (!description) return chapters;
 
     const lines = description.split('\n');
-    // Regex to find timestamps like 00:00, 0:00, 00:00:00, (0:00), [0:00]
     const timestampRegex = /(?:(\d{1,2}:)?\d{1,2}:\d{2})/;
     const chapterLineRegex = /([\(\[]?)((?:\d{1,2}:)?\d{1,2}:\d{2})([\)\]]?)/;
 
+    const timestampToSeconds = (ts: string) => {
+        const parts = ts.split(':').map(Number);
+        if (parts.length === 3) {
+            return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        }
+        return parts[0] * 60 + parts[1];
+    };
 
-    lines.forEach((line, index) => {
+    let chapterData: { title: string; startTime: number; timestamp: string; }[] = [];
+
+    lines.forEach((line) => {
         const match = line.match(chapterLineRegex);
 
         if (match) {
             const timestamp = match[2];
             let title = line.substring(line.indexOf(timestamp) + timestamp.length).trim();
-
-            // Clean up common leading characters for titles
             title = title.replace(/^[\s\-)\]]+/, '');
             
-            // Sometimes there's no title on the same line, just the timestamp. We'll ignore those for now.
             if (title) {
-                chapters.push({
-                    id: `${Date.now()}-${index}`, // More unique ID
-                    timestamp,
+                chapterData.push({
                     title,
-                    summary: '',
-                    code: '',
-                    codeExplanation: '',
-                    transcript: `Placeholder transcript for chapter: ${title}`,
+                    startTime: timestampToSeconds(timestamp),
+                    timestamp,
                 });
             }
         }
+    });
+
+    if (chapterData.length === 0) return [];
+
+    chapterData.forEach((currentChapter, index) => {
+        const nextChapter = chapterData[index + 1];
+        const endTime = nextChapter ? nextChapter.startTime : Infinity;
+
+        const chapterTranscript = fullTranscript
+            .filter(item => item.offset >= currentChapter.startTime && item.offset < endTime)
+            .map(item => item.text)
+            .join(' ');
+
+        chapters.push({
+            id: `${Date.now()}-${index}`,
+            timestamp: currentChapter.timestamp,
+            title: currentChapter.title,
+            summary: '',
+            code: '',
+            codeExplanation: '',
+            transcript: chapterTranscript || `No transcript available for chapter: ${currentChapter.title}`,
+        });
     });
 
     return chapters;
@@ -125,12 +174,16 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
       auth: apiKey,
     });
 
-    const response = await youtube.videos.list({
-      part: ['snippet'],
-      id: [videoId],
-    });
+    const [videoResponse, transcriptResponse] = await Promise.all([
+        youtube.videos.list({
+            part: ['snippet'],
+            id: [videoId],
+        }),
+        YoutubeTranscript.fetchTranscript(videoId),
+    ]);
 
-    const video = response.data.items?.[0];
+
+    const video = videoResponse.data.items?.[0];
     if (!video || !video.snippet) {
       return { error: 'Video not found.' };
     }
@@ -139,15 +192,17 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
     const description = video.snippet.description;
 
     if (!description) {
-      // Return title even if there's no description for manual chapter creation
       return { chapters: [], videoTitle };
     }
 
-    const chapters = parseChaptersFromDescription(description);
+    const chapters = parseChaptersFromDescription(description, transcriptResponse);
 
     return { chapters, videoTitle };
   } catch (error: any) {
     console.error('Error fetching from YouTube API:', error);
+    if (error.message?.includes('Could not get a transcript for this video')) {
+        return { error: "Could not get a transcript for this video. Code extraction won't be available." };
+    }
     return { error: error.message || 'Failed to fetch chapters from YouTube API.' };
   }
 }
