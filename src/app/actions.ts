@@ -60,7 +60,7 @@ export async function handleFindCodeInTranscript(values: z.infer<typeof findCode
     const validatedFields = findCodeSchema.safeParse(values);
 
     if (!validatedFields.success || !validatedFields.data.transcript) {
-        return { error: 'Invalid fields: Transcript cannot be empty.' };
+      return { code: '' }; // Return empty code, don't show error
     }
 
     try {
@@ -140,7 +140,22 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
     // Sort by start time to ensure correct order
     chapterData.sort((a, b) => a.startTime - b.startTime);
 
-    if (chapterData.length === 0) return [];
+    if (chapterData.length === 0) {
+        // If no chapters found, treat the whole video as a single chapter
+        const videoDuration = fullTranscript.length > 0 ? fullTranscript[fullTranscript.length - 1].offset / 1000 + fullTranscript[fullTranscript.length - 1].duration / 1000 : Infinity;
+        const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
+        chapters.push({
+            id: `${Date.now()}-0`,
+            timestamp: '00:00',
+            title: 'Full Video Content',
+            summary: '',
+            code: '',
+            codeExplanation: '',
+            transcript: `Video Description:\n${description}\n\nTranscript:\n${fullTranscriptText}` || 'No transcript available for this video.',
+        });
+        return chapters;
+    }
+
 
     chapterData.forEach((currentChapter, index) => {
         const nextChapter = chapterData[index + 1];
@@ -152,6 +167,8 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
             .filter(item => item.offset / 1000 >= currentChapter.startTime && item.offset / 1000 < endTime)
             .map(item => item.text)
             .join(' ');
+        
+        const fullContext = `Video Description:\n${description}\n\nTranscript for this chapter:\n${chapterTranscript}`;
 
         chapters.push({
             id: `${Date.now()}-${index}`,
@@ -160,7 +177,7 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
             summary: '',
             code: '',
             codeExplanation: '',
-            transcript: chapterTranscript || `No transcript available for chapter: ${currentChapter.title}`,
+            transcript: fullContext || `No transcript available for chapter: ${currentChapter.title}`,
         });
     });
 
@@ -208,7 +225,7 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
         transcriptResponse = transcriptResult.value;
     } else {
         console.warn('Could not fetch transcript:', transcriptResult.reason);
-        transcriptError = "Could not get a transcript for this video. Code extraction won't be available.";
+        transcriptError = "Could not get a transcript for this video. Code extraction may be less accurate.";
     }
 
 
@@ -220,15 +237,15 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
     const chapters = parseChaptersFromDescription(description, transcriptResponse);
 
     // If there's a transcript error but we still have a video title, return that info.
-    if (chapters.length === 0 && transcriptError) {
-        return { chapters: [], videoTitle, error: transcriptError };
+    if (transcriptError) {
+        return { chapters, videoTitle, error: transcriptError };
     }
 
     return { chapters, videoTitle };
   } catch (error: any) {
     console.error('Error fetching from YouTube API:', error);
     if (error.message?.includes('Could not get a transcript for this video')) {
-        return { error: "Could not get a transcript for this video. Code extraction won't be available." };
+        return { error: "Could not get a transcript for this video. Code extraction may be less accurate." };
     }
     return { error: error.message || 'Failed to fetch chapters from YouTube API.' };
   }

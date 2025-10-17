@@ -12,7 +12,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const FindCodeInTranscriptInputSchema = z.object({
-  transcript: z.string().describe('A snippet of a video transcript.'),
+  transcript: z.string().describe('A snippet of a video transcript, which may also include the full video description.'),
   chapterTitle: z.string().describe('The title of the chapter.'),
 });
 export type FindCodeInTranscriptInput = z.infer<
@@ -40,16 +40,18 @@ const prompt = ai.definePrompt({
   name: 'findCodeInTranscriptPrompt',
   input: {schema: FindCodeInTranscriptInputSchema},
   output: {schema: FindCodeInTranscriptOutputSchema},
-  prompt: `You are an expert programmer tasked with extracting code from a video transcript.
+  prompt: `You are an expert programmer tasked with extracting code from a video's content.
 
-  The title of the chapter is: "{{chapterTitle}}".
+  The user has provided you with the video's description and the transcript for a specific chapter titled: "{{chapterTitle}}".
 
-  Analyze the following transcript and extract the most relevant and complete code snippet related to the chapter title.
+  Your task is to analyze all the provided text and extract the most relevant and complete code snippet related to the chapter title.
+  - First, check the video description for GitHub links or code blocks. This is often the best source.
+  - If no code is in the description, analyze the chapter transcript.
   - Return your best guess for the most relevant code snippet.
-  - Only return the code itself. Do not include any explanations or surrounding text.
-  - If you are absolutely certain no code is present, return an empty string.
+  - Only return the code itself. Do not include any explanations, surrounding text, or markdown formatting like \`\`\`.
+  - If you are absolutely certain no code is present in either the description or the transcript, return an empty string.
 
-  Transcript:
+  Content to analyze:
   \`\`\`
   {{{transcript}}}
   \`\`\`
