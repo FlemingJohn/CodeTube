@@ -132,9 +132,8 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
         const match = line.match(timestampRegex);
         if (match) {
             const timestamp = match[0];
-            const titleText = line.substring(line.indexOf(timestamp) + timestamp.length).trim();
-            // Remove leading characters like -, ), ], etc.
-            const title = titleText.replace(/^[\s\-–—)\]]+/, '');
+            // Look for title after the timestamp, removing extra characters
+            const title = line.substring(line.indexOf(timestamp) + timestamp.length).replace(/^[\s\-–—)\]]+/, '').trim();
 
             if (title) {
                 chapterData.push({
@@ -145,14 +144,40 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
             }
         }
     });
-    
+
     // Sort by start time to ensure correct order
     chapterData.sort((a, b) => a.startTime - b.startTime);
-    
-    // If no chapters were parsed from the description but we have a transcript,
-    // treat the entire video as a single chapter.
-    if (chapterData.length === 0 && fullTranscript.length > 0) {
+
+    if (chapterData.length > 0) {
+        // Process chapters normally if they were found in the description
+        chapterData.forEach((currentChapter, index) => {
+            const nextChapter = chapterData[index + 1];
+            // Use video duration for the last chapter's end time if available
+            const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration) / 1000 : Infinity;
+            const endTime = nextChapter ? nextChapter.startTime : videoDuration;
+
+            const chapterTranscript = fullTranscript
+                .filter(item => (item.offset / 1000) >= currentChapter.startTime && (item.offset / 1000) < endTime)
+                .map(item => item.text)
+                .join(' ');
+
+            // Combine description and chapter transcript for better AI context
+            const fullContext = `Video Description:\n${description || 'No description provided.'}\n\nTranscript for this chapter:\n${chapterTranscript || 'No transcript for this segment.'}`;
+
+            chapters.push({
+                id: `${Date.now()}-${index}`,
+                timestamp: currentChapter.timestamp,
+                title: currentChapter.title,
+                summary: '',
+                code: '',
+                codeExplanation: '',
+                transcript: fullContext,
+            });
+        });
+    } else if (fullTranscript.length > 0) {
+        // If NO chapters were found, but a transcript exists, treat the whole video as one chapter.
         const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
+        const fullContext = `Video Description:\n${description || 'No description provided.'}\n\nTranscript:\n${fullTranscriptText}`;
         chapters.push({
             id: `${Date.now()}-0`,
             timestamp: '00:00',
@@ -160,37 +185,11 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
             summary: '',
             code: '',
             codeExplanation: '',
-            // Prepend the description to give the AI context for code searching
-            transcript: `Video Description:\n${description || ''}\n\nTranscript:\n${fullTranscriptText}` || 'No transcript available for this video.',
+            transcript: fullContext,
         });
-        return chapters;
     }
-
-    chapterData.forEach((currentChapter, index) => {
-        const nextChapter = chapterData[index + 1];
-        // Use video duration for the last chapter's end time if available
-        const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration) / 1000 : Infinity;
-        const endTime = nextChapter ? nextChapter.startTime : videoDuration;
-
-        const chapterTranscript = fullTranscript
-            .filter(item => item.offset / 1000 >= currentChapter.startTime && item.offset / 1000 < endTime)
-            .map(item => item.text)
-            .join(' ');
-        
-        // Combine description and chapter transcript for better AI context
-        const fullContext = `Video Description:\n${description}\n\nTranscript for this chapter:\n${chapterTranscript}`;
-
-        chapters.push({
-            id: `${Date.now()}-${index}`,
-            timestamp: currentChapter.timestamp,
-            title: currentChapter.title,
-            summary: '',
-            code: '',
-            codeExplanation: '',
-            transcript: fullContext || `No transcript available for chapter: ${currentChapter.title}`,
-        });
-    });
-
+    
+    // If no chapters and no transcript, an empty chapters array is returned, which is the correct state.
     return chapters;
 }
 
@@ -222,19 +221,20 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
     const description = video.snippet.description;
 
     let transcriptResponse: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>> = [];
-    let transcriptWarning: string | undefined = undefined;
     let transcriptError = false;
+    let transcriptWarning: string | undefined;
 
     try {
       transcriptResponse = await YoutubeTranscript.fetchTranscript(videoId);
     } catch (e) {
-      console.warn('Could not fetch transcript:', e);
+      console.warn('Could not fetch transcript for video:', videoId, e);
       transcriptError = true;
     }
 
     const chapters = parseChaptersFromDescription(description || '', transcriptResponse);
 
-    // Only warn if transcript fetch failed AND there are no chapters in the description
+    // Only warn if transcript fetch failed AND there are no chapters to parse from the description.
+    // If we have chapters from description, transcript failure is less critical.
     if (transcriptError && chapters.length === 0) {
         transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
     }

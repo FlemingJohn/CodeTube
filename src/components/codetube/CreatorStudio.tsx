@@ -52,12 +52,21 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
 
   useEffect(() => {
     // This effect ensures that if the user selects a different course from the dashboard,
-    // the editor's state updates to reflect the newly selected course.
+    // or if the course data is updated from an import, the editor's state updates.
     setCourseTitle(course.title);
     setChapters(course.chapters);
     setVideoId(course.videoId);
-    setSelectedChapterId(course.chapters[0]?.id || null);
-  }, [course, course.videoId]);
+  }, [course]);
+  
+  useEffect(() => {
+      // This effect ensures that after a new video is imported (and chapters are populated),
+      // the first chapter is automatically selected.
+      if (course.chapters.length > 0) {
+          setSelectedChapterId(course.chapters[0].id);
+      } else {
+          setSelectedChapterId(null);
+      }
+  }, [course.chapters]);
 
   useEffect(() => {
     if (isNewCourse) {
