@@ -33,9 +33,10 @@ interface CreatorStudioProps {
     course: Course;
     onCourseUpdate: (course: Course) => void;
     onBackToDashboard: () => void;
+    isNewCourse: boolean;
 }
 
-export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboard }: CreatorStudioProps) {
+export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboard, isNewCourse }: CreatorStudioProps) {
   const { toast } = useToast();
   const auth = useAuth();
   const router = useRouter();
@@ -48,6 +49,12 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
+
+  useEffect(() => {
+    if (isNewCourse) {
+      setSearchDialogOpen(true);
+    }
+  }, [isNewCourse]);
 
   // This is the function that will be called to update the parent
   const updateParentCourse = (updatedData: Partial<Course>) => {

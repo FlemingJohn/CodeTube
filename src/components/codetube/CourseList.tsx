@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Plus, Trash2 } from 'lucide-react';
 import Header from './Header';
 import AuthHeader from '../auth/AuthHeader';
+import Image from 'next/image';
 
 interface CourseListProps {
   courses: Course[];
@@ -47,12 +48,14 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
                   <CardDescription>{course.chapters.length} {course.chapters.length === 1 ? 'chapter' : 'chapters'}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                   <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                   <div className="aspect-video bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
                         {course.videoId ? (
-                            <img 
+                            <Image 
                                 src={`https://i.ytimg.com/vi/${course.videoId}/mqdefault.jpg`} 
                                 alt={course.title}
-                                className="w-full h-full object-cover rounded-md"
+                                fill
+                                style={{ objectFit: 'cover' }}
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             />
                         ): (
                             <p className="text-sm text-muted-foreground">No video</p>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Course } from '@/lib/types';
 import CourseList from '@/components/codetube/CourseList';
@@ -15,6 +15,13 @@ export default function CreatorPage() {
   const router = useRouter();
   const [courses, setCourses] = useLocalStorage<Course[]>('codetube-courses', []);
   const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
+  const [isNewCourse, setIsNewCourse] = useState(false);
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   if (isUserLoading || !user) {
     return (
@@ -24,13 +31,9 @@ export default function CreatorPage() {
     );
   }
   
-  if (!user) {
-      router.push('/login');
-      return null;
-  }
-
   const handleSelectCourse = (id: string) => {
     setActiveCourseId(id);
+    setIsNewCourse(false);
   };
 
   const handleNewCourse = () => {
@@ -42,6 +45,7 @@ export default function CreatorPage() {
     };
     setCourses(prev => [...prev, newCourse]);
     setActiveCourseId(newCourse.id);
+    setIsNewCourse(true);
   };
 
   const handleDeleteCourse = (id: string) => {
@@ -53,6 +57,7 @@ export default function CreatorPage() {
 
   const handleBackToDashboard = () => {
     setActiveCourseId(null);
+    setIsNewCourse(false);
   };
 
   const handleUpdateCourse = (updatedCourse: Course) => {
@@ -78,6 +83,7 @@ export default function CreatorPage() {
         course={activeCourse}
         onCourseUpdate={handleUpdateCourse}
         onBackToDashboard={handleBackToDashboard}
+        isNewCourse={isNewCourse}
     />
   );
 }
