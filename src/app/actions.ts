@@ -73,27 +73,28 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
 }
 
 function parseChaptersFromDescription(description: string): Chapter[] {
-  // Regex to find lines containing a timestamp (e.g., HH:MM:SS, M:SS)
-  const chapterLines = description.match(/.*(\d{1,2}:)?\d{1,2}:\d{2}.*/g) || [];
   const chapters: Chapter[] = [];
+  const lines = description.split('\n');
+  const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
 
-  chapterLines.forEach((line, index) => {
-    // More robust regex to extract timestamp and title
-    // Handles timestamps at the start, with or without surrounding characters like ()[]
-    const match = line.match(/[\[\()]*?((\d{1,2}:)?\d{1,2}:\d{2})[\]\)]*?\s+(.*)/);
-
+  lines.forEach((line, index) => {
+    const match = line.match(timestampRegex);
     if (match) {
-      const timestamp = match[1];
-      const title = match[3].trim();
-      chapters.push({
-        id: Date.now().toString() + index,
-        timestamp,
-        title,
-        summary: '',
-        code: '',
-        codeExplanation: '',
-        transcript: `Placeholder transcript for ${title}`,
-      });
+      const timestamp = match[0];
+      // The title is whatever comes after the timestamp, trimmed of whitespace and non-alphanumeric leading characters.
+      const title = line.substring(match.index! + timestamp.length).replace(/^[\s\-)\]]*/, '').trim();
+
+      if (title) {
+        chapters.push({
+          id: Date.now().toString() + index,
+          timestamp,
+          title,
+          summary: '',
+          code: '',
+          codeExplanation: '',
+          transcript: `Placeholder transcript for ${title}`,
+        });
+      }
     }
   });
 
