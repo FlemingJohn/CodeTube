@@ -115,23 +115,38 @@ export default function CodeTubeApp() {
         </Sidebar>
 
         <SidebarInset>
-          <main className="flex-1 p-4 md:p-6 bg-muted/20 flex flex-col gap-4">
-            {videoId && <VideoPlayer videoId={videoId} />}
-
-            {selectedChapter ? (
-              <ChapterEditor
-                key={selectedChapter.id}
-                chapter={selectedChapter}
-                onUpdateChapter={handleUpdateChapter}
-              />
-            ) : (
-              <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted">
-                <div className="text-center text-muted-foreground">
-                  <h2 className="text-xl font-semibold">No Chapter Selected</h2>
-                  <p>Import a YouTube video or add a chapter to get started.</p>
+          <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-6">
+              {videoId ? (
+                <VideoPlayer videoId={videoId} />
+              ) : (
+                <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
+                  <div className="text-center text-muted-foreground">
+                    <h2 className="text-xl font-semibold">No Video Imported</h2>
+                    <p>Import a YouTube video to get started.</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+            
+            <div className="flex flex-col">
+              {selectedChapter ? (
+                <div className="h-full overflow-y-auto">
+                  <ChapterEditor
+                    key={selectedChapter.id}
+                    chapter={selectedChapter}
+                    onUpdateChapter={handleUpdateChapter}
+                  />
+                </div>
+              ) : (
+                <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
+                  <div className="text-center text-muted-foreground">
+                    <h2 className="text-xl font-semibold">No Chapter Selected</h2>
+                    <p>Select a chapter from the list to edit its details.</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </main>
         </SidebarInset>
         
