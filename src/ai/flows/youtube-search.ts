@@ -1,7 +1,8 @@
 'use server';
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import {ai} from '@/ai/genkit';
+import {z} from 'zod';
+import {google} from 'googleapis';
 
 const YoutubeSearchInputSchema = z.object({
   query: z.string().describe('The query to search for on YouTube.'),
@@ -32,29 +33,32 @@ const youtubeSearchFlow = ai.defineFlow(
     inputSchema: YoutubeSearchInputSchema,
     outputSchema: YoutubeSearchOutputSchema,
   },
-  async ({ query }) => {
+  async ({query}) => {
     const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
     if (!apiKey) {
       throw new Error('YouTube API key is not configured.');
     }
 
-    // Use dynamic import to fix constructor issue with Turbopack
-    const Youtube = (await import('youtube-v3-api'));
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: apiKey,
+    });
 
-    const api = new Youtube(apiKey);
-    const response = await api.search(query, {
-      part: 'snippet',
-      type: 'video',
+    const response = await youtube.search.list({
+      part: ['snippet'],
+      q: query,
+      type: ['video'],
       maxResults: 10,
     });
 
-    const videos = response.items.map((item: any) => ({
-      id: item.id.videoId,
-      title: item.snippet.title,
-      thumbnail: item.snippet.thumbnails.default.url,
-      channelTitle: item.snippet.channelTitle,
-    }));
+    const videos =
+      response.data.items?.map(item => ({
+        id: item.id?.videoId || '',
+        title: item.snippet?.title || '',
+        thumbnail: item.snippet?.thumbnails?.default?.url || '',
+        channelTitle: item.snippet?.channelTitle || '',
+      })) || [];
 
-    return { videos };
+    return {videos};
   }
 );
