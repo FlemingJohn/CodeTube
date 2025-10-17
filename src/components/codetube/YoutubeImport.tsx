@@ -9,11 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import { getYoutubeChapters } from '@/app/actions';
 
 interface YoutubeImportProps {
-  setChapters: React.Dispatch<React.SetStateAction<Chapter[]>>;
-  setCourseTitle: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedChapterId: React.Dispatch<React.SetStateAction<string | null>>;
-  setVideoId: React.Dispatch<React.SetStateAction<string | null>>;
-  setSearchDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setChapters: (chapters: Chapter[]) => void;
+  setCourseTitle: (title: string) => void;
+  setSelectedChapterId: (id: string | null) => void;
+  setVideoId: (id: string | null) => void;
+  setSearchDialogOpen: (isOpen: boolean) => void;
 }
 
 function getYouTubeVideoId(url: string): string | null {

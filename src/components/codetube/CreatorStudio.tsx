@@ -11,7 +11,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2 } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
@@ -49,16 +49,33 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
 
-  // Effect to update parent component when course data changes
-  useEffect(() => {
-    onCourseUpdate({
+  // This is the function that will be called to update the parent
+  const updateParentCourse = (updatedData: Partial<Course>) => {
+    const updatedCourse = {
         ...course,
         title: courseTitle,
         chapters,
         videoId,
-    });
-  }, [chapters, courseTitle, videoId, onCourseUpdate, course]);
+        ...updatedData,
+    };
+    onCourseUpdate(updatedCourse);
+  };
+  
+  const handleSetVideoId = (newVideoId: string | null) => {
+    setVideoId(newVideoId);
+    updateParentCourse({ videoId: newVideoId });
+  };
+  
+  const handleSetCourseTitle = (newTitle: string) => {
+    setCourseTitle(newTitle);
+    updateParentCourse({ title: newTitle });
+  };
 
+  const handleSetChapters = (newChapters: Chapter[] | ((prev: Chapter[]) => Chapter[])) => {
+    const updatedChapters = typeof newChapters === 'function' ? newChapters(chapters) : newChapters;
+    setChapters(updatedChapters);
+    updateParentCourse({ chapters: updatedChapters });
+  };
 
   const selectedChapter = useMemo(
     () => chapters.find(c => c.id === selectedChapterId),
@@ -66,9 +83,8 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   );
 
   const handleUpdateChapter = (updatedChapter: Chapter) => {
-    setChapters(prevChapters =>
-      prevChapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c))
-    );
+    const newChapters = chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
+    handleSetChapters(newChapters);
   };
   
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -126,15 +142,15 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           <SidebarContent>
             <div className="flex flex-col gap-4 p-2">
               <YoutubeImport 
-                setChapters={setChapters} 
-                setCourseTitle={setCourseTitle} 
+                setChapters={handleSetChapters}
+                setCourseTitle={handleSetCourseTitle}
                 setSelectedChapterId={setSelectedChapterId}
-                setVideoId={setVideoId}
+                setVideoId={handleSetVideoId}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <ChapterList
                 chapters={chapters}
-                setChapters={setChapters}
+                setChapters={handleSetChapters}
                 selectedChapterId={selectedChapterId}
                 setSelectedChapterId={setSelectedChapterId}
               />
@@ -232,14 +248,13 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
         <VideoSearchDialog
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
-          setChapters={setChapters}
-          setCourseTitle={setCourseTitle}
+          setChapters={handleSetChapters}
+          setCourseTitle={handleSetCourseTitle}
           setSelectedChapterId={setSelectedChapterId}
-          setVideoId={setVideoId}
+          setVideoId={handleSetVideoId}
         />
         
       </SidebarProvider>
     </div>
   );
 }
-

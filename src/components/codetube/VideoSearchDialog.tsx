@@ -20,10 +20,10 @@ import { ScrollArea } from '../ui/scroll-area';
 interface VideoSearchDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  setChapters: React.Dispatch<React.SetStateAction<Chapter[]>>;
-  setCourseTitle: React.Dispatch<React.SetStateAction<string>>;
-  setSelectedChapterId: React.Dispatch<React.SetStateAction<string | null>>;
-  setVideoId: React.Dispatch<React.SetStateAction<string | null>>;
+  setChapters: (chapters: Chapter[]) => void;
+  setCourseTitle: (title: string) => void;
+  setSelectedChapterId: (id: string | null) => void;
+  setVideoId: (id: string | null) => void;
 }
 
 type VideoSearchResult = {
