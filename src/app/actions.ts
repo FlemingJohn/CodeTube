@@ -105,26 +105,27 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
 
     const lines = description.split('\n');
     const timestampRegex = /(?:(\d{1,2}:)?\d{1,2}:\d{2})/;
-    const chapterLineRegex = /([\(\[]?)((?:\d{1,2}:)?\d{1,2}:\d{2})([\)\]]?)/;
 
     const timestampToSeconds = (ts: string) => {
         const parts = ts.split(':').map(Number);
-        if (parts.length === 3) {
+        if (parts.length === 3) { // hh:mm:ss
             return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        } else if (parts.length === 2) { // mm:ss
+            return parts[0] * 60 + parts[1];
         }
-        return parts[0] * 60 + parts[1];
+        return 0;
     };
 
     let chapterData: { title: string; startTime: number; timestamp: string; }[] = [];
 
     lines.forEach((line) => {
-        const match = line.match(chapterLineRegex);
-
+        const match = line.match(timestampRegex);
         if (match) {
-            const timestamp = match[2];
-            let title = line.substring(line.indexOf(timestamp) + timestamp.length).trim();
-            title = title.replace(/^[\s\-)\]]+/, '');
-            
+            const timestamp = match[0];
+            const titleText = line.substring(line.indexOf(timestamp) + timestamp.length).trim();
+            // Remove leading characters like -, ), ], etc.
+            const title = titleText.replace(/^[\s\-–—)\]]+/, '');
+
             if (title) {
                 chapterData.push({
                     title,
@@ -134,12 +135,17 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
             }
         }
     });
+    
+    // Sort by start time to ensure correct order
+    chapterData.sort((a, b) => a.startTime - b.startTime);
 
     if (chapterData.length === 0) return [];
 
     chapterData.forEach((currentChapter, index) => {
         const nextChapter = chapterData[index + 1];
-        const endTime = nextChapter ? nextChapter.startTime : Infinity;
+        // Use video duration for the last chapter's end time if available
+        const videoDuration = fullTranscript.length > 0 ? fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration : Infinity;
+        const endTime = nextChapter ? nextChapter.startTime : videoDuration;
 
         const chapterTranscript = fullTranscript
             .filter(item => item.offset >= currentChapter.startTime && item.offset < endTime)
@@ -173,8 +179,11 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
       version: 'v3',
       auth: apiKey,
     });
-
-    const [videoResponse, transcriptResponse] = await Promise.all([
+    
+    let transcriptResponse: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>> = [];
+    let transcriptError: string | null = null;
+    
+    const [videoResponse, transcriptResult] = await Promise.allSettled([
         youtube.videos.list({
             part: ['snippet'],
             id: [videoId],
@@ -182,8 +191,11 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
         YoutubeTranscript.fetchTranscript(videoId),
     ]);
 
-
-    const video = videoResponse.data.items?.[0];
+    if (videoResponse.status === 'rejected') {
+        throw videoResponse.reason;
+    }
+    
+    const video = videoResponse.value.data.items?.[0];
     if (!video || !video.snippet) {
       return { error: 'Video not found.' };
     }
@@ -191,11 +203,25 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
     const videoTitle = video.snippet.title;
     const description = video.snippet.description;
 
+    if (transcriptResult.status === 'fulfilled') {
+        transcriptResponse = transcriptResult.value;
+    } else {
+        console.warn('Could not fetch transcript:', transcriptResult.reason);
+        transcriptError = "Could not get a transcript for this video. Code extraction won't be available.";
+    }
+
+
     if (!description) {
-      return { chapters: [], videoTitle };
+        if(transcriptError) return { error: transcriptError };
+        return { chapters: [], videoTitle };
     }
 
     const chapters = parseChaptersFromDescription(description, transcriptResponse);
+
+    // If there's a transcript error but we still have a video title, return that info.
+    if (chapters.length === 0 && transcriptError) {
+        return { chapters: [], videoTitle, error: transcriptError };
+    }
 
     return { chapters, videoTitle };
   } catch (error: any) {
