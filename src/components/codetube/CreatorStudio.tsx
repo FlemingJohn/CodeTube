@@ -51,6 +51,15 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const [isSummaryPending, startSummaryTransition] = useTransition();
 
   useEffect(() => {
+    // This effect ensures that if the user selects a different course from the dashboard,
+    // the editor's state updates to reflect the newly selected course.
+    setCourseTitle(course.title);
+    setChapters(course.chapters);
+    setVideoId(course.videoId);
+    setSelectedChapterId(course.chapters[0]?.id || null);
+  }, [course]);
+
+  useEffect(() => {
     if (isNewCourse) {
       setSearchDialogOpen(true);
     }
