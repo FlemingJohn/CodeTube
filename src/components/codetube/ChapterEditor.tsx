@@ -103,7 +103,10 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
         return;
     }
     startFindCodeTransition(async () => {
-        const result = await handleFindCodeInTranscript({ transcript: localChapter.transcript });
+        const result = await handleFindCodeInTranscript({ 
+            transcript: localChapter.transcript,
+            chapterTitle: localChapter.title,
+        });
         if (result.error) {
             toast({
                 variant: 'destructive',

@@ -53,6 +53,7 @@ export async function handleExplainCode(values: z.infer<typeof explainCodeSchema
 
 const findCodeSchema = z.object({
   transcript: z.string(),
+  chapterTitle: z.string(),
 });
 
 export async function handleFindCodeInTranscript(values: z.infer<typeof findCodeSchema>) {
@@ -63,9 +64,12 @@ export async function handleFindCodeInTranscript(values: z.infer<typeof findCode
     }
 
     try {
-        const result = await findCodeInTranscript({ transcript: validatedFields.data.transcript });
+        const result = await findCodeInTranscript({ 
+            transcript: validatedFields.data.transcript,
+            chapterTitle: validatedFields.data.chapterTitle,
+        });
         if (!result.code) {
-            return { error: 'Could not find a code snippet in this chapter.' };
+            return { error: 'Could not find a relevant code snippet in this chapter.' };
         }
         return { code: result.code };
     } catch (e) {
@@ -144,11 +148,11 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
     chapterData.forEach((currentChapter, index) => {
         const nextChapter = chapterData[index + 1];
         // Use video duration for the last chapter's end time if available
-        const videoDuration = fullTranscript.length > 0 ? fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration : Infinity;
+        const videoDuration = fullTranscript.length > 0 ? fullTranscript[fullTranscript.length - 1].offset / 1000 + fullTranscript[fullTranscript.length - 1].duration / 1000 : Infinity;
         const endTime = nextChapter ? nextChapter.startTime : videoDuration;
 
         const chapterTranscript = fullTranscript
-            .filter(item => item.offset >= currentChapter.startTime && item.offset < endTime)
+            .filter(item => item.offset / 1000 >= currentChapter.startTime && item.offset / 1000 < endTime)
             .map(item => item.text)
             .join(' ');
 

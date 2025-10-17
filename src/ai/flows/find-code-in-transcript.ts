@@ -13,6 +13,7 @@ import {z} from 'genkit';
 
 const FindCodeInTranscriptInputSchema = z.object({
   transcript: z.string().describe('A snippet of a video transcript.'),
+  chapterTitle: z.string().describe('The title of the chapter.'),
 });
 export type FindCodeInTranscriptInput = z.infer<
   typeof FindCodeInTranscriptInputSchema
@@ -41,10 +42,12 @@ const prompt = ai.definePrompt({
   output: {schema: FindCodeInTranscriptOutputSchema},
   prompt: `You are an expert programmer tasked with extracting code from a video transcript.
 
-  Analyze the following transcript and extract the most relevant and complete code snippet.
+  The title of the chapter is: "{{chapterTitle}}".
+
+  Analyze the following transcript and extract the most relevant and complete code snippet related to the chapter title.
   - Only return the code itself.
   - Do not include any explanations or surrounding text.
-  - If no code is present, return an empty string.
+  - If no relevant code is present, return an empty string.
 
   Transcript:
   \`\`\`
