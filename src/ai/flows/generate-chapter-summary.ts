@@ -15,6 +15,7 @@ const GenerateChapterSummaryInputSchema = z.object({
   transcript: z
     .string()
     .describe('The transcript of the video chapter to summarize.'),
+  chapterTitle: z.string().describe('The title of the chapter.'),
 });
 export type GenerateChapterSummaryInput = z.infer<
   typeof GenerateChapterSummaryInputSchema
@@ -37,10 +38,12 @@ const prompt = ai.definePrompt({
   name: 'generateChapterSummaryPrompt',
   input: {schema: GenerateChapterSummaryInputSchema},
   output: {schema: GenerateChapterSummaryOutputSchema},
-  prompt: `You are an expert educator who can create concise chapter summaries.
+  prompt: `You are an expert educator who can create concise chapter notes in bullet points.
 
-  Generate a summary of the following transcript:
+  Based on the chapter title and the provided transcript, generate a summary as a list of bullet points.
+  Focus only on the key points relevant to the chapter title.
 
+  Chapter Title: {{{chapterTitle}}}
   Transcript: {{{transcript}}}
   `,
 });

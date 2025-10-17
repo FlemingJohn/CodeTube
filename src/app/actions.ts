@@ -13,6 +13,7 @@ import { YoutubeTranscript } from 'youtube-transcript';
 
 const generateSummarySchema = z.object({
   transcript: z.string(),
+  chapterTitle: z.string(),
 });
 
 export async function handleGenerateSummary(values: z.infer<typeof generateSummarySchema>) {
@@ -23,7 +24,10 @@ export async function handleGenerateSummary(values: z.infer<typeof generateSumma
   }
 
   try {
-    const result = await generateChapterSummary({ transcript: validatedFields.data.transcript });
+    const result = await generateChapterSummary({ 
+      transcript: validatedFields.data.transcript,
+      chapterTitle: validatedFields.data.chapterTitle,
+     });
     return { summary: result.summary };
   } catch (e) {
     console.error(e);

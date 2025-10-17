@@ -68,7 +68,10 @@ export default function CodeTubeApp() {
   const onGenerateSummary = () => {
     if (!selectedChapter) return;
     startSummaryTransition(async () => {
-      const result = await handleGenerateSummary({ transcript: selectedChapter.transcript });
+      const result = await handleGenerateSummary({ 
+        transcript: selectedChapter.transcript,
+        chapterTitle: selectedChapter.title,
+      });
       if (result.error) {
         toast({
           variant: 'destructive',
