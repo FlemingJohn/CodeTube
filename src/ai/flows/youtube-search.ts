@@ -39,7 +39,7 @@ const youtubeSearchFlow = ai.defineFlow(
     }
 
     // Use dynamic import to fix constructor issue with Turbopack
-    const Youtube = (await import('youtube-v3-api')).default;
+    const Youtube = (await import('youtube-v3-api'));
 
     const api = new Youtube(apiKey);
     const response = await api.search(query, {
