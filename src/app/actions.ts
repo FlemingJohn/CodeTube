@@ -73,13 +73,15 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
 }
 
 function parseChaptersFromDescription(description: string): Chapter[] {
-  // Matches timestamps like HH:MM:SS, H:MM:SS, MM:SS, or M:SS
-  const chapterLines = description.match(/^.*(\d{1,2}:)?\d{1,2}:\d{2}.*$/gm) || [];
+  // Regex to find lines containing a timestamp (e.g., HH:MM:SS, M:SS)
+  const chapterLines = description.match(/.*(\d{1,2}:)?\d{1,2}:\d{2}.*/g) || [];
   const chapters: Chapter[] = [];
 
   chapterLines.forEach((line, index) => {
-    // Extracts timestamp and title from a line
-    const match = line.match(/((\d{1,2}:)?\d{1,2}:\d{2})\s(.+)/);
+    // More robust regex to extract timestamp and title
+    // Handles timestamps at the start, with or without surrounding characters like ()[]
+    const match = line.match(/[\[\()]*?((\d{1,2}:)?\d{1,2}:\d{2})[\]\)]*?\s+(.*)/);
+
     if (match) {
       const timestamp = match[1];
       const title = match[3].trim();
