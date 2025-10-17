@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2, Wand2, Bot } from 'lucide-react';
-import { handleGenerateSummary, handleExplainCode } from '@/app/actions';
+import { Loader2, Wand2, Bot } from 'lucide-react';
+import { handleExplainCode } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChapterEditorProps {
@@ -53,7 +53,6 @@ const FormattedExplanation = ({ text }: { text: string }) => {
 export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
-  const [isSummaryPending, startSummaryTransition] = useTransition();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
 
 
@@ -62,27 +61,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
     const updatedChapter = { ...localChapter, [name]: value };
     setLocalChapter(updatedChapter);
     onUpdateChapter(updatedChapter);
-  };
-
-  const onGenerateSummary = () => {
-    startSummaryTransition(async () => {
-      const result = await handleGenerateSummary({ transcript: localChapter.transcript });
-      if (result.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.error,
-        });
-      } else if (result.summary) {
-        const updatedChapter = { ...localChapter, summary: result.summary };
-        setLocalChapter(updatedChapter);
-        onUpdateChapter(updatedChapter);
-        toast({
-          title: 'Summary Generated',
-          description: 'The AI-powered summary has been added.',
-        });
-      }
-    });
   };
 
   const onExplainCode = () => {
@@ -143,17 +121,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
             />
           </div>
         </div>
-
-        <div className="flex items-center justify-end">
-            <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
-              {isSummaryPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              Generate Notes in Left Panel
-            </Button>
-          </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-2">

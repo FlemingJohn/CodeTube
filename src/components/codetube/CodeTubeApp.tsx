@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useTransition } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -26,8 +26,8 @@ import { Loader2 } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
 import VideoSearchDialog from './VideoSearchDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
+import { handleGenerateSummary } from '@/app/actions';
 
 export default function CodeTubeApp() {
   const { toast } = useToast();
@@ -40,6 +40,7 @@ export default function CodeTubeApp() {
   const [courseTitle, setCourseTitle] = useState('My CodeTube Course');
   const [videoId, setVideoId] = useState<string | null>(null);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [isSummaryPending, startSummaryTransition] = useTransition();
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -62,6 +63,27 @@ export default function CodeTubeApp() {
     if (!selectedChapter) return;
     const updatedChapter = { ...selectedChapter, summary: e.target.value };
     handleUpdateChapter(updatedChapter);
+  };
+
+  const onGenerateSummary = () => {
+    if (!selectedChapter) return;
+    startSummaryTransition(async () => {
+      const result = await handleGenerateSummary({ transcript: selectedChapter.transcript });
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: result.error,
+        });
+      } else if (result.summary) {
+        const updatedChapter = { ...selectedChapter, summary: result.summary };
+        handleUpdateChapter(updatedChapter);
+        toast({
+          title: 'Summary Generated',
+          description: 'The AI-powered summary has been added.',
+        });
+      }
+    });
   };
 
 
@@ -139,11 +161,19 @@ export default function CodeTubeApp() {
               )}
                {selectedChapter && (
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2 font-headline text-2xl">
                       <Sparkles className="w-6 h-6 text-primary" />
                       AI-Generated Notes
                     </CardTitle>
+                    <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
+                        {isSummaryPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Sparkles className="mr-2 h-4 w-4" />
+                        )}
+                        Generate Notes
+                    </Button>
                   </CardHeader>
                   <CardContent>
                     <Textarea
@@ -151,7 +181,7 @@ export default function CodeTubeApp() {
                         name="summary"
                         value={selectedChapter.summary}
                         onChange={handleSummaryChange}
-                        placeholder="Click 'Generate Summary' in the chapter editor or write your own notes here."
+                        placeholder="Click 'Generate Notes' or write your own notes here."
                         rows={8}
                         className="text-base"
                     />
