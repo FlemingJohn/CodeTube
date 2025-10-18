@@ -589,13 +589,7 @@ export default function LandingPage() {
                 <li><Link href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQs</Link></li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-semibold mb-2">Legal</h4>
-              <ul className="space-y-2">
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
-              </ul>
-            </div>
+            
             <div>
               <h4 className="font-semibold mb-2">Get Started</h4>
               <Button asChild className="transition-transform hover:scale-105">
