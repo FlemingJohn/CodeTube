@@ -71,7 +71,11 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
                 const progress = calculateProgress(course);
                 const category = course.category || 'General';
                 return (
-                  <Card key={course.id} className="flex flex-col transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                  <Card 
+                    key={course.id} 
+                    onClick={() => onSelectCourse(course.id)}
+                    className="flex flex-col cursor-pointer transition-all duration-300 hover:scale-105 hover:-translate-y-2"
+                  >
                     <CardHeader>
                       <div className="flex justify-between items-start">
                          <CardTitle className="font-headline line-clamp-2">{course.title}</CardTitle>
@@ -103,8 +107,7 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
                         </div>
                        )}
                     </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <Button onClick={() => onSelectCourse(course.id)}>Edit Course</Button>
+                    <CardFooter className="flex justify-end">
                       <Button variant="ghost" size="icon" onClick={(e) => {
                           e.stopPropagation();
                           onDeleteCourse(course.id);
