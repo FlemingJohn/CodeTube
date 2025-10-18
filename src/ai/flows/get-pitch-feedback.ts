@@ -85,8 +85,10 @@ const getPitchFeedbackFlow = ai.defineFlow(
       input.audioDataUri.substring(input.audioDataUri.indexOf(',') + 1),
       'base64'
     );
-    // The browser recorder is likely recording in a format that needs to be
-    // converted or handled properly. Assuming it's raw PCM for now and converting to WAV.
+    
+    // The browser recorder is likely recording in webm/opus, which is not directly supported.
+    // Assuming the client decodes it to raw PCM before sending.
+    // Here we convert the raw PCM buffer to a WAV data URI.
     const wavAudio = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
 
     const transcribed = await ai.generate({

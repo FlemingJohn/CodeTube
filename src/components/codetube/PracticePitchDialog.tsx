@@ -50,6 +50,7 @@ export default function PracticePitchDialog({ isOpen, setIsOpen, course }: Pract
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -101,32 +102,67 @@ export default function PracticePitchDialog({ isOpen, setIsOpen, course }: Pract
     }
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorderRef.current = new MediaRecorder(stream);
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+
+        mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
         mediaRecorderRef.current.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
+          audioChunksRef.current.push(event.data);
         };
+
         mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = async () => {
-            const base64Audio = reader.result as string;
-            setPitchState(PitchState.Transcribing);
-            const result = await handleGetPitchFeedback({ scenario, audioDataUri: base64Audio });
-            if (result.error) {
-                toast({ variant: 'destructive', title: 'Error', description: result.error });
-                setPitchState(PitchState.ScenarioReady);
-            } else if (result.feedback) {
-                setFeedback(result.feedback);
-                setPitchState(PitchState.FeedbackReady);
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          
+          if (!audioContextRef.current) {
+            toast({ variant: 'destructive', title: 'Audio processing failed.' });
+            return;
+          }
+
+          const decodedAudio = await audioContextRef.current.decodeAudioData(arrayBuffer);
+          const pcmFloat32 = decodedAudio.getChannelData(0);
+          
+          // Downsample and convert to 16-bit PCM
+          const targetSampleRate = 24000;
+          const sourceSampleRate = decodedAudio.sampleRate;
+          const ratio = sourceSampleRate / targetSampleRate;
+          const newLength = Math.round(pcmFloat32.length / ratio);
+          const pcm16 = new Int16Array(newLength);
+          let offsetResult = 0;
+          let offsetBuffer = 0;
+
+          while (offsetResult < newLength) {
+            const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
+            let accum = 0, count = 0;
+            for (let i = offsetBuffer; i < nextOffsetBuffer && i < pcmFloat32.length; i++) {
+                accum += pcmFloat32[i];
+                count++;
             }
-        };
-        audioChunksRef.current = [];
+            pcm16[offsetResult] = Math.max(-1, Math.min(1, accum / count)) * 0x7FFF;
+            offsetResult++;
+            offsetBuffer = nextOffsetBuffer;
+          }
+          const pcmBuffer = Buffer.from(pcm16.buffer);
+          const base64Audio = pcmBuffer.toString('base64');
+          
+          setPitchState(PitchState.Transcribing);
+          const result = await handleGetPitchFeedback({ scenario, audioDataUri: `data:application/octet-stream;base64,${base64Audio}` });
+          if (result.error) {
+              toast({ variant: 'destructive', title: 'Error', description: result.error });
+              setPitchState(PitchState.ScenarioReady);
+          } else if (result.feedback) {
+              setFeedback(result.feedback);
+              setPitchState(PitchState.FeedbackReady);
+          }
+          
+          audioChunksRef.current = [];
         };
         mediaRecorderRef.current.start();
         setPitchState(PitchState.Recording);
-    } catch (err) {
-        toast({ variant: 'destructive', title: 'Could not start recording.', description: 'Please ensure microphone permissions are enabled.'})
+    } catch (err: any) {
+        console.error(err);
+        toast({ variant: 'destructive', title: 'Could not start recording.', description: 'Please ensure microphone permissions are enabled and try again.'})
     }
   };
 
