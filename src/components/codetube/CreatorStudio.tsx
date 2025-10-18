@@ -9,6 +9,8 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarInset,
+  SidebarTrigger,
+  SidebarRail
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag } from 'lucide-react';
@@ -86,20 +88,25 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     if (!player) return;
   
     const interval = setInterval(() => {
-        const currentTime = player.getCurrentTime();
-        if (typeof currentTime !== 'number') return;
-    
-        let activeChapterId = null;
-    
-        // Find the chapter that is currently playing
-        for (let i = chapterStartTimes.length - 1; i >= 0; i--) {
-            if (currentTime >= chapterStartTimes[i].startTime) {
-                activeChapterId = chapterStartTimes[i].id;
-                break;
+        try {
+            const currentTime = player.getCurrentTime();
+            if (typeof currentTime !== 'number') return;
+        
+            let activeChapterId = null;
+        
+            // Find the chapter that is currently playing
+            for (let i = chapterStartTimes.length - 1; i >= 0; i--) {
+                if (currentTime >= chapterStartTimes[i].startTime) {
+                    activeChapterId = chapterStartTimes[i].id;
+                    break;
+                }
             }
+        
+            setPlayingChapterId(activeChapterId);
+        } catch (e) {
+            // Can happen if the player is destroyed
+            clearInterval(interval);
         }
-    
-        setPlayingChapterId(activeChapterId);
     }, 1000); // Check every second
   
     return () => clearInterval(interval);
@@ -176,9 +183,9 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
       <SidebarProvider
         defaultOpen={true}
         collapsible="icon"
-        style={{ '--sidebar-width': '25rem' } as React.CSSProperties}
       >
         <Sidebar>
+            <SidebarRail />
           <SidebarHeader>
             <Header />
           </SidebarHeader>
@@ -236,7 +243,10 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
         </Sidebar>
 
         <SidebarInset>
-          <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="absolute top-2 left-2 z-10">
+            <SidebarTrigger />
+          </div>
+          <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6 pt-12 md:pt-6">
             <div className="flex flex-col gap-6">
               {course.videoId ? (
                 <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
