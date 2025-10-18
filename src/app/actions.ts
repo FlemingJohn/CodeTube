@@ -331,7 +331,7 @@ export async function handleGenerateQuiz(values: z.infer<typeof generateQuizSche
     
     try {
         const result = await generateQuiz(validatedFields.data);
-        return { quiz: result };
+        return { questions: result.questions };
     } catch (e: any) {
         console.error(e);
         return { error: e.message || 'Failed to generate quiz.' };

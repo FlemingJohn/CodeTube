@@ -140,7 +140,10 @@
           "description": "Timestamp indicating the starting point of the chapter in the video."
         },
         "quiz": {
-          "$ref": "#/backend/entities/Quiz"
+          "type": "array",
+          "items": {
+            "$ref": "#/backend/entities/Quiz"
+          }
         },
         "createdAt": {
           "type": "string",

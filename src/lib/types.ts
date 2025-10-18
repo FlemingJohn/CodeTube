@@ -15,7 +15,7 @@ export type Chapter = {
   codeExplanation: string;
   // A placeholder for the actual transcript for AI summary generation
   transcript: string;
-  quiz?: Quiz;
+  quiz?: Quiz[];
 };
 
 export type Course = {

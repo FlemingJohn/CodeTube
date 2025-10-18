@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import type { Chapter } from '@/lib/types';
+import type { Chapter, Quiz } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +12,7 @@ import { handleExplainCode, handleGenerateQuiz } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface ChapterEditorProps {
   chapter: Chapter;
@@ -52,6 +53,31 @@ const FormattedExplanation = ({ text }: { text: string }) => {
     );
   };
   
+const QuizCard = ({ quiz, index }: { quiz: Quiz, index: number }) => (
+    <Card className="bg-muted/40">
+        <CardContent className="p-4 space-y-4">
+            <p className="font-semibold">{index + 1}. {quiz.question}</p>
+            <RadioGroup defaultValue={quiz.answer}>
+                {quiz.options.map((option, idx) => {
+                    const isCorrect = option === quiz.answer;
+                    return (
+                    <div key={idx} 
+                        className={cn("flex items-center space-x-3 rounded-md border p-3",
+                        isCorrect ? "border-green-500/50 bg-green-500/10" : "border-transparent"
+                        )}
+                    >
+                        <RadioGroupItem value={option} id={`option-${index}-${idx}`} disabled />
+                        <Label htmlFor={`option-${index}-${idx}`} className="flex-1">
+                        {option}
+                        </Label>
+                        {isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                    </div>
+                    )
+                })}
+            </RadioGroup>
+        </CardContent>
+    </Card>
+);
 
 export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
@@ -116,13 +142,13 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
             title: 'Quiz Generation Failed',
             description: result.error,
           });
-        } else if (result.quiz) {
-          const updatedChapter = { ...localChapter, quiz: result.quiz };
+        } else if (result.questions) {
+          const updatedChapter = { ...localChapter, quiz: result.questions };
           setLocalChapter(updatedChapter);
           onUpdateChapter(updatedChapter);
           toast({
             title: 'Quiz Generated!',
-            description: 'A new quiz question has been added to this chapter.',
+            description: 'A new 5-question quiz has been added to this chapter.',
           });
         }
       });
@@ -223,30 +249,14 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 </Button>
             </div>
 
-            {localChapter.quiz ? (
-                <Card className="bg-muted/40">
-                    <CardContent className="p-4 space-y-4">
-                        <p className="font-semibold">{localChapter.quiz.question}</p>
-                        <RadioGroup defaultValue={localChapter.quiz.answer}>
-                            {localChapter.quiz.options.map((option, index) => {
-                                const isCorrect = option === localChapter.quiz.answer;
-                                return (
-                                <div key={index} 
-                                    className={cn("flex items-center space-x-3 rounded-md border p-3",
-                                    isCorrect ? "border-green-500/50 bg-green-500/10" : "border-transparent"
-                                    )}
-                                >
-                                    <RadioGroupItem value={option} id={`option-${index}`} disabled />
-                                    <Label htmlFor={`option-${index}`} className="flex-1">
-                                    {option}
-                                    </Label>
-                                    {isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
-                                </div>
-                                )
-                            })}
-                        </RadioGroup>
-                    </CardContent>
-                </Card>
+            {localChapter.quiz && localChapter.quiz.length > 0 ? (
+                <ScrollArea className="h-96 pr-4">
+                    <div className="space-y-4">
+                        {localChapter.quiz.map((q, index) => (
+                            <QuizCard key={index} quiz={q} index={index} />
+                        ))}
+                    </div>
+                </ScrollArea>
             ) : (
                 <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
                     <p>No quiz for this chapter yet.</p>
