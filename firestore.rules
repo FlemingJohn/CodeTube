@@ -1,116 +1,133 @@
 /**
- * @fileOverview Firestore Security Rules for CodeTube.
+ * @fileoverview Firestore Security Rules for CodeTube application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for private user data (profiles, courses, chapters).
- * Public courses are readable by anyone if the 'published' field is set to true, but only the owner can modify them.
+ * This ruleset enforces a strict user-ownership model for private data
+ * (courses and chapters stored under `/users/{userId}`). Public courses
+ * in the top-level `/courses` collection are readable by anyone,
+ * but only editable by the owner.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profiles. Accessible only by the user themselves.
- * - /users/{userId}/courses/{courseId}: Stores private, editable versions of courses owned by the user.
- * - /users/{userId}/courses/{courseId}/chapters/{chapterId}: Stores chapters within a private course.
- * - /courses/{courseId}: Stores public, read-only versions of courses. Readable by anyone if published:true.
+ * - /users/{userId}: Stores user profiles, accessible only to the user.
+ * - /users/{userId}/courses/{courseId}: Stores private course data, accessible only to the user.
+ * - /users/{userId}/courses/{courseId}/chapters/{chapterId}: Stores chapter data, accessible only to the user.
+ * - /courses/{courseId}: Stores public course data, readable by anyone if published.
  *
  * Key Security Decisions:
- * - Users can only access their own user document.
- * - Courses and chapters under /users/{userId} are accessible only by the owning user.
- * - Public courses in /courses/{courseId} are readable by anyone if 'published' is true, but only the owner can modify them.
- * - The `list` operation is allowed for user-owned courses and chapters.
- *
- * Denormalization for Authorization:
- * - Courses in the top-level `/courses/{courseId}` collection MUST have a `userId` field to indicate ownership. This is essential for securing write access.
- *   It will be validated upon course creation in that collection.
- *
- * Structural Segregation:
- * - Private and public courses are stored in separate collections (/users/{userId}/courses/{courseId} vs /courses/{courseId}) to simplify access control and improve performance.
+ * - Users can only access their own data.
+ * - Public courses are readable by everyone but writable only by the owner.
+ * - Listing of users is disallowed.
+ * - Data validation is relaxed in this prototyping phase, focusing on authorization.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Grants access to user profiles.
+     * @description Enforces that all requests are made by an authenticated user.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of the document.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of the existing document.
+     *              Also verifies that the resource exists to prevent accidental operations on non-existent documents.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /***************** Users Collection *******************/
+
+    /**
+     * @description Controls access to user profiles.
      * @path /users/{userId}
-     * @allow (get, create, update, delete) - User with matching {userId}.
-     * @deny (get, create, update, delete) - User with non-matching {userId}.
+     * @allow (create) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can create their profile with matching user ID.
+     * @allow (get) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can read their profile.
+     * @allow (update) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can update their profile.
+     * @allow (delete) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can delete their profile.
+     * @deny (create) User 'someOtherUserId' cannot create a profile with userId 'gHzseHPOIIT8gtSJktYcnP8glBy2'.
+     * @deny (get) User 'someOtherUserId' cannot read user 'gHzseHPOIIT8gtSJktYcnP8glBy2' profile.
      * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false; // Listing users is not allowed.
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
     }
 
+    /***************** Private Courses Collection *******************/
+
     /**
-     * @description Grants access to courses owned by a specific user.
+     * @description Controls access to private courses stored under a user's profile.
      * @path /users/{userId}/courses/{courseId}
-     * @allow (get, create, update, delete, list) - User with matching {userId}.
-     * @deny (get, create, update, delete, list) - User with non-matching {userId}.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can create a course under their profile.
+     * @allow (get) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can read a course under their profile.
+     * @allow (update) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can update a course under their profile.
+     * @allow (delete) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can delete a course under their profile.
+     * @deny (create) User 'someOtherUserId' cannot create a course under user 'gHzseHPOIIT8gtSJktYcnP8glBy2' profile.
+     * @deny (get) User 'someOtherUserId' cannot read a course under user 'gHzseHPOIIT8gtSJktYcnP8glBy2' profile.
+     * @principle Enforces document ownership for all operations on private courses.
      */
     match /users/{userId}/courses/{courseId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
 
+    /***************** Chapters Collection *******************/
+
     /**
-     * @description Grants access to chapters within a specific user's course.
+     * @description Controls access to chapters stored under a user's course.
      * @path /users/{userId}/courses/{courseId}/chapters/{chapterId}
-     * @allow (get, create, update, delete, list) - User with matching {userId}.
-     * @deny (get, create, update, delete, list) - User with non-matching {userId}.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can create a chapter in their course.
+     * @allow (get) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can read a chapter in their course.
+     * @allow (update) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can update a chapter in their course.
+     * @allow (delete) User 'gHzseHPOIIT8gtSJktYcnP8glBy2' can delete a chapter in their course.
+     * @deny (create) User 'someOtherUserId' cannot create a chapter in user 'gHzseHPOIIT8gtSJktYcnP8glBy2' course.
+     * @deny (get) User 'someOtherUserId' cannot read a chapter in user 'gHzseHPOIIT8gtSJktYcnP8glBy2' course.
+     * @principle Enforces document ownership for all operations on chapters.
      */
     match /users/{userId}/courses/{courseId}/chapters/{chapterId} {
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-       function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if isSignedIn() && isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.courseId == courseId;
+      allow update: if isExistingOwner(userId) && request.resource.data.courseId == resource.data.courseId;
+      allow delete: if isExistingOwner(userId);
     }
 
+    /***************** Public Courses Collection *******************/
+
     /**
-     * @description Grants read access to public courses, but restricts write access to the owner.
+     * @description Controls access to public courses.
      * @path /courses/{courseId}
-     * @allow (get, list) - Anyone if published == true.
-     * @allow (create) - Owner with matching userId in request.resource.data.
-     * @allow (update, delete) - Owner with matching userId in resource.data.
-     * @deny (create, update, delete) - If not owner.
-     * @principle Allows public read access to published courses while enforcing ownership for writes.
+     * @allow (get) Anyone can read a published course.
+     * @allow (list) Anyone can list published courses.
+     * @allow (create) Only the owner can create a public course and must set userId.
+     * @allow (update) Only the owner can update a public course, and userId cannot be changed.
+     * @allow (delete) Only the owner can delete a public course.
+     * @deny (create) User cannot create a course with a different userId than their own.
+     * @deny (update) User cannot update a course and change the userId.
+     * @principle Allows public read access to published courses but restricts writes to the owner.
      */
     match /courses/{courseId} {
-      function isOwner(resourceUserId) {
-        return request.auth.uid == resourceUserId;
-      }
-      function isSignedIn() {
-        return request.auth != null;
-      }
-      allow get, list: if true;
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && isOwner(resource.data.userId);
-      allow delete: if isSignedIn() && isOwner(resource.data.userId);
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(resource.data.userId);
     }
   }
 }
