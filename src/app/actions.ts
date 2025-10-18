@@ -385,7 +385,7 @@ export async function handleGeneratePitchScenario(values: z.infer<typeof generat
 
 const getPitchFeedbackSchema = z.object({
     scenario: z.string(),
-    audioDataUri: z.string(),
+    userAnswer: z.string(),
 });
 
 export async function handleGetPitchFeedback(values: z.infer<typeof getPitchFeedbackSchema>) {
