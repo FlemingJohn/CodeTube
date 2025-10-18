@@ -9,6 +9,8 @@ import Header from './Header';
 import AuthHeader from '../auth/AuthHeader';
 import Image from 'next/image';
 import { Progress } from '../ui/progress';
+import { Badge } from '../ui/badge';
+import { cn } from '@/lib/utils';
 
 interface CourseListProps {
   courses: Course[];
@@ -16,6 +18,18 @@ interface CourseListProps {
   onNewCourse: () => void;
   onDeleteCourse: (id: string) => void;
 }
+
+const categoryColors: { [key: string]: string } = {
+    'Programming': 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
+    'Web Development': 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30',
+    'Mobile Development': 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
+    'Data Science': 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30',
+    'AI/ML': 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30',
+    'DevOps': 'bg-pink-500/20 text-pink-700 dark:text-pink-300 border-pink-500/30',
+    'Game Development': 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30',
+    'General': 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30',
+  };
+  
 
 export default function CourseList({ courses, onSelectCourse, onNewCourse, onDeleteCourse }: CourseListProps) {
   
@@ -55,10 +69,14 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {courses.map(course => {
                 const progress = calculateProgress(course);
+                const category = course.category || 'General';
                 return (
                   <Card key={course.id} className="flex flex-col transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                     <CardHeader>
-                      <CardTitle className="font-headline line-clamp-2">{course.title}</CardTitle>
+                      <div className="flex justify-between items-start">
+                         <CardTitle className="font-headline line-clamp-2">{course.title}</CardTitle>
+                         <Badge variant="outline" className={cn("whitespace-nowrap", categoryColors[category])}>{category}</Badge>
+                      </div>
                       <CardDescription>{course.chapters.length} {course.chapters.length === 1 ? 'chapter' : 'chapters'}</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-grow space-y-4">

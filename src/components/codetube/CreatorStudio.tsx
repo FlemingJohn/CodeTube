@@ -11,13 +11,14 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import GithubExportDialog from './GithubExportDialog';
-import type { Chapter, Course } from '@/lib/types';
+import type { Chapter, Course, CourseCategory } from '@/lib/types';
+import { COURSE_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
@@ -27,6 +28,7 @@ import VideoSearchDialog from './VideoSearchDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import { handleGenerateSummary } from '@/app/actions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface CreatorStudioProps {
     course: Course;
@@ -165,6 +167,10 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     }
   }
 
+  const handleCategoryChange = (category: CourseCategory) => {
+    onCourseUpdate({ ...course, category });
+  }
+
   return (
     <div className="h-screen bg-background">
       <SidebarProvider
@@ -183,6 +189,26 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                 onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 px-1 text-sm font-medium text-muted-foreground">
+                  <Tag className="w-5 h-5"/>
+                  <span>Category</span>
+                </div>
+                <Select 
+                  value={course.category || 'General'} 
+                  onValueChange={(value) => handleCategoryChange(value as CourseCategory)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COURSE_CATEGORIES.map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <ChapterList
                 chapters={course.chapters}
                 onChaptersUpdate={(newChapters) => onCourseUpdate({ ...course, chapters: newChapters })}

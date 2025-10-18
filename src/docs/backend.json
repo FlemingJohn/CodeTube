@@ -1,0 +1,211 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user in the CodeTube application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "username": {
+          "type": "string",
+          "description": "The username chosen by the user."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "username",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Course": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Course",
+      "type": "object",
+      "description": "Represents a course created by a user in CodeTube.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Course entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Course)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the course."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the course content."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the course (e.g., Web Development, Data Science)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the course was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the course was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "description",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Chapter": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Chapter",
+      "type": "object",
+      "description": "Represents a chapter within a course.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Chapter entity."
+        },
+        "courseId": {
+          "type": "string",
+          "description": "Reference to Course. (Relationship: Course 1:N Chapter)"
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the chapter."
+        },
+        "note": {
+          "type": "string",
+          "description": "A note summarizing the content of the chapter."
+        },
+        "code": {
+          "type": "string",
+          "description": "Optional code snippet associated with the chapter."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating the starting point of the chapter in the video."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the chapter was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the chapter was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "courseId",
+        "title",
+        "note",
+        "timestamp",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user data. Uses path-based ownership for security (request.auth.uid == userId).",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/courses/{courseId}",
+        "definition": {
+          "entityName": "Course",
+          "schema": {
+            "$ref": "#/backend/entities/Course"
+          },
+          "description": "Stores courses created by a user. Enforces path-based ownership for security. (request.auth.uid == userId)",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/courses/{courseId}/chapters/{chapterId}",
+        "definition": {
+          "entityName": "Chapter",
+          "schema": {
+            "$ref": "#/backend/entities/Chapter"
+          },
+          "description": "Stores chapters within a course. Enforces path-based ownership for security. (request.auth.uid == userId)",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            },
+            {
+              "name": "chapterId",
+              "description": "The unique identifier of the chapter."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, support QAPs, and maintain data integrity. It leverages path-based ownership for user-specific data and denormalization where necessary to avoid complex security rules with `get()` calls.\n\nUsers are stored in the `/users/{userId}` collection. Courses, Chapters are organized under the corresponding user document using hierarchical paths: `/users/{userId}/courses/{courseId}` and `/users/{userId}/courses/{courseId}/chapters/{chapterId}` respectively. This direct hierarchical structure enables simple, efficient security rules based on `request.auth.uid` without needing to perform additional reads for authorization.\n\nAuthorization Independence is achieved via path-based ownership, as rules can directly verify if `request.auth.uid == userId` in the path. This eliminates the need to read parent documents for authorization. This approach also supports QAPs by enabling list operations that are securely filtered by user ID without requiring additional filtering in the rules.\n\nSince this application does not include collaborative data structures, the membership map pattern is not used. If future features include shared entities, a `members` map should be denormalized into subcollections as needed."
+  }
+}
