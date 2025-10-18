@@ -30,6 +30,7 @@ export type Course = {
   videoId: string | null;
   chapters: Chapter[];
   category?: string;
+  interviewQuestions?: InterviewQuestion[];
 };
 
 export const COURSE_CATEGORIES = [

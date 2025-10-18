@@ -7,6 +7,8 @@ import { explainCode } from '@/ai/flows/explain-code';
 import { youtubeSearch } from '@/ai/flows/youtube-search';
 import { generateQuiz } from '@/ai/flows/generate-quiz';
 import { generateInterviewQuestions } from '@/ai/flows/generate-interview-questions';
+import { generatePitchScenario } from '@/ai/flows/generate-pitch-scenario';
+import { getPitchFeedback } from '@/ai/flows/get-pitch-feedback';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -357,5 +359,47 @@ export async function handleGenerateInterviewQuestions(values: z.infer<typeof ge
     } catch (e: any) {
         console.error(e);
         return { error: e.message || 'Failed to generate interview questions.' };
+    }
+}
+
+const generatePitchScenarioSchema = z.object({
+    courseTitle: z.string(),
+    courseContent: z.string(),
+});
+
+export async function handleGeneratePitchScenario(values: z.infer<typeof generatePitchScenarioSchema>) {
+    const validatedFields = generatePitchScenarioSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields' };
+    }
+
+    try {
+        const result = await generatePitchScenario(validatedFields.data);
+        return { scenario: result.scenario };
+    } catch (e: any) {
+        console.error(e);
+        return { error: 'Failed to generate pitch scenario. Please try again.' };
+    }
+}
+
+const getPitchFeedbackSchema = z.object({
+    scenario: z.string(),
+    audioDataUri: z.string(),
+});
+
+export async function handleGetPitchFeedback(values: z.infer<typeof getPitchFeedbackSchema>) {
+    const validatedFields = getPitchFeedbackSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields' };
+    }
+
+    try {
+        const result = await getPitchFeedback(validatedFields.data);
+        return { feedback: result };
+    } catch (e: any) {
+        console.error(e);
+        return { error: 'Failed to get pitch feedback. Please try again.' };
     }
 }
