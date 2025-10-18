@@ -14,6 +14,9 @@ import {
   BrainCircuit,
   Star,
   ArrowUp,
+  HelpCircle,
+  Briefcase,
+  Mic,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -38,42 +41,60 @@ import React from 'react';
 const features = [
   {
     icon: <Youtube className="h-10 w-10 text-primary" />,
-    title: 'Import from YouTube',
+    title: 'Instant Video Import',
     description:
-      'Paste any YouTube link and automatically detect chapters and generate transcripts.',
+      'Paste any YouTube link to automatically generate transcripts and detect chapters in seconds.',
   },
   {
     icon: <Sparkles className="h-10 w-10 text-primary" />,
     title: 'AI-Powered Notes',
     description:
-      'Generate concise, AI-powered summaries for each chapter to enhance learning.',
+      'Generate concise, AI-powered summaries and notes for each chapter to enhance learning.',
   },
   {
     icon: <Code className="h-10 w-10 text-primary" />,
     title: 'Interactive Code Snippets',
     description:
-      'Embed editable code snippets for hands-on practice directly within your course.',
+      'Automatically find and embed editable code snippets for hands-on practice directly within your course.',
+  },
+   {
+    icon: <HelpCircle className="h-10 w-10 text-primary" />,
+    title: 'AI-Generated Quizzes',
+    description:
+      'Automatically generate multi-question quizzes for each chapter to test understanding and reinforce concepts.',
+  },
+  {
+    icon: <Briefcase className="h-10 w-10 text-primary" />,
+    title: 'Interview Prep',
+    description:
+      'Get AI-generated interview questions based on the course content to prepare for technical screenings.',
+  },
+  {
+    icon: <Mic className="h-10 w-10 text-primary" />,
+    title: 'Practice Your Pitch',
+    description:
+      'Record yourself answering interview questions and get instant, AI-powered feedback on your delivery.',
   },
 ];
 
 const howItWorks = [
   {
     icon: <Youtube className="h-8 w-8 text-primary" />,
-    title: '1. Import Video',
+    title: '1. Import & Structure',
     description:
-      'Paste a YouTube video link to automatically pull in the title and chapters.',
+      'Paste a YouTube link. CodeTube fetches the video, transcript, and chapters automatically.',
   },
   {
     icon: <FileEdit className="h-8 w-8 text-primary" />,
-    title: '2. Add Content',
+    title: '2. Enrich with AI',
     description:
-      'Enrich each chapter with AI-generated notes and relevant code snippets.',
+      'Generate notes, find code snippets, create quizzes, and add interview questions with one click.',
   },
   {
-    icon: <UploadCloud className="h-8 w-8 text-primary" />,
-    title: '3. Export & Share',
+    icon: <Mic className="h-8 w-8 text-primary" />,
+    title: '3. Practice & Prepare',
     description:
-      'Export the entire course to a new GitHub repository with a single click.',
+      'Use the AI-generated interview scenarios to practice your pitch and get instant feedback.',
   },
 ];
 
@@ -99,33 +120,33 @@ const mainTech = [
 ];
 
 const testimonials = [
-  {
+    {
     quote:
-      'The AI code explanation is a lifesaver. It breaks down complex snippets into easy-to-understand steps, which has been amazing for my learning.',
-    name: 'Chris Patel',
-    title: 'Self-Taught Programmer',
-  },
-  {
-    quote:
-      'As a student, being able to see the code, notes, and video side-by-side is incredibly helpful. I wish all my tutorials used a tool like this!',
-    name: 'Samantha Lee',
-    title: 'Computer Science Student',
-  },
-  {
-    quote:
-      'I use this to review tutorials before job interviews. The AI summaries and GitHub export help me create a quick portfolio piece. It\'s brilliant.',
+      "The 'Practice Your Pitch' feature is a game-changer. I recorded my answer and the AI feedback on my explanation was better than most human coaches. Invaluable for interview prep.",
     name: 'Michael B.',
     title: 'Junior Backend Developer',
   },
   {
     quote:
-      'CodeTube transformed the way I follow along with coding tutorials. The automatic chapter detection is a game-changer!',
+      'As a student, being able to take a quiz right after watching a chapter is amazing. It tells me immediately if I actually understood the concept. So much better than just passive watching.',
+    name: 'Samantha Lee',
+    title: 'Computer Science Student',
+  },
+  {
+    quote:
+      'CodeTube transformed the way I follow along with coding tutorials. The automatic chapter detection and AI notes save me so much time.',
     name: 'Alex Johnson',
     title: 'Frontend Developer',
   },
   {
     quote:
-      'The ability to export my notes and code to GitHub is an incredible feature for building my portfolio.',
+      'I use this to review tutorials before job interviews. The AI-generated interview questions are spot-on and help me prepare for what to expect.',
+    name: 'Chris Patel',
+    title: 'Self-Taught Programmer',
+  },
+  {
+    quote:
+      'The ability to export my notes and code to GitHub is an incredible feature for building my portfolio and showing my work to employers.',
     name: 'Jessica Rodriguez',
     title: 'Aspiring Full-Stack Developer',
   },
@@ -133,19 +154,22 @@ const testimonials = [
 
 const faqs = [
   {
-    question: 'Is CodeTube free to use?',
-    answer:
-      'Yes, CodeTube is free to use during our beta period. You can import videos, create courses, and export to GitHub without any cost. We may introduce premium features in the future.',
+    question: "Who is CodeTube for?",
+    answer: "CodeTube is designed for self-directed learners, including students, junior developers, and working professionals. If you use YouTube to learn new technical skills, CodeTube helps you do it more effectively and turn that learning into career opportunities."
   },
   {
-    question: 'How does the AI summary work?',
+    question: "How does the 'Practice Your Pitch' feature work?",
+    answer: "This feature uses multiple AI models. First, it analyzes your course content to create a relevant interview scenario. Then, you record your answer with your microphone. The audio is transcribed to text, and then another AI analyzes your answer to provide feedback on your clarity, confidence, and technical explanation."
+  },
+  {
+    question: 'How do the AI quizzes and interview questions work?',
     answer:
-      "Our AI, powered by Google's Gemini models, processes the transcript of your video chapter to generate a concise and accurate summary. It's designed to capture the key points and save you time.",
+      "Our AI, powered by Google's Gemini models, processes the transcript of your video chapter to generate relevant multiple-choice questions or technical interview questions. It's designed to test key concepts from the material to help you prepare.",
   },
   {
     question: 'Can I use any YouTube video?',
     answer:
-      'Yes, you can import any public YouTube video. For the best results with automatic chapter detection, ensure the video has timestamps listed in its description.',
+      'Yes, you can import any public YouTube video. For the best results with automatic chapter detection and transcripts, choose videos where the creator has enabled captions and listed timestamps in the description.',
   },
   {
     question: 'Is my data secure?',
@@ -156,7 +180,7 @@ const faqs = [
 
 export default function LandingPage() {
   const autoplayPlugin = React.useRef(
-    Autoplay({ delay: 3000, stopOnInteraction: true })
+    Autoplay({ delay: 4000, stopOnInteraction: true })
   );
 
   return (
@@ -183,12 +207,10 @@ export default function LandingPage() {
           <div className="container grid gap-12 items-center justify-items-center">
             <div className="flex flex-col items-center text-center space-y-6">
               <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-headline tracking-tighter">
-                Turn Any YouTube Video into an Interactive Course in Minutes
+                From Passive Watching to Productive Learning
               </h1>
               <p className="text-lg text-muted-foreground md:text-xl max-w-3xl">
-                Effortlessly create engaging learning experiences with AI-powered
-                summaries, code snippets, and more. Transform passive viewing
-                into active learning.
+                CodeTube transforms distracting YouTube tutorials into focused, interactive courses. Spend less time scrubbing through videos and more time building real, career-ready skills.
               </p>
               <div className="flex flex-col items-center gap-2">
                 <Button size="lg" asChild className="transition-transform hover:scale-105">
@@ -285,14 +307,13 @@ export default function LandingPage() {
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
-                Why CodeTube?
+                A Smarter Way to Learn
               </h2>
               <p className="text-lg text-muted-foreground mt-4">
-                We provide powerful, AI-driven tools to make course creation
-                simple and effective.
+                We provide powerful, AI-driven tools to make course creation and learning simple and effective.
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, index) => (
                 <AnimateOnScroll key={feature.title} delay={index * 100}>
                   <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
@@ -321,7 +342,7 @@ export default function LandingPage() {
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
-                How It Works
+                From Video to Portfolio in 3 Steps
               </h2>
               <p className="text-lg text-muted-foreground mt-4">
                 Create an interactive course from any YouTube video in just
@@ -383,7 +404,7 @@ export default function LandingPage() {
               plugins={[autoplayPlugin.current]}
               onMouseEnter={autoplayPlugin.current.stop}
               onMouseLeave={autoplayPlugin.current.reset}
-              className="w-full max-w-4xl mx-auto"
+              className="w-full max-w-5xl mx-auto"
             >
               <CarouselContent>
                 {testimonials.map((testimonial, index) => (
@@ -465,7 +486,7 @@ export default function LandingPage() {
             <Accordion type="single" collapsible className="w-full">
               {faqs.map(faq => (
                 <AccordionItem key={faq.question} value={faq.question}>
-                  <AccordionTrigger className="font-headline text-lg">
+                  <AccordionTrigger className="font-headline text-lg text-left">
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="text-base text-muted-foreground">
@@ -481,10 +502,10 @@ export default function LandingPage() {
         <section className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container text-center max-w-3xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold font-headline">
-              Ready to Get Started?
+              Ready to Stop Watching and Start Building?
             </h2>
             <p className="text-lg text-muted-foreground mt-4 mb-8">
-              Begin creating your first interactive course in just a few clicks.
+              Begin creating your first interactive course in just a few clicks. Turn your learning into a career asset.
             </p>
             <Button size="lg" asChild className="transition-transform hover:scale-105">
               <Link href="/creator">Launch Your Creator Studio</Link>
