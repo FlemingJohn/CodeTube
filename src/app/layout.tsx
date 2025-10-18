@@ -112,13 +112,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const clapperboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20.2 6-3 11-8-5-8.3-5.6 3.5-7 15.8 6.6Z"/><path d="m20.2 6-3 11-8-5-8.3-5.6 3.5-7 15.8 6.6Z"/><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m3.5 11.6.9 2.4c.3 1.1-.3 2.2-1.3 2.5l-2.2.6c-1.1.3-2.2-.3-2.5-1.3L.6 11"/><path d="M15 12.3 3.8 15.7c-1.1.3-2.2-.3-2.5-1.3L0 12l15 4.3Z"/><path d="m15 12.3-1.2 6.2c-.3 1.1.3 2.2 1.3 2.5l2.2.6c1.1.3 2.2-.3 2.5-1.3l1.2-6.2-6-1.7Z"/></svg>`;
-  const faviconDataUri = `data:image/svg+xml;base64,${btoa(clapperboardIcon)}`;
 
   return (
     <html lang="en" className="dark">
       <head>
-        <link rel="icon" href={faviconDataUri} type="image/svg+xml" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m20.2 6-3 11-8-5-8.3-5.6 3.5-7 15.8 6.6Z%22/><path d=%22m20.2 6-3 11-8-5-8.3-5.6 3.5-7 15.8 6.6Z%22/><path d=%22M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z%22/><path d=%22m3.5 11.6.9 2.4c.3 1.1-.3 2.2-1.3 2.5l-2.2.6c-1.1.3-2.2-.3-2.5-1.3L.6 11%22/><path d=%22M15 12.3 3.8 15.7c-1.1.3-2.2-.3-2.5-1.3L0 12l15 4.3Z%22/><path d=%22m15 12.3-1.2 6.2c-.3 1.1.3 2.2 1.3 2.5l2.2.6c1.1.3 2.2-.3 2.5-1.3l1.2-6.2-6-1.7Z%22/></svg>" type="image/svg+xml" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
