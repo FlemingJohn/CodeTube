@@ -18,12 +18,19 @@ export type Chapter = {
   quiz?: Quiz[];
 };
 
+export type InterviewQuestion = {
+  question: string;
+
+  answer: string;
+};
+
 export type Course = {
   id:string;
   title: string;
   videoId: string | null;
   chapters: Chapter[];
   category?: string;
+  interviewQuestions?: InterviewQuestion[];
 };
 
 export const COURSE_CATEGORIES = [

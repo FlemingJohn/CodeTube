@@ -7,18 +7,17 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarInset,
   SidebarTrigger,
   SidebarRail
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import GithubExportDialog from './GithubExportDialog';
-import type { Chapter, Course, CourseCategory } from '@/lib/types';
+import type { Chapter, Course, CourseCategory, InterviewQuestion } from '@/lib/types';
 import { COURSE_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -28,9 +27,11 @@ import VideoPlayer from './VideoPlayer';
 import VideoSearchDialog from './VideoSearchDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Textarea } from '../ui/textarea';
-import { handleGenerateSummary } from '@/app/actions';
+import { handleGenerateSummary, handleGenerateInterviewQuestions } from '@/app/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { ScrollArea } from '../ui/scroll-area';
 
 interface CreatorStudioProps {
     course: Course;
@@ -59,6 +60,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
+  const [isInterviewPending, startInterviewTransition] = useTransition();
   const [player, setPlayer] = useState<any>(null);
 
   useEffect(() => {
@@ -152,6 +154,38 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     });
   };
 
+  const onGenerateInterviewQuestions = () => {
+    if (course.chapters.length === 0) {
+        toast({
+            variant: 'destructive',
+            title: 'No Content',
+            description: 'Please add chapters to the course before generating questions.',
+        });
+        return;
+    }
+    startInterviewTransition(async () => {
+        const allTranscripts = course.chapters.map(c => c.transcript).join('\n\n');
+        const result = await handleGenerateInterviewQuestions({
+            transcripts: allTranscripts,
+            courseTitle: course.title,
+        });
+
+        if (result.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Error Generating Questions',
+                description: result.error,
+            });
+        } else if (result.questions) {
+            onCourseUpdate({ ...course, interviewQuestions: result.questions });
+            toast({
+                title: 'Interview Prep Generated!',
+                description: 'A new set of interview questions has been added to the course.',
+            });
+        }
+    });
+  };
+
   const handleSignOut = async () => {
     await signOut(auth);
     toast({
@@ -227,7 +261,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           </SidebarContent>
         </Sidebar>
 
-        <SidebarInset>
+        <div className="flex flex-col flex-1">
             <header className="flex items-center justify-between p-2 border-b">
                 <SidebarTrigger />
                 <div className="flex items-center gap-2">
@@ -248,47 +282,86 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           <main className="flex-1 bg-muted/20 overflow-auto">
             <ResizablePanelGroup direction="horizontal" className="h-full">
               <ResizablePanel defaultSize={50}>
-                <div className="flex flex-col gap-6 p-4 md:p-6 h-full overflow-auto">
-                  {course.videoId ? (
-                    <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
-                  ) : (
-                    <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
-                      <div className="text-center text-muted-foreground">
-                        <h2 className="text-xl font-semibold">No Video Imported</h2>
-                        <p>Import a YouTube video to get started.</p>
+                <ScrollArea className="h-full">
+                  <div className="flex flex-col gap-6 p-4 md:p-6">
+                    {course.videoId ? (
+                      <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
+                    ) : (
+                      <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
+                        <div className="text-center text-muted-foreground">
+                          <h2 className="text-xl font-semibold">No Video Imported</h2>
+                          <p>Import a YouTube video to get started.</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {selectedChapter && (
+                    )}
+                    {selectedChapter && (
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                            <Sparkles className="w-6 h-6 text-primary" />
+                            Take notes
+                          </CardTitle>
+                          <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
+                              {isSummaryPending ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                  <Sparkles className="mr-2 h-4 w-4" />
+                              )}
+                              Generate Notes
+                          </Button>
+                        </CardHeader>
+                        <CardContent>
+                          <Textarea
+                              id="summary"
+                              name="summary"
+                              value={selectedChapter.summary}
+                              onChange={handleSummaryChange}
+                              placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
+                              rows={8}
+                              className="text-base"
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                          <Sparkles className="w-6 h-6 text-primary" />
-                          Take notes
-                        </CardTitle>
-                        <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
-                            {isSummaryPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <Sparkles className="mr-2 h-4 w-4" />
-                            )}
-                            Generate Notes
-                        </Button>
+                          <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                              <Bot className="w-6 h-6 text-primary" />
+                              Interview Prep
+                          </CardTitle>
+                          <Button size="sm" variant="outline" onClick={onGenerateInterviewQuestions} disabled={isInterviewPending}>
+                              {isInterviewPending ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                  <Sparkles className="mr-2 h-4 w-4" />
+                              )}
+                              Generate Questions
+                          </Button>
                       </CardHeader>
                       <CardContent>
-                        <Textarea
-                            id="summary"
-                            name="summary"
-                            value={selectedChapter.summary}
-                            onChange={handleSummaryChange}
-                            placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
-                            rows={8}
-                            className="text-base"
-                        />
+                          {course.interviewQuestions && course.interviewQuestions.length > 0 ? (
+                              <Accordion type="single" collapsible className="w-full">
+                                  {course.interviewQuestions.map((item, index) => (
+                                      <AccordionItem key={index} value={`item-${index}`}>
+                                          <AccordionTrigger>{item.question}</AccordionTrigger>
+                                          <AccordionContent className="text-base whitespace-pre-line">
+                                              {item.answer}
+                                          </AccordionContent>
+                                      </AccordionItem>
+                                  ))}
+                              </Accordion>
+                          ) : (
+                            <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                                <p>No interview questions for this course yet.</p>
+                                <p>Click "Generate Questions" to create them.</p>
+                            </div>
+                          )}
                       </CardContent>
                     </Card>
-                  )}
-                </div>
+
+                  </div>
+                </ScrollArea>
               </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={50}>
@@ -312,7 +385,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
               </ResizablePanel>
             </ResizablePanelGroup>
           </main>
-        </SidebarInset>
+        </div>
         
         <GithubExportDialog
           isOpen={isGithubDialogOpen}
@@ -331,5 +404,3 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     </div>
   );
 }
-
-    

@@ -6,6 +6,7 @@ import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-
 import { explainCode } from '@/ai/flows/explain-code';
 import { youtubeSearch } from '@/ai/flows/youtube-search';
 import { generateQuiz } from '@/ai/flows/generate-quiz';
+import { generateInterviewQuestions } from '@/ai/flows/generate-interview-questions';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -335,5 +336,26 @@ export async function handleGenerateQuiz(values: z.infer<typeof generateQuizSche
     } catch (e: any) {
         console.error(e);
         return { error: e.message || 'Failed to generate quiz.' };
+    }
+}
+
+const generateInterviewQuestionsSchema = z.object({
+    transcripts: z.string(),
+    courseTitle: z.string(),
+});
+
+export async function handleGenerateInterviewQuestions(values: z.infer<typeof generateInterviewQuestionsSchema>) {
+    const validatedFields = generateInterviewQuestionsSchema.safeParse(values);
+    
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields for interview question generation.' };
+    }
+    
+    try {
+        const result = await generateInterviewQuestions(validatedFields.data);
+        return { questions: result.questions };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || 'Failed to generate interview questions.' };
     }
 }
