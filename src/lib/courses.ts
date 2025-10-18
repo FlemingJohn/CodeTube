@@ -39,7 +39,12 @@ export async function addCourse(firestore: Firestore, userId: string, courseData
     
     // Also create the initial public copy so it can be shared immediately
     const publicCourseDocRef = doc(firestore, 'courses', docRef.id);
-    setDocumentNonBlocking(publicCourseDocRef, newDocData, { merge: true });
+    // Ensure userId is included in the public copy
+    const publicData = {
+        ...newDocData,
+        userId: userId,
+    };
+    setDocumentNonBlocking(publicCourseDocRef, publicData, { merge: true });
 
     return docRef.id;
 }
