@@ -14,6 +14,7 @@ export default function VideoPlayer({ videoId, onReady }: VideoPlayerProps) {
     playerVars: {
       // https://developers.google.com/youtube/player_params
       autoplay: 0,
+      rel: 0, // Do not show related videos when playback ends
     },
   };
 
