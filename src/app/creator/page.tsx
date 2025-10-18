@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Course } from '@/lib/types';
 import CourseList from '@/components/codetube/CourseList';
 import CreatorStudio from '@/components/codetube/CreatorStudio';
@@ -8,7 +9,7 @@ import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebas
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { collection } from 'firebase/firestore';
-import { addCourse } from '@/lib/courses';
+import { addCourse, deleteCourse, updateCourse } from '@/lib/courses';
 
 export default function CreatorPage() {
   const { user, isUserLoading } = useUser();
@@ -50,7 +51,7 @@ export default function CreatorPage() {
       chapters: [],
       published: false,
     };
-    const newCourseId = await addCourse(user.uid, newCourseData);
+    const newCourseId = await addCourse(firestore, user.uid, newCourseData);
     if(newCourseId) {
         setActiveCourseId(newCourseId);
     }
@@ -58,6 +59,14 @@ export default function CreatorPage() {
 
   const handleBackToDashboard = () => {
     setActiveCourseId(null);
+  };
+  
+  const handleDeleteCourse = (courseId: string) => {
+    if (!user) return;
+    deleteCourse(firestore, user.uid, courseId);
+    if (activeCourseId === courseId) {
+      setActiveCourseId(null);
+    }
   };
   
   const activeCourse = courses?.find(c => c.id === activeCourseId);
@@ -71,6 +80,7 @@ export default function CreatorPage() {
         courses={courses || []}
         onSelectCourse={handleSelectCourse}
         onNewCourse={handleNewCourse}
+        onDeleteCourse={handleDeleteCourse}
       />
     );
   }
@@ -81,6 +91,7 @@ export default function CreatorPage() {
         courses={courses || []}
         onSelectCourse={handleSelectCourse}
         onNewCourse={handleNewCourse}
+        onDeleteCourse={handleDeleteCourse}
       />
     );
   }

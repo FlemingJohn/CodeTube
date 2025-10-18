@@ -23,7 +23,7 @@ import { COURSE_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore } from '@/firebase';
 import VideoPlayer from './VideoPlayer';
 import VideoSearchDialog from './VideoSearchDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -88,6 +88,7 @@ const FormattedAnswer = ({ text }: { text: string }) => {
 export default function CreatorStudio({ course: initialCourse, onBackToDashboard }: CreatorStudioProps) {
   const { toast } = useToast();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
 
   const [course, setCourse] = useState(initialCourse);
@@ -119,7 +120,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
 
   const onCourseUpdate = (updatedCourse: Course) => {
     setCourse(updatedCourse);
-    updateCourse(updatedCourse.userId, updatedCourse.id, updatedCourse);
+    updateCourse(firestore, updatedCourse.userId, updatedCourse.id, updatedCourse);
   };
 
   const chapterStartTimes = useMemo(() => {

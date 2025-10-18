@@ -13,13 +13,13 @@ import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import PracticePitchDialog from './PracticePitchDialog';
-import { deleteCourse } from '@/lib/courses';
 import ShareDialog from './ShareDialog';
 
 interface CourseListProps {
   courses: Course[];
   onSelectCourse: (id: string) => void;
   onNewCourse: () => void;
+  onDeleteCourse: (id: string) => void;
 }
 
 const categoryColors: { [key: string]: string } = {
@@ -34,7 +34,7 @@ const categoryColors: { [key: string]: string } = {
   };
   
 
-export default function CourseList({ courses, onSelectCourse, onNewCourse }: CourseListProps) {
+export default function CourseList({ courses, onSelectCourse, onNewCourse, onDeleteCourse }: CourseListProps) {
   const [selectedCourseForPitch, setSelectedCourseForPitch] = useState<Course | null>(null);
   const [selectedCourseForShare, setSelectedCourseForShare] = useState<Course | null>(null);
 
@@ -58,9 +58,9 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse }: Cou
     setSelectedCourseForShare(course);
   };
 
-  const handleDelete = (courseId: string, userId: string, e: React.MouseEvent) => {
+  const handleDelete = (courseId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    deleteCourse(userId, courseId);
+    onDeleteCourse(courseId);
   }
 
   return (
@@ -137,7 +137,7 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse }: Cou
                             <Mic className="h-4 w-4 mr-2" />
                             Practice
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={(e) => handleDelete(course.id, course.userId, e)}>
+                        <Button variant="ghost" size="icon" onClick={(e) => handleDelete(course.id, e)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </CardFooter>

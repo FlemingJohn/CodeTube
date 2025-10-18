@@ -6,12 +6,11 @@ import {
     addDoc,
     updateDoc,
     deleteDoc,
-    serverTimestamp
+    serverTimestamp,
+    Firestore
 } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 import { Course } from './types';
 import { 
-    addDocumentNonBlocking,
     updateDocumentNonBlocking,
     deleteDocumentNonBlocking
 } from '@/firebase/non-blocking-updates';
@@ -22,12 +21,12 @@ import {
 /**
  * Adds a new course to Firestore for a specific user.
  *
+ * @param firestore - The Firestore instance.
  * @param userId - The ID of the user creating the course.
  * @param courseData - The partial course data (title is required).
  * @returns The ID of the newly created course document.
  */
-export async function addCourse(userId: string, courseData: Partial<Omit<Course, 'id' | 'userId'>>) {
-    const firestore = useFirestore();
+export async function addCourse(firestore: Firestore, userId: string, courseData: Partial<Omit<Course, 'id' | 'userId'>>) {
     const coursesColRef = collection(firestore, 'users', userId, 'courses');
     
     const newDocData = {
@@ -44,12 +43,12 @@ export async function addCourse(userId: string, courseData: Partial<Omit<Course,
 /**
  * Updates an existing course in Firestore.
  *
+ * @param firestore - The Firestore instance.
  * @param userId - The ID of the user who owns the course.
  * @param courseId - The ID of the course to update.
  * @param courseData - The partial course data to update.
  */
-export function updateCourse(userId: string, courseId: string, courseData: Partial<Omit<Course, 'id' | 'userId'>>) {
-    const firestore = useFirestore();
+export function updateCourse(firestore: Firestore, userId: string, courseId: string, courseData: Partial<Omit<Course, 'id' | 'userId'>>) {
     const courseDocRef = doc(firestore, 'users', userId, 'courses', courseId);
     
     const updateData = {
@@ -63,11 +62,11 @@ export function updateCourse(userId: string, courseId: string, courseData: Parti
 /**
  * Deletes a course from Firestore.
  *
+ * @param firestore - The Firestore instance.
  * @param userId - The ID of the user who owns the course.
  * @param courseId - The ID of the course to delete.
  */
-export function deleteCourse(userId: string, courseId: string) {
-    const firestore = useFirestore();
+export function deleteCourse(firestore: Firestore, userId: string, courseId: string) {
     const courseDocRef = doc(firestore, 'users', userId, 'courses', courseId);
     deleteDocumentNonBlocking(courseDocRef);
 }
