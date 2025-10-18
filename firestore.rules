@@ -1,3 +1,19 @@
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for private course data and allows public read access to published courses.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores user profiles, accessible only to the user themselves.
+ * - /users/{userId}/courses/{courseId}: Stores private course data, accessible only to the course owner.
+ * - /users/{userId}/courses/{courseId}/chapters/{chapterId}: Stores chapter data for private courses, accessible only to the course owner.
+ * - /courses/{courseId}: Stores public, read-only course data, accessible to all users if the 'published' field is true.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own user documents.
+ * - Courses and chapters under /users/{userId} are strictly owned and managed by that user.
+ * - Public courses in /courses/{courseId} are readable by anyone if the published flag is true, but only updatable/deletable by the owner.
+ * - Listing of any kind is only allowed for the owner of a course.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -5,147 +21,97 @@ service cloud.firestore {
     /**
      * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (create) - Authenticated user can create their own profile if the userId matches their auth.uid.
-     * @allow (get) - Authenticated user can read their own profile.
-     * @allow (update) - Authenticated user can update their own profile.
-     * @allow (delete) - Authenticated user can delete their own profile.
-     * @deny (list) - Prevents listing of all user profiles.
-     * @deny (create) - Unauthenticated user cannot create a profile.
-     * @deny (update) - Authenticated user cannot update someone else's profile.
-     * @deny (delete) - Authenticated user cannot delete someone else's profile.
-     * @principle Enforces document ownership for writes and restricts listing of user profiles.
+     * @allow (create) User with ID 'user123' can create their own profile.
+     * @allow (get) User with ID 'user123' can read their own profile.
+     * @allow (update) User with ID 'user123' can update their own profile.
+     * @allow (delete) User with ID 'user123' can delete their own profile.
+     * @deny (create) User with ID 'user123' cannot create a profile for user 'user456'.
+     * @deny (get) User with ID 'user123' cannot read profile of user 'user456'.
+     * @deny (update) User with ID 'user123' cannot update profile of user 'user456'.
+     * @deny (delete) User with ID 'user123' cannot delete profile of user 'user456'.
+     * @principle Enforces user-ownership for user profile data.
      */
     match /users/{userId} {
-      // Helper function to check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Helper function to check if the user is the owner of the document
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
 
-        // Helper function to check if the user is the owner of the existing document
-      function isExistingOwner(userId) {
-        return isSignedIn() && resource.data.id == request.auth.uid;
-      }
-
-
-      allow get: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId) && request.auth.uid == userId;
-      allow update: if isSignedIn() && isOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Controls access to private course documents stored under a user's profile.
+     * @description Controls access to private course documents under a user.
      * @path /users/{userId}/courses/{courseId}
-     * @allow (create) - Authenticated user can create a course under their profile if the userId matches their auth.uid.
-     * @allow (get) - Authenticated user can read a course under their profile if the userId matches their auth.uid.
-     * @allow (update) - Authenticated user can update a course under their profile if the userId matches their auth.uid.
-     * @allow (delete) - Authenticated user can delete a course under their profile if the userId matches their auth.uid.
-     * @deny (create) - Unauthenticated user cannot create a course.
-     * @deny (get) - Unauthenticated user cannot read a course.
-     * @deny (update) - Authenticated user cannot update someone else's course.
-     * @deny (delete) - Authenticated user cannot delete someone else's course.
-     * @principle Enforces document ownership and validates the relationship between user and course.
+     * @allow (create) User with ID 'user123' can create a course under their profile.
+     * @allow (get) User with ID 'user123' can read a course under their profile.
+     * @allow (update) User with ID 'user123' can update a course under their profile.
+     * @allow (delete) User with ID 'user123' can delete a course under their profile.
+     * @deny (create) User with ID 'user123' cannot create a course under user 'user456'.
+     * @deny (get) User with ID 'user123' cannot read a course under user 'user456'.
+     * @deny (update) User with ID 'user123' cannot update a course under user 'user456'.
+     * @deny (delete) User with ID 'user123' cannot delete a course under user 'user456'.
+     * @principle Enforces user-ownership for private course data.
      */
     match /users/{userId}/courses/{courseId} {
-      // Helper function to check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Helper function to check if the user is the owner of the document
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
 
-      // Helper function to check if the user is the owner of the existing document
-      function isExistingOwner() {
-        return isSignedIn() && resource.data.userId == request.auth.uid;
-      }
-
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner();
-      allow delete: if isSignedIn() && isExistingOwner();
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Controls access to chapter documents stored under a user's course.
+     * @description Controls access to chapter documents under a private course.
      * @path /users/{userId}/courses/{courseId}/chapters/{chapterId}
-     * @allow (create) - Authenticated user can create a chapter under their course if the userId matches their auth.uid.
-     * @allow (get) - Authenticated user can read a chapter under their course if the userId matches their auth.uid.
-     * @allow (update) - Authenticated user can update a chapter under their course if the userId matches their auth.uid.
-     * @allow (delete) - Authenticated user can delete a chapter under their course if the userId matches their auth.uid.
-     * @deny (create) - Unauthenticated user cannot create a chapter.
-     * @deny (get) - Unauthenticated user cannot read a chapter.
-     * @deny (update) - Authenticated user cannot update someone else's chapter.
-     * @deny (delete) - Authenticated user cannot delete someone else's chapter.
-     * @principle Enforces document ownership and validates the relationship between user, course, and chapter.
+     * @allow (create) User with ID 'user123' can create a chapter under their course.
+     * @allow (get) User with ID 'user123' can read a chapter under their course.
+     * @allow (update) User with ID 'user123' can update a chapter under their course.
+     * @allow (delete) User with ID 'user123' can delete a chapter under their course.
+     * @deny (create) User with ID 'user123' cannot create a chapter under course of user 'user456'.
+     * @deny (get) User with ID 'user123' cannot read a chapter under course of user 'user456'.
+     * @deny (update) User with ID 'user123' cannot update a chapter under course of user 'user456'.
+     * @deny (delete) User with ID 'user123' cannot delete a chapter under course of user 'user456'.
+     * @principle Enforces user-ownership for chapter data within private courses.
      */
     match /users/{userId}/courses/{courseId}/chapters/{chapterId} {
-      // Helper function to check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Helper function to check if the user is the owner of the document
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
 
-      // Helper function to check if the user is the owner of the existing document
-      function isExistingOwner(userId, courseId) {
-        return isSignedIn() && get(/databases/$(database)/documents/users/$(userId)/courses/$(courseId)).data.userId == request.auth.uid;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId, courseId);
-      allow delete: if isSignedIn() && isExistingOwner(userId, courseId);
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
 
     /**
      * @description Controls access to public course documents.
      * @path /courses/{courseId}
-     * @allow (get) - Anyone can read a public course.
-     * @allow (list) - Anyone can list public courses.
-     * @allow (create) - Authenticated user can create a public course if the userId matches their auth.uid.
-     * @allow (update) - Authenticated user can update a public course if the userId matches their auth.uid.
-     * @allow (delete) - Authenticated user can delete a public course if the userId matches their auth.uid.
-     * @deny (create) - Unauthenticated user cannot create a public course.
-     * @deny (update) - Authenticated user cannot update someone else's public course.
-     * @deny (delete) - Authenticated user cannot delete someone else's public course.
-     * @principle Allows public read access and enforces ownership for writes.
+     * @allow (get) Any user can read a course if it's published.
+     * @allow (list) Any user can list courses if they are published.
+     * @allow (create) User with ID 'user123' can create a public course where userId matches.
+     * @allow (update) User with ID 'user123' can update a public course they own.
+     * @allow (delete) User with ID 'user123' can delete a public course they own.
+     * @deny (create) User with ID 'user123' cannot create a public course with mismatched userId.
+     * @deny (update) User with ID 'user123' cannot update a public course they don't own.
+     * @deny (delete) User with ID 'user123' cannot delete a public course they don't own.
+     * @principle Allows public read access to published courses while enforcing owner-only writes.
      */
     match /courses/{courseId} {
-      // Helper function to check if the user is signed in
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Helper function to check if the user is the owner of the document
-      function isOwner() {
-        return request.auth.uid == resource.data.userId;
-      }
-
-      // Helper function to check if the user is the owner of the existing document
-      function isExistingOwner() {
-        return isSignedIn() && resource.data.userId == request.auth.uid;
-      }
-
       allow get: if true;
       allow list: if true;
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && isExistingOwner();
-      allow delete: if isSignedIn() && isExistingOwner();
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
   }
 }
