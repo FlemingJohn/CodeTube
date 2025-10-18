@@ -50,6 +50,38 @@ const timestampToSeconds = (ts: string) => {
     return 0;
 };
   
+const FormattedAnswer = ({ text }: { text: string }) => {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const parts = text.split(codeBlockRegex);
+  
+    return (
+      <div className="space-y-4">
+        {parts.map((part, index) => {
+          if (index % 3 === 2) { 
+            return (
+              <Card key={index} className="bg-background/50 my-4 shadow-inner">
+                <CardContent className="p-4">
+                  <pre className="font-code text-sm overflow-x-auto">
+                    <code>{part.trim()}</code>
+                  </pre>
+                </CardContent>
+              </Card>
+            );
+          }
+          if (index % 3 === 0 && part.trim()) {
+            return (
+              <div key={index}>
+                {part.trim().split('\n').map((paragraph, pIndex) => (
+                  <p key={pIndex} className="mb-2 last:mb-0">{paragraph}</p>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
+};
 
 export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboard, isNewCourse }: CreatorStudioProps) {
   const { toast } = useToast();
@@ -61,6 +93,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
+  const [isInterviewPending, startInterviewTransition] = useTransition();
   const [player, setPlayer] = useState<any>(null);
 
   useEffect(() => {
@@ -86,6 +119,11 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     })).sort((a, b) => a.startTime - b.startTime);
   }, [course.chapters]);
 
+  const selectedChapter = useMemo(
+    () => course.chapters.find(c => c.id === selectedChapterId),
+    [course.chapters, selectedChapterId]
+  );
+  
   useEffect(() => {
     if (!player) return;
   
@@ -114,10 +152,21 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     return () => clearInterval(interval);
   }, [player, chapterStartTimes]);
   
-  const selectedChapter = useMemo(
-    () => course.chapters.find(c => c.id === selectedChapterId),
-    [course.chapters, selectedChapterId]
-  );
+  useEffect(() => {
+    if (selectedChapter && !selectedChapter.interviewQuestions && selectedChapter.transcript) {
+        startInterviewTransition(async () => {
+            const result = await handleGenerateInterviewQuestions({
+                transcript: selectedChapter.transcript,
+                chapterTitle: selectedChapter.title,
+            });
+            if (result.questions) {
+                const updatedChapter = { ...selectedChapter, interviewQuestions: result.questions };
+                handleUpdateChapter(updatedChapter);
+            }
+        });
+    }
+  }, [selectedChapter]);
+
 
   const handleUpdateChapter = (updatedChapter: Chapter) => {
     const newChapters = course.chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
@@ -263,33 +312,72 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                       </div>
                     )}
                     {selectedChapter && (
-                      <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                          <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                            <Sparkles className="w-6 h-6 text-primary" />
-                            Take notes
-                          </CardTitle>
-                          <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
-                              {isSummaryPending ? (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : (
-                                  <Sparkles className="mr-2 h-4 w-4" />
-                              )}
-                              Generate Notes
-                          </Button>
-                        </CardHeader>
-                        <CardContent>
-                          <Textarea
-                              id="summary"
-                              name="summary"
-                              value={selectedChapter.summary}
-                              onChange={handleSummaryChange}
-                              placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
-                              rows={8}
-                              className="text-base"
-                          />
-                        </CardContent>
-                      </Card>
+                      <>
+                        <Card>
+                          <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                              <Sparkles className="w-6 h-6 text-primary" />
+                              Take notes
+                            </CardTitle>
+                            <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
+                                {isSummaryPending ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Sparkles className="mr-2 h-4 w-4" />
+                                )}
+                                Generate Notes
+                            </Button>
+                          </CardHeader>
+                          <CardContent>
+                            <Textarea
+                                id="summary"
+                                name="summary"
+                                value={selectedChapter.summary}
+                                onChange={handleSummaryChange}
+                                placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
+                                rows={8}
+                                className="text-base"
+                            />
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                                    <Bot className="w-6 h-6 text-primary" />
+                                    Interview Prep
+                                </CardTitle>
+                                {isInterviewPending && <Loader2 className="h-6 w-6 animate-spin" />}
+                            </CardHeader>
+                            <CardContent>
+                                {selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 ? (
+                                    <Accordion type="single" collapsible className="w-full space-y-2">
+                                        {selectedChapter.interviewQuestions.map((item, index) => (
+                                            <AccordionItem key={index} value={`item-${index}`} className="bg-background/50 rounded-md border px-4">
+                                                <AccordionTrigger className="text-left hover:no-underline">
+                                                    <div className="flex items-start gap-4">
+                                                        <span className="text-lg font-bold text-primary mt-1">{index + 1}.</span>
+                                                        <span className="flex-1">{item.question}</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                <AccordionContent className="text-base prose prose-sm dark:prose-invert max-w-none pt-2">
+                                                    <FormattedAnswer text={item.answer} />
+                                                </AccordionContent>
+                                            </AccordionItem>
+                                        ))}
+                                    </Accordion>
+                                ) : (
+                                <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                                    {isInterviewPending ? (
+                                        <p>Generating interview questions...</p>
+                                    ) : (
+                                        <p>Interview questions for this chapter will be generated automatically.</p>
+                                    )}
+                                </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                      </>
                     )}
                   </div>
                 </ScrollArea>
