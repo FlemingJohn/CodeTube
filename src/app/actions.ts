@@ -5,7 +5,6 @@ import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
 import { explainCode } from '@/ai/flows/explain-code';
 import { youtubeSearch } from '@/ai/flows/youtube-search';
-import { findCodeInTranscript } from '@/ai/flows/find-code-in-transcript';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -55,37 +54,6 @@ export async function handleExplainCode(values: z.infer<typeof explainCodeSchema
     return { error: 'Failed to explain code. Please try again.' };
   }
 }
-
-const findCodeSchema = z.object({
-  transcript: z.string(),
-  chapterTitle: z.string(),
-});
-
-export async function handleFindCodeInTranscript(values: z.infer<typeof findCodeSchema>) {
-    const validatedFields = findCodeSchema.safeParse(values);
-
-    if (!validatedFields.success) {
-        return { error: 'Invalid fields to find code.' };
-    }
-    
-    // Return empty if transcript is missing, but don't show an error.
-    if (!validatedFields.data.transcript) {
-        return { code: '' }; 
-    }
-
-    try {
-        const result = await findCodeInTranscript({ 
-            transcript: validatedFields.data.transcript,
-            chapterTitle: validatedFields.data.chapterTitle,
-        });
-        return { code: result.code };
-    } catch (e) {
-        console.error(e);
-        // If AI fails, still return empty code so UI doesn't show an error
-        return { code: '' };
-    }
-}
-
 
 const suggestImprovementsSchema = z.object({
   htmlContent: z.string(),

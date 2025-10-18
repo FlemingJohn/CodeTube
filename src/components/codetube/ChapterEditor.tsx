@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, SearchCode } from 'lucide-react';
-import { handleExplainCode, handleFindCodeInTranscript } from '@/app/actions';
+import { Loader2, Wand2, Bot } from 'lucide-react';
+import { handleExplainCode } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChapterEditorProps {
@@ -54,7 +54,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
-  const [isFindCodePending, startFindCodeTransition] = useTransition();
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -90,44 +89,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
           description: 'The AI-powered explanation has been generated.',
         });
       }
-    });
-  };
-
-  const onFindCode = () => {
-    if (!localChapter.transcript) {
-        toast({
-            variant: 'destructive',
-            title: 'No Transcript Found',
-            description: 'A transcript is needed to find code. Import a video with transcripts available.',
-        });
-        return;
-    }
-    startFindCodeTransition(async () => {
-        const result = await handleFindCodeInTranscript({ 
-            transcript: localChapter.transcript,
-            chapterTitle: localChapter.title,
-        });
-        if (result.error) {
-            toast({
-                variant: 'destructive',
-                title: 'Could Not Find Code',
-                description: result.error,
-            });
-        } else if (result.code) {
-            const updatedChapter = { ...localChapter, code: result.code };
-            setLocalChapter(updatedChapter);
-            onUpdateChapter(updatedChapter);
-            toast({
-                title: 'Code Snippet Found!',
-                description: 'The AI has added a code snippet to this chapter.',
-            });
-        } else {
-            toast({
-                variant: 'default',
-                title: 'No Code Found',
-                description: 'The AI could not find a relevant code snippet in this chapter.',
-            });
-        }
     });
   };
 
@@ -168,21 +129,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
                 <Button
                     size="sm"
                     variant="outline"
-                    onClick={onFindCode}
-                    disabled={isFindCodePending || isCodeExplanationPending}
-                >
-                    {isFindCodePending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <SearchCode className="mr-2 h-4 w-4" />
-                    )}
-                    Find Code
-                </Button>
-                <Button
-                    size="sm"
-                    variant="outline"
                     onClick={onExplainCode}
-                    disabled={isCodeExplanationPending || isFindCodePending || !localChapter.code}
+                    disabled={isCodeExplanationPending || !localChapter.code}
                 >
                     {isCodeExplanationPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

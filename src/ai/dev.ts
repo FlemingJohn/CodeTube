@@ -6,4 +6,3 @@ import '@/ai/flows/suggest-landing-page-improvements.ts';
 import '@/ai/flows/generate-chapter-summary.ts';
 import '@/ai/flows/explain-code.ts';
 import '@/ai/flows/youtube-search.ts';
-import '@/ai/flows/find-code-in-transcript.ts';
