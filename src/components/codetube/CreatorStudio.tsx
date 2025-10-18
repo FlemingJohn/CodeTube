@@ -190,7 +190,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
             <Header />
           </SidebarHeader>
 
-          <SidebarContent>
+          <SidebarContent className='overflow-auto'>
             <div className="flex flex-col gap-4 p-2">
               <YoutubeImport 
                 onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
@@ -225,28 +225,27 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
               />
             </div>
           </SidebarContent>
-
-          <SidebarFooter className="p-2">
-            <Button variant="ghost" className="justify-start gap-2" onClick={onBackToDashboard}>
-              <ArrowLeft />
-              <span className="group-data-[collapsible=icon]:hidden">My Courses</span>
-            </Button>
-            <Button variant="ghost" className="justify-start gap-2" onClick={() => setGithubDialogOpen(true)}>
-              <Github />
-              <span className="group-data-[collapsible=icon]:hidden">Export to GitHub</span>
-            </Button>
-            <Button variant="ghost" className="justify-start gap-2" onClick={handleSignOut}>
-              <LogOut />
-              <span className="group-data-[collapsible=icon]:hidden">Sign Out</span>
-            </Button>
-          </SidebarFooter>
         </Sidebar>
 
         <SidebarInset>
-          <div className="absolute top-2 left-2 z-10">
-            <SidebarTrigger />
-          </div>
-          <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6 pt-12 md:pt-6">
+            <header className="flex items-center justify-between p-2 border-b">
+                <SidebarTrigger />
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={onBackToDashboard}>
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      My Courses
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setGithubDialogOpen(true)}>
+                        <Github className="mr-2 h-4 w-4" />
+                        Export
+                    </Button>
+                     <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
+                    </Button>
+                </div>
+            </header>
+          <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-auto">
             <div className="flex flex-col gap-6">
               {course.videoId ? (
                 <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
