@@ -318,7 +318,7 @@ export async function handleYoutubeSearch(values: z.infer<typeof youtubeSearchSc
 }
 
 const generateQuizSchema = z.object({
-    chapterContent: z.string(),
+    transcript: z.string(),
     chapterTitle: z.string(),
 });
 

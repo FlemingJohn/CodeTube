@@ -97,17 +97,17 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   };
 
   const onGenerateQuiz = () => {
-    if (!localChapter.summary) {
+    if (!localChapter.transcript) {
         toast({
           variant: 'destructive',
-          title: 'Missing Chapter Summary',
-          description: 'Please generate a summary for this chapter before creating a quiz.',
+          title: 'Missing Chapter Transcript',
+          description: 'A transcript is required to generate a quiz.',
         });
         return;
       }
       startQuizGenerationTransition(async () => {
         const result = await handleGenerateQuiz({
-          chapterContent: localChapter.summary,
+          transcript: localChapter.transcript,
           chapterTitle: localChapter.title,
         });
         if (result.error) {
@@ -212,7 +212,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                     size="sm"
                     variant="outline"
                     onClick={onGenerateQuiz}
-                    disabled={isQuizGenerationPending || !localChapter.summary}
+                    disabled={isQuizGenerationPending || !localChapter.transcript}
                 >
                     {isQuizGenerationPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
