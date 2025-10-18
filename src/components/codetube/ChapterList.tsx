@@ -10,14 +10,14 @@ interface ChapterListProps {
   chapters: Chapter[];
   onChaptersUpdate: (chapters: Chapter[]) => void;
   selectedChapterId: string | null;
-  setSelectedChapterId: React.Dispatch<React.SetStateAction<string | null>>;
+  onChapterSelect: (chapter: Chapter) => void;
 }
 
 export default function ChapterList({
   chapters,
   onChaptersUpdate,
   selectedChapterId,
-  setSelectedChapterId,
+  onChapterSelect,
 }: ChapterListProps) {
   const addChapter = () => {
     const newChapter: Chapter = {
@@ -30,13 +30,15 @@ export default function ChapterList({
       transcript: 'This is a new chapter. Please add a transcript.',
     };
     onChaptersUpdate([...chapters, newChapter]);
-    setSelectedChapterId(newChapter.id);
+    onChapterSelect(newChapter);
   };
 
   const deleteChapter = (idToDelete: string) => {
-    onChaptersUpdate(chapters.filter(c => c.id !== idToDelete));
+    const newChapters = chapters.filter(c => c.id !== idToDelete);
+    onChaptersUpdate(newChapters);
     if (selectedChapterId === idToDelete) {
-      setSelectedChapterId(null);
+      // Select the first chapter if it exists, otherwise null
+      onChapterSelect(newChapters[0] || null);
     }
   };
 
@@ -54,7 +56,7 @@ export default function ChapterList({
             chapters.map(chapter => (
               <div
                 key={chapter.id}
-                onClick={() => setSelectedChapterId(chapter.id)}
+                onClick={() => onChapterSelect(chapter)}
                 className={`group flex items-center justify-between rounded-md p-2 cursor-pointer transition-colors ${
                   selectedChapterId === chapter.id
                     ? 'bg-primary/10 text-primary'

@@ -35,6 +35,16 @@ interface CreatorStudioProps {
     isNewCourse: boolean;
 }
 
+const timestampToSeconds = (ts: string) => {
+    const parts = ts.split(':').map(Number);
+    if (parts.length === 3) { // hh:mm:ss
+        return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else if (parts.length === 2) { // mm:ss
+        return parts[0] * 60 + parts[1];
+    }
+    return 0;
+};
+
 export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboard, isNewCourse }: CreatorStudioProps) {
   const { toast } = useToast();
   const auth = useAuth();
@@ -44,8 +54,8 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
+  const [player, setPlayer] = useState<any>(null);
 
-  // Effect to auto-select the first chapter when the course chapters change (e.g., after import)
   useEffect(() => {
     if (course.chapters.length > 0) {
       if (!selectedChapterId || !course.chapters.some(c => c.id === selectedChapterId)) {
@@ -71,10 +81,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     const newChapters = course.chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
     onCourseUpdate({ ...course, chapters: newChapters });
   };
-
-  const handleSetChapters = (newChapters: Chapter[]) => {
-    onCourseUpdate({ ...course, chapters: newChapters });
-  }
   
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!selectedChapter) return;
@@ -115,9 +121,18 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     router.push('/');
   };
 
-  const handleSetCourseData = (updatedData: Partial<Course>) => {
-    onCourseUpdate({ ...course, ...updatedData });
+  const onPlayerReady = (event: any) => {
+    setPlayer(event.target);
   };
+
+  const handleChapterSelect = (chapter: Chapter) => {
+    setSelectedChapterId(chapter.id);
+    if (player) {
+      const seekTime = timestampToSeconds(chapter.timestamp);
+      player.seekTo(seekTime);
+      player.playVideo();
+    }
+  }
 
   return (
     <div className="h-screen bg-background">
@@ -134,14 +149,14 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           <SidebarContent>
             <div className="flex flex-col gap-4 p-2">
               <YoutubeImport 
-                onCourseUpdate={handleSetCourseData}
+                onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <ChapterList
                 chapters={course.chapters}
-                onChaptersUpdate={(newChapters) => handleSetCourseData({ chapters: newChapters })}
+                onChaptersUpdate={(newChapters) => onCourseUpdate({ ...course, chapters: newChapters })}
                 selectedChapterId={selectedChapterId}
-                setSelectedChapterId={setSelectedChapterId}
+                onChapterSelect={handleChapterSelect}
               />
             </div>
           </SidebarContent>
@@ -166,7 +181,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="flex flex-col gap-6">
               {course.videoId ? (
-                <VideoPlayer videoId={course.videoId} />
+                <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
               ) : (
                 <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
                   <div className="text-center text-muted-foreground">
@@ -237,7 +252,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
         <VideoSearchDialog
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
-          onCourseUpdate={handleSetCourseData}
+          onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
           setSelectedChapterId={setSelectedChapterId}
         />
         
