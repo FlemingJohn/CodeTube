@@ -60,7 +60,7 @@ async function toWav(
       bitDepth: sampleWidth * 8,
     });
 
-    let bufs = [] as any[];
+    const bufs = [] as any[];
     writer.on('error', reject);
     writer.on('data', function (d) {
       bufs.push(d);
@@ -85,6 +85,8 @@ const getPitchFeedbackFlow = ai.defineFlow(
       input.audioDataUri.substring(input.audioDataUri.indexOf(',') + 1),
       'base64'
     );
+    // The browser recorder is likely recording in a format that needs to be
+    // converted or handled properly. Assuming it's raw PCM for now and converting to WAV.
     const wavAudio = 'data:audio/wav;base64,' + (await toWav(audioBuffer));
 
     const transcribed = await ai.generate({
