@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
@@ -111,10 +112,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const clapperboardIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20.2 6-3 11-8-5-8.3-5.6 3.5-7 15.8 6.6Z"/><path d="m20.2 6-3 11-8-5-8.3-5.6 3.5-7 15.8 6.6Z"/><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m3.5 11.6.9 2.4c.3 1.1-.3 2.2-1.3 2.5l-2.2.6c-1.1.3-2.2-.3-2.5-1.3L.6 11"/><path d="M15 12.3 3.8 15.7c-1.1.3-2.2-.3-2.5-1.3L0 12l15 4.3Z"/><path d="m15 12.3-1.2 6.2c-.3 1.1.3 2.2 1.3 2.5l2.2.6c1.1.3 2.2-.3 2.5-1.3l1.2-6.2-6-1.7Z"/></svg>`;
+  const faviconDataUri = `data:image/svg+xml;base64,${btoa(clapperboardIcon)}`;
+
   return (
     <html lang="en" className="dark">
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href={faviconDataUri} type="image/svg+xml" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
