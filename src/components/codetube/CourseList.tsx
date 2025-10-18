@@ -4,7 +4,7 @@
 import { Course } from '@/lib/types';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Plus, Trash2, Mic } from 'lucide-react';
+import { Plus, Trash2, Mic, Share2 } from 'lucide-react';
 import Header from './Header';
 import AuthHeader from '../auth/AuthHeader';
 import Image from 'next/image';
@@ -13,12 +13,13 @@ import { Badge } from '../ui/badge';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import PracticePitchDialog from './PracticePitchDialog';
+import { deleteCourse } from '@/lib/courses';
+import ShareDialog from './ShareDialog';
 
 interface CourseListProps {
   courses: Course[];
   onSelectCourse: (id: string) => void;
   onNewCourse: () => void;
-  onDeleteCourse: (id: string) => void;
 }
 
 const categoryColors: { [key: string]: string } = {
@@ -33,8 +34,9 @@ const categoryColors: { [key: string]: string } = {
   };
   
 
-export default function CourseList({ courses, onSelectCourse, onNewCourse, onDeleteCourse }: CourseListProps) {
+export default function CourseList({ courses, onSelectCourse, onNewCourse }: CourseListProps) {
   const [selectedCourseForPitch, setSelectedCourseForPitch] = useState<Course | null>(null);
+  const [selectedCourseForShare, setSelectedCourseForShare] = useState<Course | null>(null);
 
   const calculateProgress = (course: Course) => {
     if (!course.chapters || course.chapters.length === 0) {
@@ -50,6 +52,16 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
     e.stopPropagation();
     setSelectedCourseForPitch(course);
   };
+  
+  const openShareDialog = (course: Course, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedCourseForShare(course);
+  };
+
+  const handleDelete = (courseId: string, userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteCourse(userId, courseId);
+  }
 
   return (
     <>
@@ -117,14 +129,15 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
                         )}
                       </CardContent>
                       <CardFooter className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={(e) => openShareDialog(course, e)}>
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Share
+                        </Button>
                         <Button variant="outline" size="sm" onClick={(e) => openPitchDialog(course, e)}>
                             <Mic className="h-4 w-4 mr-2" />
-                            Practice Pitch
+                            Practice
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteCourse(course.id);
-                        }}>
+                        <Button variant="ghost" size="icon" onClick={(e) => handleDelete(course.id, course.userId, e)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </CardFooter>
@@ -150,6 +163,13 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
             isOpen={!!selectedCourseForPitch}
             setIsOpen={() => setSelectedCourseForPitch(null)}
             course={selectedCourseForPitch}
+        />
+      )}
+      {selectedCourseForShare && (
+        <ShareDialog
+          isOpen={!!selectedCourseForShare}
+          setIsOpen={() => setSelectedCourseForShare(null)}
+          course={selectedCourseForShare}
         />
       )}
     </>

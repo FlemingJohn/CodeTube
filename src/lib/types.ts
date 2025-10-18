@@ -1,5 +1,4 @@
 
-
 export type Quiz = {
   question: string;
   options: string[];
@@ -26,11 +25,13 @@ export type Chapter = {
 
 export type Course = {
   id:string;
+  userId: string;
   title: string;
   videoId: string | null;
   chapters: Chapter[];
   category?: string;
   interviewQuestions?: InterviewQuestion[];
+  published?: boolean;
 };
 
 export const COURSE_CATEGORIES = [

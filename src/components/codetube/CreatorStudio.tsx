@@ -11,12 +11,13 @@ import {
   SidebarRail
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2 } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import GithubExportDialog from './GithubExportDialog';
+import ShareDialog from './ShareDialog';
 import type { Chapter, Course, CourseCategory, InterviewQuestion } from '@/lib/types';
 import { COURSE_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -32,12 +33,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { ScrollArea } from '../ui/scroll-area';
+import { updateCourse } from '@/lib/courses';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface CreatorStudioProps {
     course: Course;
-    onCourseUpdate: (course: Course) => void;
     onBackToDashboard: () => void;
-    isNewCourse: boolean;
 }
 
 const timestampToSeconds = (ts: string) => {
@@ -83,15 +85,17 @@ const FormattedAnswer = ({ text }: { text: string }) => {
     );
 };
 
-export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboard, isNewCourse }: CreatorStudioProps) {
+export default function CreatorStudio({ course: initialCourse, onBackToDashboard }: CreatorStudioProps) {
   const { toast } = useToast();
   const auth = useAuth();
   const router = useRouter();
 
+  const [course, setCourse] = useState(initialCourse);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [playingChapterId, setPlayingChapterId] = useState<string | null>(null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [isShareDialogOpen, setShareDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
   const [isInterviewPending, startInterviewTransition] = useTransition();
   const [player, setPlayer] = useState<any>(null);
@@ -107,10 +111,16 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   }, [course.chapters, selectedChapterId]);
 
   useEffect(() => {
-    if (isNewCourse) {
+    // If the course is new and has no video, open the search dialog.
+    if (!initialCourse.videoId) {
       setSearchDialogOpen(true);
     }
-  }, [isNewCourse]);
+  }, [initialCourse.videoId]);
+
+  const onCourseUpdate = (updatedCourse: Course) => {
+    setCourse(updatedCourse);
+    updateCourse(updatedCourse.userId, updatedCourse.id, updatedCourse);
+  };
 
   const chapterStartTimes = useMemo(() => {
     return course.chapters.map(chapter => ({
@@ -165,6 +175,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
             }
         });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChapter]);
 
 
@@ -216,7 +227,11 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     setPlayer(event.target);
   };
 
-  const handleChapterSelect = (chapter: Chapter) => {
+  const handleChapterSelect = (chapter: Chapter | null) => {
+    if (!chapter) {
+        setSelectedChapterId(null);
+        return;
+    }
     setSelectedChapterId(chapter.id);
     if (player) {
       const seekTime = timestampToSeconds(chapter.timestamp);
@@ -228,6 +243,14 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const handleCategoryChange = (category: CourseCategory) => {
     onCourseUpdate({ ...course, category });
   }
+
+  const handlePublishToggle = (published: boolean) => {
+    onCourseUpdate({ ...course, published });
+    toast({
+        title: `Course ${published ? 'Published' : 'Unpublished'}`,
+        description: `Your course is now ${published ? 'publicly visible' : 'private'}.`,
+    });
+  };
 
   return (
     <div className="h-screen bg-background">
@@ -286,6 +309,14 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       My Courses
                     </Button>
+                    <div className="flex items-center space-x-2">
+                        <Switch id="publish-switch" checked={course.published} onCheckedChange={handlePublishToggle}/>
+                        <Label htmlFor="publish-switch">Publish</Label>
+                    </div>
+                     <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)} disabled={!course.published}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => setGithubDialogOpen(true)}>
                         <Github className="mr-2 h-4 w-4" />
                         Export
@@ -307,7 +338,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                       <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
                         <div className="text-center text-muted-foreground">
                           <h2 className="text-xl font-semibold">No Video Imported</h2>
-                          <p>Import a YouTube video to get started.</p>
+                          <p>Click the "Search" button to find a video.</p>
                         </div>
                       </div>
                     )}
@@ -417,6 +448,12 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
           onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
+        />
+
+        <ShareDialog
+          isOpen={isShareDialogOpen}
+          setIsOpen={setShareDialogOpen}
+          course={course}
         />
         
       </SidebarProvider>

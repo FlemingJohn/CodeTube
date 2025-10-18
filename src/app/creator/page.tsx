@@ -2,20 +2,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocalStorage } from '@/hooks/use-local-storage';
-import { Chapter, Course } from '@/lib/types';
+import { Course } from '@/lib/types';
 import CourseList from '@/components/codetube/CourseList';
 import CreatorStudio from '@/components/codetube/CreatorStudio';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { collection } from 'firebase/firestore';
+import { addCourse } from '@/lib/courses';
+import { useMemo } from 'react';
 
 export default function CreatorPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-  const [courses, setCourses] = useLocalStorage<Course[]>('codetube-courses', []);
-  const [activeCourseId, setActiveCourseId] = useLocalStorage<string | null>('codetube-active-course', null);
-  const [isNewCourse, setIsNewCourse] = useState(false);
+  const firestore = useFirestore();
+
+  const coursesQuery = useMemo(() => {
+    if (!user || !firestore) return null;
+    return collection(firestore, 'users', user.uid, 'courses');
+  }, [user, firestore]);
+  
+  const { data: courses, isLoading: areCoursesLoading } = useCollection<Course>(coursesQuery);
+  
+  const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -23,7 +32,7 @@ export default function CreatorPage() {
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || areCoursesLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -33,46 +42,33 @@ export default function CreatorPage() {
   
   const handleSelectCourse = (id: string) => {
     setActiveCourseId(id);
-    setIsNewCourse(false);
   };
 
-  const handleNewCourse = () => {
-    const newCourse: Course = {
-      id: `course_${Date.now()}`,
+  const handleNewCourse = async () => {
+    const newCourseData = {
       title: 'New Untitled Course',
       videoId: null,
       chapters: [],
+      published: false,
     };
-    setCourses(prev => [...prev, newCourse]);
-    setActiveCourseId(newCourse.id);
-    setIsNewCourse(true);
-  };
-
-  const handleDeleteCourse = (id: string) => {
-    setCourses(prev => prev.filter(course => course.id !== id));
-    if (activeCourseId === id) {
-      setActiveCourseId(null);
+    const newCourseId = await addCourse(user.uid, newCourseData);
+    if(newCourseId) {
+        setActiveCourseId(newCourseId);
     }
   };
 
   const handleBackToDashboard = () => {
     setActiveCourseId(null);
-    setIsNewCourse(false);
-  };
-
-  const handleUpdateCourse = (updatedCourse: Course) => {
-    setCourses(prev => prev.map(c => c.id === updatedCourse.id ? updatedCourse : c));
   };
   
-  const activeCourse = courses.find(c => c.id === activeCourseId);
+  const activeCourse = courses?.find(c => c.id === activeCourseId);
 
   if (!activeCourse) {
     return (
       <CourseList 
-        courses={courses}
+        courses={courses || []}
         onSelectCourse={handleSelectCourse}
         onNewCourse={handleNewCourse}
-        onDeleteCourse={handleDeleteCourse}
       />
     );
   }
@@ -81,9 +77,7 @@ export default function CreatorPage() {
     <CreatorStudio 
         key={activeCourse.id}
         course={activeCourse}
-        onCourseUpdate={handleUpdateCourse}
         onBackToDashboard={handleBackToDashboard}
-        isNewCourse={isNewCourse}
     />
   );
 }
