@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useTransition } from 'react';
@@ -7,12 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
+import { Switch } from '../ui/switch';
 
 interface ChapterEditorProps {
   chapter: Chapter;
@@ -53,24 +55,72 @@ const FormattedExplanation = ({ text }: { text: string }) => {
     );
   };
   
-const QuizCard = ({ quiz, index }: { quiz: Quiz, index: number }) => (
+const QuizCard = ({ quiz, index }: { quiz: Quiz; index: number }) => {
+    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+    const [showAnswer, setShowAnswer] = useState(false);
+
+    const handleValueChange = (value: string) => {
+        setSelectedAnswer(value);
+        setShowAnswer(true);
+    };
+
+    const isSubmitted = showAnswer || selectedAnswer !== null;
+
+    return (
+        <Card className="bg-muted/40">
+            <CardContent className="p-4 space-y-4">
+                <p className="font-semibold">{index + 1}. {quiz.question}</p>
+                <RadioGroup value={selectedAnswer || undefined} onValueChange={handleValueChange}>
+                    {quiz.options.map((option, idx) => {
+                        const isCorrect = option === quiz.answer;
+                        const isSelected = option === selectedAnswer;
+
+                        return (
+                        <div key={idx} 
+                            className={cn("flex items-center space-x-3 rounded-md border p-3 transition-colors",
+                                isSubmitted && isCorrect && "border-green-500/50 bg-green-500/10",
+                                isSubmitted && isSelected && !isCorrect && "border-red-500/50 bg-red-500/10",
+                            )}
+                        >
+                            <RadioGroupItem value={option} id={`option-${index}-${idx}`} disabled={isSubmitted} />
+                            <Label htmlFor={`option-${index}-${idx}`} className={cn("flex-1", isSubmitted ? "cursor-default" : "cursor-pointer")}>
+                            {option}
+                            </Label>
+                            {isSubmitted && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                            {isSubmitted && isSelected && !isCorrect && <XCircle className="h-5 w-5 text-red-600" />}
+                        </div>
+                        )
+                    })}
+                </RadioGroup>
+                {isSubmitted && (
+                    <Button variant="ghost" size="sm" onClick={() => { setSelectedAnswer(null); setShowAnswer(false); }}>
+                        Try Again
+                    </Button>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
+
+const CreatorQuizView = ({ quiz, index, showAnswers }: { quiz: Quiz, index: number, showAnswers: boolean }) => (
     <Card className="bg-muted/40">
         <CardContent className="p-4 space-y-4">
             <p className="font-semibold">{index + 1}. {quiz.question}</p>
-            <RadioGroup defaultValue={quiz.answer}>
+            <RadioGroup defaultValue={showAnswers ? quiz.answer : undefined}>
                 {quiz.options.map((option, idx) => {
                     const isCorrect = option === quiz.answer;
                     return (
                     <div key={idx} 
                         className={cn("flex items-center space-x-3 rounded-md border p-3",
-                        isCorrect ? "border-green-500/50 bg-green-500/10" : "border-transparent"
+                        showAnswers && isCorrect ? "border-green-500/50 bg-green-500/10" : "border-transparent"
                         )}
                     >
-                        <RadioGroupItem value={option} id={`option-${index}-${idx}`} disabled />
-                        <Label htmlFor={`option-${index}-${idx}`} className="flex-1">
+                        <RadioGroupItem value={option} id={`creator-option-${index}-${idx}`} disabled />
+                        <Label htmlFor={`creator-option-${index}-${idx}`} className="flex-1">
                         {option}
                         </Label>
-                        {isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                        {showAnswers && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
                     </div>
                     )
                 })}
@@ -84,6 +134,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const { toast } = useToast();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
+  const [showQuizAnswers, setShowQuizAnswers] = useState(false);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -230,30 +281,39 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
 
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2 text-lg">
+                <Label className="flex items-center gap-2 text-lg font-headline">
                     <HelpCircle className="h-5 w-5" />
                     Knowledge Check
                 </Label>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={onGenerateQuiz}
-                    disabled={isQuizGenerationPending || !localChapter.transcript}
-                >
-                    {isQuizGenerationPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Wand2 className="mr-2 h-4 w-4" />
-                    )}
-                    Generate Quiz
-                </Button>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2">
+                        <Switch id="show-answers" checked={showQuizAnswers} onCheckedChange={setShowQuizAnswers} />
+                        <Label htmlFor="show-answers" className="text-xs flex items-center gap-1">
+                            {showQuizAnswers ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {showQuizAnswers ? 'Hide' : 'Show'} Answers
+                        </Label>
+                    </div>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onGenerateQuiz}
+                        disabled={isQuizGenerationPending || !localChapter.transcript}
+                    >
+                        {isQuizGenerationPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Wand2 className="mr-2 h-4 w-4" />
+                        )}
+                        Generate Quiz
+                    </Button>
+                </div>
             </div>
 
             {localChapter.quiz && localChapter.quiz.length > 0 ? (
                 <ScrollArea className="h-96 pr-4">
                     <div className="space-y-4">
                         {localChapter.quiz.map((q, index) => (
-                            <QuizCard key={index} quiz={q} index={index} />
+                            <CreatorQuizView key={index} quiz={q} index={index} showAnswers={showQuizAnswers} />
                         ))}
                     </div>
                 </ScrollArea>
@@ -268,3 +328,4 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
+
