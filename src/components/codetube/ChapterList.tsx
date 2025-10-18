@@ -5,11 +5,13 @@ import type { Chapter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface ChapterListProps {
   chapters: Chapter[];
   onChaptersUpdate: (chapters: Chapter[]) => void;
   selectedChapterId: string | null;
+  playingChapterId: string | null;
   onChapterSelect: (chapter: Chapter) => void;
 }
 
@@ -17,6 +19,7 @@ export default function ChapterList({
   chapters,
   onChaptersUpdate,
   selectedChapterId,
+  playingChapterId,
   onChapterSelect,
 }: ChapterListProps) {
   const addChapter = () => {
@@ -57,11 +60,14 @@ export default function ChapterList({
               <div
                 key={chapter.id}
                 onClick={() => onChapterSelect(chapter)}
-                className={`group flex items-center justify-between rounded-md p-2 cursor-pointer transition-colors ${
-                  selectedChapterId === chapter.id
-                    ? 'bg-primary/10 text-primary'
-                    : 'hover:bg-accent'
-                }`}
+                className={cn(
+                    'group flex items-center justify-between rounded-md p-2 cursor-pointer transition-colors',
+                    {
+                      'bg-primary/20 text-primary-foreground': playingChapterId === chapter.id && selectedChapterId !== chapter.id,
+                      'bg-primary/10 text-primary': selectedChapterId === chapter.id,
+                      'hover:bg-accent': selectedChapterId !== chapter.id,
+                    }
+                  )}
               >
                 <div className="truncate">
                   <p className="text-sm font-medium">{chapter.title}</p>

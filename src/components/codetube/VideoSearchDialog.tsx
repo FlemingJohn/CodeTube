@@ -22,7 +22,6 @@ interface VideoSearchDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   onCourseUpdate: (courseUpdate: Partial<Course>) => void;
-  setSelectedChapterId: (id: string | null) => void;
 }
 
 type VideoSearchResult = {
@@ -36,7 +35,6 @@ export default function VideoSearchDialog({
   isOpen,
   setIsOpen,
   onCourseUpdate,
-  setSelectedChapterId,
 }: VideoSearchDialogProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,7 +75,6 @@ export default function VideoSearchDialog({
           chapters: result.chapters,
           title: result.videoTitle,
         });
-        setSelectedChapterId(result.chapters[0]?.id || null);
         
         toast({
           title: 'Video Imported!',

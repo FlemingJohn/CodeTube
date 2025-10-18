@@ -51,6 +51,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const router = useRouter();
 
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
+  const [playingChapterId, setPlayingChapterId] = useState<string | null>(null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
@@ -71,6 +72,36 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
       setSearchDialogOpen(true);
     }
   }, [isNewCourse]);
+
+  const chapterStartTimes = useMemo(() => {
+    return course.chapters.map(chapter => ({
+      id: chapter.id,
+      startTime: timestampToSeconds(chapter.timestamp),
+    })).sort((a, b) => a.startTime - b.startTime);
+  }, [course.chapters]);
+
+  useEffect(() => {
+    if (!player) return;
+  
+    const interval = setInterval(() => {
+        const currentTime = player.getCurrentTime();
+        if (typeof currentTime !== 'number') return;
+    
+        let activeChapterId = null;
+    
+        // Find the chapter that is currently playing
+        for (let i = chapterStartTimes.length - 1; i >= 0; i--) {
+            if (currentTime >= chapterStartTimes[i].startTime) {
+                activeChapterId = chapterStartTimes[i].id;
+                break;
+            }
+        }
+    
+        setPlayingChapterId(activeChapterId);
+    }, 1000); // Check every second
+  
+    return () => clearInterval(interval);
+  }, [player, chapterStartTimes]);
   
   const selectedChapter = useMemo(
     () => course.chapters.find(c => c.id === selectedChapterId),
@@ -156,6 +187,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                 chapters={course.chapters}
                 onChaptersUpdate={(newChapters) => onCourseUpdate({ ...course, chapters: newChapters })}
                 selectedChapterId={selectedChapterId}
+                playingChapterId={playingChapterId}
                 onChapterSelect={handleChapterSelect}
               />
             </div>
@@ -253,7 +285,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
           onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
-          setSelectedChapterId={setSelectedChapterId}
         />
         
       </SidebarProvider>
