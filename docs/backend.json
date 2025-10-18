@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -60,6 +61,10 @@
           "type": "string",
           "description": "A brief description of the course content."
         },
+        "category": {
+          "type": "string",
+          "description": "The category of the course (e.g., Web Development, Data Science)."
+        },
         "createdAt": {
           "type": "string",
           "description": "Timestamp indicating when the course was created.",
@@ -79,6 +84,30 @@
         "createdAt",
         "updatedAt"
       ]
+    },
+    "Quiz": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Quiz",
+      "type": "object",
+      "description": "Represents a single multiple-choice quiz question.",
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "The quiz question."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of possible answers."
+        },
+        "answer": {
+          "type": "string",
+          "description": "The correct answer from the options list."
+        }
+      },
+      "required": ["question", "options", "answer"]
     },
     "Chapter": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -109,6 +138,9 @@
         "timestamp": {
           "type": "string",
           "description": "Timestamp indicating the starting point of the chapter in the video."
+        },
+        "quiz": {
+          "$ref": "#/backend/entities/Quiz"
         },
         "createdAt": {
           "type": "string",

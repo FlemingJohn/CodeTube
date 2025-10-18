@@ -12,7 +12,7 @@ interface ChapterListProps {
   onChaptersUpdate: (chapters: Chapter[]) => void;
   selectedChapterId: string | null;
   playingChapterId: string | null;
-  onChapterSelect: (chapter: Chapter) => void;
+  onChapterSelect: (chapter: Chapter | null) => void;
 }
 
 export default function ChapterList({
@@ -41,7 +41,7 @@ export default function ChapterList({
     onChaptersUpdate(newChapters);
     if (selectedChapterId === idToDelete) {
       // Select the first chapter if it exists, otherwise null
-      onChapterSelect(newChapters[0] || null);
+      onChapterSelect(newChapters.length > 0 ? newChapters[0] : null);
     }
   };
 

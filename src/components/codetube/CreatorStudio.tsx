@@ -286,6 +286,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                     key={selectedChapter.id}
                     chapter={selectedChapter}
                     onUpdateChapter={handleUpdateChapter}
+                    courseTitle={course.title}
                   />
                 </div>
               ) : (

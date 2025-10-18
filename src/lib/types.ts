@@ -1,4 +1,11 @@
 
+
+export type Quiz = {
+  question: string;
+  options: string[];
+  answer: string;
+};
+
 export type Chapter = {
   id: string;
   timestamp: string;
@@ -8,6 +15,7 @@ export type Chapter = {
   codeExplanation: string;
   // A placeholder for the actual transcript for AI summary generation
   transcript: string;
+  quiz?: Quiz;
 };
 
 export type Course = {

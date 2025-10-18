@@ -7,13 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot } from 'lucide-react';
-import { handleExplainCode } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 interface ChapterEditorProps {
   chapter: Chapter;
   onUpdateChapter: (chapter: Chapter) => void;
+  courseTitle: string;
 }
 
 const FormattedExplanation = ({ text }: { text: string }) => {
@@ -50,10 +53,11 @@ const FormattedExplanation = ({ text }: { text: string }) => {
   };
   
 
-export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEditorProps) {
+export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
+  const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -92,10 +96,42 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
     });
   };
 
+  const onGenerateQuiz = () => {
+    if (!localChapter.summary) {
+        toast({
+          variant: 'destructive',
+          title: 'Missing Chapter Summary',
+          description: 'Please generate a summary for this chapter before creating a quiz.',
+        });
+        return;
+      }
+      startQuizGenerationTransition(async () => {
+        const result = await handleGenerateQuiz({
+          chapterContent: localChapter.summary,
+          chapterTitle: localChapter.title,
+        });
+        if (result.error) {
+          toast({
+            variant: 'destructive',
+            title: 'Quiz Generation Failed',
+            description: result.error,
+          });
+        } else if (result.quiz) {
+          const updatedChapter = { ...localChapter, quiz: result.quiz };
+          setLocalChapter(updatedChapter);
+          onUpdateChapter(updatedChapter);
+          toast({
+            title: 'Quiz Generated!',
+            description: 'A new quiz question has been added to this chapter.',
+          });
+        }
+      });
+  }
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
-        <CardTitle className="font-headline text-3xl">Chapter Details</CardTitle>
+        <CardTitle className="font-headline text-3xl">{courseTitle}</CardTitle>
         <CardDescription>Edit the details for the selected chapter.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -165,6 +201,59 @@ export default function ChapterEditor({ chapter, onUpdateChapter }: ChapterEdito
              </Card>
            </div>
         )}
+
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 text-lg">
+                    <HelpCircle className="h-5 w-5" />
+                    Knowledge Check
+                </Label>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onGenerateQuiz}
+                    disabled={isQuizGenerationPending || !localChapter.summary}
+                >
+                    {isQuizGenerationPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Wand2 className="mr-2 h-4 w-4" />
+                    )}
+                    Generate Quiz
+                </Button>
+            </div>
+
+            {localChapter.quiz ? (
+                <Card className="bg-muted/40">
+                    <CardContent className="p-4 space-y-4">
+                        <p className="font-semibold">{localChapter.quiz.question}</p>
+                        <RadioGroup defaultValue={localChapter.quiz.answer}>
+                            {localChapter.quiz.options.map((option, index) => {
+                                const isCorrect = option === localChapter.quiz.answer;
+                                return (
+                                <div key={index} 
+                                    className={cn("flex items-center space-x-3 rounded-md border p-3",
+                                    isCorrect ? "border-green-500/50 bg-green-500/10" : "border-transparent"
+                                    )}
+                                >
+                                    <RadioGroupItem value={option} id={`option-${index}`} disabled />
+                                    <Label htmlFor={`option-${index}`} className="flex-1">
+                                    {option}
+                                    </Label>
+                                    {isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
+                                </div>
+                                )
+                            })}
+                        </RadioGroup>
+                    </CardContent>
+                </Card>
+            ) : (
+                <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                    <p>No quiz for this chapter yet.</p>
+                    <p>Click "Generate Quiz" to create one.</p>
+                </div>
+            )}
+        </div>
       </CardContent>
     </Card>
   );

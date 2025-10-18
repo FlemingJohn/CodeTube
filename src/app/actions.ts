@@ -5,6 +5,7 @@ import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
 import { explainCode } from '@/ai/flows/explain-code';
 import { youtubeSearch } from '@/ai/flows/youtube-search';
+import { generateQuiz } from '@/ai/flows/generate-quiz';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -313,5 +314,26 @@ export async function handleYoutubeSearch(values: z.infer<typeof youtubeSearchSc
     } catch (e: any) {
         console.error(e);
         return { error: e.message || 'Failed to search YouTube.' };
+    }
+}
+
+const generateQuizSchema = z.object({
+    chapterContent: z.string(),
+    chapterTitle: z.string(),
+});
+
+export async function handleGenerateQuiz(values: z.infer<typeof generateQuizSchema>) {
+    const validatedFields = generateQuizSchema.safeParse(values);
+    
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields for quiz generation.' };
+    }
+    
+    try {
+        const result = await generateQuiz(validatedFields.data);
+        return { quiz: result };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || 'Failed to generate quiz.' };
     }
 }
