@@ -1,19 +1,20 @@
 
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import type { Chapter, Quiz } from '@/lib/types';
+import React, { useState, useTransition, useEffect } from 'react';
+import type { Chapter, InterviewQuestion, Quiz } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleGenerateInterviewQuestions } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 interface ChapterEditorProps {
   chapter: Chapter;
@@ -22,22 +23,17 @@ interface ChapterEditorProps {
 }
 
 const FormattedExplanation = ({ text }: { text: string }) => {
-    // Split text into paragraphs by newline characters
     const paragraphs = text.split(/\n+/);
-  
-    // Regex to find code snippets enclosed in backticks
     const codeRegex = /`([^`]+)`/g;
   
     return (
       <div className="space-y-4">
         {paragraphs.map((paragraph, pIndex) => {
-          // Split paragraph by code snippets to interleave text and code
           const parts = paragraph.split(codeRegex);
           
           return (
             <p key={pIndex} className="text-sm font-sans leading-relaxed">
               {parts.map((part, index) => {
-                // Every odd index is a code snippet
                 if (index % 2 === 1) {
                   return (
                     <code key={index} className="bg-muted text-foreground font-code px-1 py-0.5 rounded-sm text-xs">
@@ -52,8 +48,41 @@ const FormattedExplanation = ({ text }: { text: string }) => {
         })}
       </div>
     );
-  };
+};
   
+const FormattedAnswer = ({ text }: { text: string }) => {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const parts = text.split(codeBlockRegex);
+  
+    return (
+      <div className="space-y-4">
+        {parts.map((part, index) => {
+          if (index % 3 === 2) { 
+            return (
+              <Card key={index} className="bg-background/50 my-4 shadow-inner">
+                <CardContent className="p-4">
+                  <pre className="font-code text-sm overflow-x-auto">
+                    <code>{part.trim()}</code>
+                  </pre>
+                </CardContent>
+              </Card>
+            );
+          }
+          if (index % 3 === 0 && part.trim()) {
+            return (
+              <div key={index}>
+                {part.trim().split('\n').map((paragraph, pIndex) => (
+                  <p key={pIndex} className="mb-2 last:mb-0">{paragraph}</p>
+                ))}
+              </div>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
+};
+
 const QuizCard = ({ quiz, index }: { quiz: Quiz; index: number }) => {
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [showAnswer, setShowAnswer] = useState(false);
@@ -106,6 +135,26 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const { toast } = useToast();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
+  const [isInterviewPending, startInterviewTransition] = useTransition();
+
+  useEffect(() => {
+    setLocalChapter(chapter);
+    // Auto-generate interview questions if they don't exist for the selected chapter
+    if (chapter && !chapter.interviewQuestions && chapter.transcript) {
+        startInterviewTransition(async () => {
+            const result = await handleGenerateInterviewQuestions({
+                transcript: chapter.transcript,
+                chapterTitle: chapter.title,
+            });
+            if (result.questions) {
+                const updatedChapter = { ...chapter, interviewQuestions: result.questions };
+                setLocalChapter(updatedChapter);
+                onUpdateChapter(updatedChapter);
+            }
+        });
+    }
+  }, [chapter, onUpdateChapter]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -287,6 +336,44 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 </div>
             )}
         </div>
+
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                    <Bot className="w-6 h-6 text-primary" />
+                    Interview Prep
+                </CardTitle>
+                {isInterviewPending && <Loader2 className="h-6 w-6 animate-spin" />}
+            </CardHeader>
+            <CardContent>
+                {localChapter.interviewQuestions && localChapter.interviewQuestions.length > 0 ? (
+                    <Accordion type="single" collapsible className="w-full space-y-2">
+                        {localChapter.interviewQuestions.map((item, index) => (
+                            <AccordionItem key={index} value={`item-${index}`} className="bg-background/50 rounded-md border px-4">
+                                <AccordionTrigger className="text-left hover:no-underline">
+                                    <div className="flex items-start gap-4">
+                                        <span className="text-lg font-bold text-primary mt-1">{index + 1}.</span>
+                                        <span className="flex-1">{item.question}</span>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="text-base prose prose-sm dark:prose-invert max-w-none pt-2">
+                                    <FormattedAnswer text={item.answer} />
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                ) : (
+                <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                    {isInterviewPending ? (
+                        <p>Generating interview questions...</p>
+                    ) : (
+                        <p>Interview questions for this chapter will be generated automatically.</p>
+                    )}
+                </div>
+                )}
+            </CardContent>
+        </Card>
+
       </CardContent>
     </Card>
   );

@@ -49,41 +49,6 @@ const timestampToSeconds = (ts: string) => {
     }
     return 0;
 };
-
-
-const FormattedAnswer = ({ text }: { text: string }) => {
-    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    const parts = text.split(codeBlockRegex);
-  
-    return (
-      <div className="space-y-4">
-        {parts.map((part, index) => {
-          if (index % 3 === 2) { // This is the code content
-            const lang = parts[index - 1] || 'plaintext';
-            return (
-              <Card key={index} className="bg-background/50 my-4 shadow-inner">
-                <CardContent className="p-4">
-                  <pre className="font-code text-sm overflow-x-auto">
-                    <code>{part.trim()}</code>
-                  </pre>
-                </CardContent>
-              </Card>
-            );
-          }
-          if (index % 3 === 0 && part.trim()) {
-            return (
-              <div key={index}>
-                {part.trim().split('\n').map((paragraph, pIndex) => (
-                  <p key={pIndex} className="mb-2 last:mb-0">{paragraph}</p>
-                ))}
-              </div>
-            );
-          }
-          return null;
-        })}
-      </div>
-    );
-};
   
 
 export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboard, isNewCourse }: CreatorStudioProps) {
@@ -96,7 +61,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isSummaryPending, startSummaryTransition] = useTransition();
-  const [isInterviewPending, startInterviewTransition] = useTransition();
   const [player, setPlayer] = useState<any>(null);
 
   useEffect(() => {
@@ -187,38 +151,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           description: 'The AI-powered summary has been added.',
         });
       }
-    });
-  };
-
-  const onGenerateInterviewQuestions = () => {
-    if (course.chapters.length === 0) {
-        toast({
-            variant: 'destructive',
-            title: 'No Content',
-            description: 'Please add chapters to the course before generating questions.',
-        });
-        return;
-    }
-    startInterviewTransition(async () => {
-        const allTranscripts = course.chapters.map(c => c.transcript).join('\n\n');
-        const result = await handleGenerateInterviewQuestions({
-            transcripts: allTranscripts,
-            courseTitle: course.title,
-        });
-
-        if (result.error) {
-            toast({
-                variant: 'destructive',
-                title: 'Error Generating Questions',
-                description: result.error,
-            });
-        } else if (result.questions) {
-            onCourseUpdate({ ...course, interviewQuestions: result.questions });
-            toast({
-                title: 'Interview Prep Generated!',
-                description: 'A new set of interview questions has been added to the course.',
-            });
-        }
     });
   };
 
@@ -359,48 +291,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                         </CardContent>
                       </Card>
                     )}
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                <Bot className="w-6 h-6 text-primary" />
-                                Interview Prep
-                            </CardTitle>
-                            <Button size="sm" variant="outline" onClick={onGenerateInterviewQuestions} disabled={isInterviewPending}>
-                                {isInterviewPending ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Sparkles className="mr-2 h-4 w-4" />
-                                )}
-                                Generate Questions
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {course.interviewQuestions && course.interviewQuestions.length > 0 ? (
-                                <Accordion type="single" collapsible className="w-full space-y-2">
-                                    {course.interviewQuestions.map((item, index) => (
-                                        <AccordionItem key={index} value={`item-${index}`} className="bg-background/50 rounded-md border px-4">
-                                            <AccordionTrigger className="text-left hover:no-underline">
-                                                <div className="flex items-start gap-4">
-                                                    <span className="text-lg font-bold text-primary mt-1">{index + 1}.</span>
-                                                    <span className="flex-1">{item.question}</span>
-                                                </div>
-                                            </AccordionTrigger>
-                                            <AccordionContent className="text-base prose prose-sm dark:prose-invert max-w-none pt-2">
-                                                <FormattedAnswer text={item.answer} />
-                                            </AccordionContent>
-                                        </AccordionItem>
-                                    ))}
-                                </Accordion>
-                            ) : (
-                            <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
-                                <p>No interview questions for this course yet.</p>
-                                <p>Click "Generate Questions" to create them.</p>
-                            </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
                   </div>
                 </ScrollArea>
               </ResizablePanel>
@@ -445,5 +335,3 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     </div>
   );
 }
-
-    

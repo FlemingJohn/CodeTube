@@ -6,6 +6,11 @@ export type Quiz = {
   answer: string;
 };
 
+export type InterviewQuestion = {
+  question: string;
+  answer: string;
+};
+
 export type Chapter = {
   id: string;
   timestamp: string;
@@ -16,12 +21,7 @@ export type Chapter = {
   // A placeholder for the actual transcript for AI summary generation
   transcript: string;
   quiz?: Quiz[];
-};
-
-export type InterviewQuestion = {
-  question: string;
-
-  answer: string;
+  interviewQuestions?: InterviewQuestion[];
 };
 
 export type Course = {
@@ -30,7 +30,6 @@ export type Course = {
   videoId: string | null;
   chapters: Chapter[];
   category?: string;
-  interviewQuestions?: InterviewQuestion[];
 };
 
 export const COURSE_CATEGORIES = [

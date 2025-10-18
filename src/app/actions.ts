@@ -340,8 +340,8 @@ export async function handleGenerateQuiz(values: z.infer<typeof generateQuizSche
 }
 
 const generateInterviewQuestionsSchema = z.object({
-    transcripts: z.string(),
-    courseTitle: z.string(),
+    transcript: z.string(),
+    chapterTitle: z.string(),
 });
 
 export async function handleGenerateInterviewQuestions(values: z.infer<typeof generateInterviewQuestionsSchema>) {
