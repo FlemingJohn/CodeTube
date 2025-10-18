@@ -30,6 +30,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Textarea } from '../ui/textarea';
 import { handleGenerateSummary } from '@/app/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 
 interface CreatorStudioProps {
     course: Course;
@@ -189,7 +190,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
             <Header />
           </SidebarHeader>
 
-          <SidebarContent className="flex-1">
+          <SidebarContent className="flex-1 flex flex-col">
             <div className="flex flex-col gap-4 p-2 h-full">
               <YoutubeImport 
                 onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
@@ -244,68 +245,72 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
                     </Button>
                 </div>
             </header>
-          <main className="flex-1 p-4 md:p-6 bg-muted/20 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-auto">
-            <div className="flex flex-col gap-6">
-              {course.videoId ? (
-                <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
-              ) : (
-                <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
-                  <div className="text-center text-muted-foreground">
-                    <h2 className="text-xl font-semibold">No Video Imported</h2>
-                    <p>Import a YouTube video to get started.</p>
-                  </div>
+          <main className="flex-1 bg-muted/20 overflow-auto">
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              <ResizablePanel defaultSize={50}>
+                <div className="flex flex-col gap-6 p-4 md:p-6 h-full overflow-auto">
+                  {course.videoId ? (
+                    <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
+                  ) : (
+                    <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
+                      <div className="text-center text-muted-foreground">
+                        <h2 className="text-xl font-semibold">No Video Imported</h2>
+                        <p>Import a YouTube video to get started.</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedChapter && (
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                          <Sparkles className="w-6 h-6 text-primary" />
+                          Take notes
+                        </CardTitle>
+                        <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
+                            {isSummaryPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Sparkles className="mr-2 h-4 w-4" />
+                            )}
+                            Generate Notes
+                        </Button>
+                      </CardHeader>
+                      <CardContent>
+                        <Textarea
+                            id="summary"
+                            name="summary"
+                            value={selectedChapter.summary}
+                            onChange={handleSummaryChange}
+                            placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
+                            rows={8}
+                            className="text-base"
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
-              )}
-               {selectedChapter && (
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                      <Sparkles className="w-6 h-6 text-primary" />
-                      Take notes
-                    </CardTitle>
-                    <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
-                        {isSummaryPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Sparkles className="mr-2 h-4 w-4" />
-                        )}
-                        Generate Notes
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <Textarea
-                        id="summary"
-                        name="summary"
-                        value={selectedChapter.summary}
-                        onChange={handleSummaryChange}
-                        placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
-                        rows={8}
-                        className="text-base"
-                    />
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-            
-            <div className="flex flex-col">
-              {selectedChapter ? (
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={50}>
                 <div className="h-full overflow-y-auto">
-                  <ChapterEditor
-                    key={selectedChapter.id}
-                    chapter={selectedChapter}
-                    onUpdateChapter={handleUpdateChapter}
-                    courseTitle={course.title}
-                  />
+                  {selectedChapter ? (
+                    <ChapterEditor
+                      key={selectedChapter.id}
+                      chapter={selectedChapter}
+                      onUpdateChapter={handleUpdateChapter}
+                      courseTitle={course.title}
+                    />
+                  ) : (
+                    <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background m-4">
+                      <div className="text-center text-muted-foreground">
+                        <h2 className="text-xl font-semibold">No Chapter Selected</h2>
+                        <p>Select a chapter from the list to edit its details.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
-                  <div className="text-center text-muted-foreground">
-                    <h2 className="text-xl font-semibold">No Chapter Selected</h2>
-                    <p>Select a chapter from the list to edit its details.</p>
-                  </div>
-                </div>
-              )}
-            </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </main>
         </SidebarInset>
         
@@ -326,3 +331,5 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     </div>
   );
 }
+
+    
