@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { Course } from '@/lib/types';
+import { Chapter, Course } from '@/lib/types';
 import CourseList from '@/components/codetube/CourseList';
 import CreatorStudio from '@/components/codetube/CreatorStudio';
 import { useUser } from '@/firebase';
@@ -14,7 +14,7 @@ export default function CreatorPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const [courses, setCourses] = useLocalStorage<Course[]>('codetube-courses', []);
-  const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
+  const [activeCourseId, setActiveCourseId] = useLocalStorage<string | null>('codetube-active-course', null);
   const [isNewCourse, setIsNewCourse] = useState(false);
 
   useEffect(() => {

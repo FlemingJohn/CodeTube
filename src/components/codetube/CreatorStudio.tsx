@@ -19,7 +19,6 @@ import ChapterEditor from './ChapterEditor';
 import GithubExportDialog from './GithubExportDialog';
 import type { Chapter, Course } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
@@ -49,7 +48,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
   // Effect to auto-select the first chapter when the course chapters change (e.g., after import)
   useEffect(() => {
     if (course.chapters.length > 0) {
-      // If no chapter is selected OR the selected one is no longer in the list
       if (!selectedChapterId || !course.chapters.some(c => c.id === selectedChapterId)) {
         setSelectedChapterId(course.chapters[0].id);
       }
@@ -63,10 +61,6 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
       setSearchDialogOpen(true);
     }
   }, [isNewCourse]);
-
-  const handleSetCourseData = (updatedData: Partial<Course>) => {
-    onCourseUpdate({ ...course, ...updatedData });
-  };
   
   const selectedChapter = useMemo(
     () => course.chapters.find(c => c.id === selectedChapterId),
@@ -75,8 +69,12 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
 
   const handleUpdateChapter = (updatedChapter: Chapter) => {
     const newChapters = course.chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
-    handleSetCourseData({ chapters: newChapters });
+    onCourseUpdate({ ...course, chapters: newChapters });
   };
+
+  const handleSetChapters = (newChapters: Chapter[]) => {
+    onCourseUpdate({ ...course, chapters: newChapters });
+  }
   
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!selectedChapter) return;
@@ -117,17 +115,9 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
     router.push('/');
   };
 
-  const handleSetChapters = (newChapters: Chapter[]) => {
-      handleSetCourseData({ chapters: newChapters });
-  }
-
-  const handleSetCourseTitle = (newTitle: string) => {
-      handleSetCourseData({ title: newTitle });
-  }
-  
-  const handleSetVideoId = (newVideoId: string | null) => {
-      handleSetCourseData({ videoId: newVideoId });
-  }
+  const handleSetCourseData = (updatedData: Partial<Course>) => {
+    onCourseUpdate({ ...course, ...updatedData });
+  };
 
   return (
     <div className="h-screen bg-background">
@@ -144,18 +134,12 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
           <SidebarContent>
             <div className="flex flex-col gap-4 p-2">
               <YoutubeImport 
-                setChapters={handleSetChapters}
-                setCourseTitle={handleSetCourseTitle}
-                setSelectedChapterId={setSelectedChapterId}
-                setVideoId={handleSetVideoId}
+                onCourseUpdate={handleSetCourseData}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <ChapterList
                 chapters={course.chapters}
-                setChapters={(updater) => {
-                    const newChapters = typeof updater === 'function' ? updater(course.chapters) : updater;
-                    handleSetChapters(newChapters);
-                }}
+                onChaptersUpdate={(newChapters) => handleSetCourseData({ chapters: newChapters })}
                 selectedChapterId={selectedChapterId}
                 setSelectedChapterId={setSelectedChapterId}
               />
@@ -253,10 +237,8 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
         <VideoSearchDialog
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
-          setChapters={handleSetChapters}
-          setCourseTitle={handleSetCourseTitle}
+          onCourseUpdate={handleSetCourseData}
           setSelectedChapterId={setSelectedChapterId}
-          setVideoId={handleSetVideoId}
         />
         
       </SidebarProvider>

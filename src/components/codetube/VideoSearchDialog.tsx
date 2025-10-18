@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useTransition } from 'react';
@@ -14,16 +15,14 @@ import { Loader2, Search, Youtube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { handleYoutubeSearch, getYoutubeChapters } from '@/app/actions';
 import Image from 'next/image';
-import type { Chapter } from '@/lib/types';
+import type { Course } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
 
 interface VideoSearchDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  setChapters: (chapters: Chapter[]) => void;
-  setCourseTitle: (title: string) => void;
+  onCourseUpdate: (courseUpdate: Partial<Course>) => void;
   setSelectedChapterId: (id: string | null) => void;
-  setVideoId: (id: string | null) => void;
 }
 
 type VideoSearchResult = {
@@ -36,10 +35,8 @@ type VideoSearchResult = {
 export default function VideoSearchDialog({
   isOpen,
   setIsOpen,
-  setChapters,
-  setCourseTitle,
+  onCourseUpdate,
   setSelectedChapterId,
-  setVideoId,
 }: VideoSearchDialogProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,9 +72,11 @@ export default function VideoSearchDialog({
           description: result.error,
         });
       } else if (result.chapters && result.videoTitle) {
-        setVideoId(videoId);
-        setChapters(result.chapters);
-        setCourseTitle(result.videoTitle);
+        onCourseUpdate({
+          videoId: videoId,
+          chapters: result.chapters,
+          title: result.videoTitle,
+        });
         setSelectedChapterId(result.chapters[0]?.id || null);
         
         toast({

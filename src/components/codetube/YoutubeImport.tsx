@@ -1,18 +1,16 @@
+
 'use client';
 
 import React, { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Youtube, Search } from 'lucide-react';
-import type { Chapter } from '@/lib/types';
+import type { Chapter, Course } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { getYoutubeChapters } from '@/app/actions';
 
 interface YoutubeImportProps {
-  setChapters: (chapters: Chapter[]) => void;
-  setCourseTitle: (title: string) => void;
-  setSelectedChapterId: (id: string | null) => void;
-  setVideoId: (id: string | null) => void;
+  onCourseUpdate: (courseUpdate: Partial<Course>) => void;
   setSearchDialogOpen: (isOpen: boolean) => void;
 }
 
@@ -22,7 +20,7 @@ function getYouTubeVideoId(url: string): string | null {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function YoutubeImport({ setChapters, setCourseTitle, setSelectedChapterId, setVideoId, setSearchDialogOpen }: YoutubeImportProps) {
+export default function YoutubeImport({ onCourseUpdate, setSearchDialogOpen }: YoutubeImportProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -48,10 +46,11 @@ export default function YoutubeImport({ setChapters, setCourseTitle, setSelected
           description: result.error,
         });
       } else if (result.chapters && result.videoTitle) {
-        setVideoId(videoId);
-        setChapters(result.chapters);
-        setCourseTitle(result.videoTitle);
-        setSelectedChapterId(result.chapters[0]?.id || null);
+        onCourseUpdate({
+          videoId: videoId,
+          chapters: result.chapters,
+          title: result.videoTitle,
+        });
         
         if (result.chapters.length > 0) {
           toast({

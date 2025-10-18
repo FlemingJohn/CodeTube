@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Chapter } from '@/lib/types';
@@ -7,14 +8,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChapterListProps {
   chapters: Chapter[];
-  setChapters: React.Dispatch<React.SetStateAction<Chapter[]>>;
+  onChaptersUpdate: (chapters: Chapter[]) => void;
   selectedChapterId: string | null;
   setSelectedChapterId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export default function ChapterList({
   chapters,
-  setChapters,
+  onChaptersUpdate,
   selectedChapterId,
   setSelectedChapterId,
 }: ChapterListProps) {
@@ -28,12 +29,12 @@ export default function ChapterList({
       codeExplanation: '',
       transcript: 'This is a new chapter. Please add a transcript.',
     };
-    setChapters(prev => [...prev, newChapter]);
+    onChaptersUpdate([...chapters, newChapter]);
     setSelectedChapterId(newChapter.id);
   };
 
   const deleteChapter = (idToDelete: string) => {
-    setChapters(prev => prev.filter(c => c.id !== idToDelete));
+    onChaptersUpdate(chapters.filter(c => c.id !== idToDelete));
     if (selectedChapterId === idToDelete) {
       setSelectedChapterId(null);
     }
