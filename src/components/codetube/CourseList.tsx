@@ -8,6 +8,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import Header from './Header';
 import AuthHeader from '../auth/AuthHeader';
 import Image from 'next/image';
+import { Progress } from '../ui/progress';
 
 interface CourseListProps {
   courses: Course[];
@@ -17,6 +18,17 @@ interface CourseListProps {
 }
 
 export default function CourseList({ courses, onSelectCourse, onNewCourse, onDeleteCourse }: CourseListProps) {
+  
+  const calculateProgress = (course: Course) => {
+    if (!course.chapters || course.chapters.length === 0) {
+      return { completed: 0, total: 0, percentage: 0 };
+    }
+    const completed = course.chapters.filter(c => c.summary && c.summary.trim() !== '').length;
+    const total = course.chapters.length;
+    const percentage = total > 0 ? (completed / total) * 100 : 0;
+    return { completed, total, percentage };
+  };
+
   return (
     <div className="min-h-screen bg-muted/20">
        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -41,38 +53,50 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
 
         {courses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map(course => (
-              <Card key={course.id} className="flex flex-col transition-all duration-300 hover:scale-105 hover:-translate-y-2">
-                <CardHeader>
-                  <CardTitle className="font-headline line-clamp-2">{course.title}</CardTitle>
-                  <CardDescription>{course.chapters.length} {course.chapters.length === 1 ? 'chapter' : 'chapters'}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                   <div className="aspect-video bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
-                        {course.videoId ? (
-                            <Image 
-                                src={`https://i.ytimg.com/vi/${course.videoId}/mqdefault.jpg`} 
-                                alt={course.title}
-                                fill
-                                style={{ objectFit: 'cover' }}
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            />
-                        ): (
-                            <p className="text-sm text-muted-foreground">No video</p>
-                        )}
-                   </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button onClick={() => onSelectCourse(course.id)}>Edit Course</Button>
-                  <Button variant="ghost" size="icon" onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteCourse(course.id);
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+            {courses.map(course => {
+                const progress = calculateProgress(course);
+                return (
+                  <Card key={course.id} className="flex flex-col transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                    <CardHeader>
+                      <CardTitle className="font-headline line-clamp-2">{course.title}</CardTitle>
+                      <CardDescription>{course.chapters.length} {course.chapters.length === 1 ? 'chapter' : 'chapters'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-grow space-y-4">
+                       <div className="aspect-video bg-muted rounded-md flex items-center justify-center relative overflow-hidden">
+                            {course.videoId ? (
+                                <Image 
+                                    src={`https://i.ytimg.com/vi/${course.videoId}/mqdefault.jpg`} 
+                                    alt={course.title}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                />
+                            ): (
+                                <p className="text-sm text-muted-foreground">No video</p>
+                            )}
+                       </div>
+                       {progress.total > 0 && (
+                        <div className='space-y-2'>
+                           <div className="flex justify-between text-xs text-muted-foreground">
+                             <span>Progress</span>
+                             <span>{progress.completed} / {progress.total}</span>
+                           </div>
+                           <Progress value={progress.percentage} />
+                        </div>
+                       )}
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button onClick={() => onSelectCourse(course.id)}>Edit Course</Button>
+                      <Button variant="ghost" size="icon" onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteCourse(course.id);
+                      }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )
+            })}
           </div>
         ) : (
           <div className="text-center py-16 border-2 border-dashed border-muted-foreground/30 rounded-lg">
