@@ -25,12 +25,12 @@ import {
  * @param courseData - The partial course data (title is required).
  * @returns The ID of the newly created course document.
  */
-export async function addCourse(firestore: Firestore, userId: string, courseData: Partial<Omit<Course, 'id' | 'userId'>>) {
+export async function addCourse(firestore: Firestore, userId: string, courseData: Partial<Omit<Course, 'id'>>) {
     const coursesColRef = collection(firestore, 'users', userId, 'courses');
     
     const newDocData = {
       ...courseData,
-      userId: userId,
+      userId: userId, // Ensure userId is set
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -39,12 +39,7 @@ export async function addCourse(firestore: Firestore, userId: string, courseData
     
     // Also create the initial public copy so it can be shared immediately
     const publicCourseDocRef = doc(firestore, 'courses', docRef.id);
-    // Ensure userId is included in the public copy
-    const publicData = {
-        ...newDocData,
-        userId: userId,
-    };
-    setDocumentNonBlocking(publicCourseDocRef, publicData, { merge: true });
+    setDocumentNonBlocking(publicCourseDocRef, newDocData, { merge: true });
 
     return docRef.id;
 }

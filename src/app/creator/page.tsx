@@ -44,12 +44,12 @@ export default function CreatorPage() {
   };
 
   const handleNewCourse = async () => {
-    if (!user) return;
+    if (!user || !firestore) return;
     const newCourseData = {
+      userId: user.uid, // Ensure userId is included
       title: 'New Untitled Course',
       videoId: null,
       chapters: [],
-      published: false,
     };
     const newCourseId = await addCourse(firestore, user.uid, newCourseData);
     if(newCourseId) {
@@ -62,7 +62,7 @@ export default function CreatorPage() {
   };
   
   const handleDeleteCourse = (courseId: string) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     deleteCourse(firestore, user.uid, courseId);
     if (activeCourseId === courseId) {
       setActiveCourseId(null);
