@@ -189,8 +189,8 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
             <Header />
           </SidebarHeader>
 
-          <SidebarContent className='flex-1 overflow-auto'>
-            <div className="flex flex-col gap-4 p-2">
+          <SidebarContent className="flex-1">
+            <div className="flex flex-col gap-4 p-2 h-full">
               <YoutubeImport 
                 onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
                 setSearchDialogOpen={setSearchDialogOpen}
