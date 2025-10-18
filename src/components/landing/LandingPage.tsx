@@ -10,13 +10,15 @@ import {
   Sparkles,
   Code,
   FileEdit,
-  UploadCloud,
   BrainCircuit,
   Star,
   ArrowUp,
   HelpCircle,
   Briefcase,
   Mic,
+  GraduationCap,
+  Rocket,
+  TrendingUp,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -97,6 +99,27 @@ const howItWorks = [
       'Use the AI-generated interview scenarios to practice your pitch and get instant feedback.',
   },
 ];
+
+const targetAudience = [
+    {
+      icon: <GraduationCap className="h-10 w-10 text-primary" />,
+      title: 'For Students',
+      description:
+        'Turn dense lectures into interactive study guides. Use AI-generated quizzes and interview questions to ace your exams and build a project for your portfolio.',
+    },
+    {
+      icon: <Rocket className="h-10 w-10 text-primary" />,
+      title: 'For Junior Developers',
+      description:
+        "Bridge the gap between tutorials and job-readiness. Practice your interview pitch with AI feedback and export your completed course to GitHub to showcase your skills.",
+    },
+    {
+      icon: <TrendingUp className="h-10 w-10 text-primary" />,
+      title: 'For Working Professionals',
+      description:
+        'Quickly upskill on new technologies without the friction. Instantly summarize long videos and extract key concepts to stay ahead in your career.',
+    },
+  ];
 
 const mainTech = [
   {
@@ -373,8 +396,43 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Target Audience Section */}
+        <section id="target-audience" className="w-full bg-secondary/50 py-20 md:py-28">
+            <div className="container">
+                <div className="text-center max-w-3xl mx-auto mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold font-headline">
+                        Built for Every Stage of Your Career
+                    </h2>
+                    <p className="text-lg text-muted-foreground mt-4">
+                        Whether you're just starting out or a seasoned pro, CodeTube helps you learn faster and smarter.
+                    </p>
+                </div>
+                <div className="grid md:grid-cols-3 gap-8">
+                    {targetAudience.map((target, index) => (
+                        <AnimateOnScroll key={target.title} delay={index * 100}>
+                            <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                                <CardHeader>
+                                    <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
+                                        {target.icon}
+                                    </div>
+                                    <CardTitle className="font-headline text-xl pt-4">
+                                        {target.title}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-muted-foreground">
+                                        {target.description}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </AnimateOnScroll>
+                    ))}
+                </div>
+            </div>
+        </section>
+
         {/* Featured Course Section */}
-        <section id="featured-course" className="w-full bg-secondary/50 py-20 md:py-28">
+        <section id="featured-course" className="w-full py-20 md:py-28">
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-headline">
