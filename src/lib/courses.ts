@@ -29,8 +29,12 @@ export async function addCourse(firestore: Firestore, userId: string, courseData
     const coursesColRef = collection(firestore, 'users', userId, 'courses');
     
     const newDocData = {
-      ...courseData,
-      userId: userId, // Ensure userId is set
+      userId: userId, // Ensure userId is always present
+      title: 'New Untitled Course',
+      videoId: null,
+      chapters: [],
+      category: 'General',
+      ...courseData, // Apply any provided data, overwriting defaults
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -67,8 +71,8 @@ export function updateCourse(firestore: Firestore, userId: string, courseId: str
     // Always update the public copy to keep it in sync
     const publicCourseDocRef = doc(firestore, 'courses', courseId);
     const publicData = {
+        userId: userId, // Ensure userId is always present in public copy
         ...updateData,
-        userId: userId, // Ensure userId is present in public copy
     };
     // Use setDoc with merge to create or update the public document
     setDocumentNonBlocking(publicCourseDocRef, publicData, { merge: true });

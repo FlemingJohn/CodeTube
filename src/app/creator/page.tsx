@@ -45,11 +45,9 @@ export default function CreatorPage() {
 
   const handleNewCourse = async () => {
     if (!user || !firestore) return;
+    // Pass the userId directly when creating the course
     const newCourseData = {
-      userId: user.uid, // Ensure userId is included
-      title: 'New Untitled Course',
-      videoId: null,
-      chapters: [],
+      userId: user.uid,
     };
     const newCourseId = await addCourse(firestore, user.uid, newCourseData);
     if(newCourseId) {
