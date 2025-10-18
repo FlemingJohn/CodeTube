@@ -8,13 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
-import { Switch } from '../ui/switch';
 
 interface ChapterEditorProps {
   chapter: Chapter;
@@ -102,40 +101,11 @@ const QuizCard = ({ quiz, index }: { quiz: Quiz; index: number }) => {
     );
 };
 
-
-const CreatorQuizView = ({ quiz, index, showAnswers }: { quiz: Quiz, index: number, showAnswers: boolean }) => (
-    <Card className="bg-muted/40">
-        <CardContent className="p-4 space-y-4">
-            <p className="font-semibold">{index + 1}. {quiz.question}</p>
-            <RadioGroup defaultValue={showAnswers ? quiz.answer : undefined}>
-                {quiz.options.map((option, idx) => {
-                    const isCorrect = option === quiz.answer;
-                    return (
-                    <div key={idx} 
-                        className={cn("flex items-center space-x-3 rounded-md border p-3",
-                        showAnswers && isCorrect ? "border-green-500/50 bg-green-500/10" : "border-transparent"
-                        )}
-                    >
-                        <RadioGroupItem value={option} id={`creator-option-${index}-${idx}`} disabled />
-                        <Label htmlFor={`creator-option-${index}-${idx}`} className="flex-1">
-                        {option}
-                        </Label>
-                        {showAnswers && isCorrect && <CheckCircle2 className="h-5 w-5 text-green-600" />}
-                    </div>
-                    )
-                })}
-            </RadioGroup>
-        </CardContent>
-    </Card>
-);
-
 export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
-  const [showQuizAnswers, setShowQuizAnswers] = useState(false);
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -286,13 +256,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                     Knowledge Check
                 </Label>
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center space-x-2">
-                        <Switch id="show-answers" checked={showQuizAnswers} onCheckedChange={setShowQuizAnswers} />
-                        <Label htmlFor="show-answers" className="text-xs flex items-center gap-1">
-                            {showQuizAnswers ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            {showQuizAnswers ? 'Hide' : 'Show'} Answers
-                        </Label>
-                    </div>
                     <Button
                         size="sm"
                         variant="outline"
@@ -313,7 +276,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 <ScrollArea className="h-96 pr-4">
                     <div className="space-y-4">
                         {localChapter.quiz.map((q, index) => (
-                            <CreatorQuizView key={index} quiz={q} index={index} showAnswers={showQuizAnswers} />
+                            <QuizCard key={index} quiz={q} index={index} />
                         ))}
                     </div>
                 </ScrollArea>
@@ -328,4 +291,3 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
-
