@@ -35,12 +35,17 @@ export async function addCourse(firestore: Firestore, userId: string, courseData
     };
 
     const docRef = await addDoc(coursesColRef, newDocData);
+    
+    // Also create the initial public copy so it can be shared immediately
+    const publicCourseDocRef = doc(firestore, 'courses', docRef.id);
+    setDocumentNonBlocking(publicCourseDocRef, newDocData, { merge: true });
+
     return docRef.id;
 }
 
 /**
  * Updates an existing course in Firestore.
- * This function also handles creating/updating a public-facing copy if the course is published.
+ * This function also handles creating/updating a public-facing copy.
  *
  * @param firestore - The Firestore instance.
  * @param userId - The ID of the user who owns the course.
@@ -58,20 +63,14 @@ export function updateCourse(firestore: Firestore, userId: string, courseId: str
     // Update the user's private copy of the course
     updateDocumentNonBlocking(userCourseDocRef, updateData);
 
-    // If the course is being published, create/update a public copy
-    if (courseData.published) {
-        const publicCourseDocRef = doc(firestore, 'courses', courseId);
-        const publicData = {
-            ...updateData,
-            userId: userId,
-        };
-        // Use setDoc with merge to create or update the public document
-        setDocumentNonBlocking(publicCourseDocRef, publicData, { merge: true });
-    } else if (courseData.published === false) {
-        // If the course is being unpublished, delete the public copy
-        const publicCourseDocRef = doc(firestore, 'courses', courseId);
-        deleteDocumentNonBlocking(publicCourseDocRef);
-    }
+    // Always update the public copy to keep it in sync
+    const publicCourseDocRef = doc(firestore, 'courses', courseId);
+    const publicData = {
+        ...updateData,
+        userId: userId, // Ensure userId is present in public copy
+    };
+    // Use setDoc with merge to create or update the public document
+    setDocumentNonBlocking(publicCourseDocRef, publicData, { merge: true });
 }
 
 /**
