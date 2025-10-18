@@ -7,7 +7,6 @@ import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarFooter,
   SidebarInset,
   SidebarTrigger,
   SidebarRail
@@ -190,7 +189,7 @@ export default function CreatorStudio({ course, onCourseUpdate, onBackToDashboar
             <Header />
           </SidebarHeader>
 
-          <SidebarContent className='overflow-auto'>
+          <SidebarContent className='flex-1 overflow-auto'>
             <div className="flex flex-col gap-4 p-2">
               <YoutubeImport 
                 onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
