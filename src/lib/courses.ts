@@ -1,9 +1,9 @@
-
 'use client';
 import { 
     collection, 
     doc,
     addDoc,
+    setDoc,
     updateDoc,
     deleteDoc,
     serverTimestamp,
@@ -11,12 +11,10 @@ import {
 } from 'firebase/firestore';
 import { Course } from './types';
 import { 
+    setDocumentNonBlocking,
     updateDocumentNonBlocking,
     deleteDocumentNonBlocking
 } from '@/firebase/non-blocking-updates';
-
-// This is a simplified set of functions. In a real app, you'd want to
-// use the non-blocking versions and handle UI updates optimistically.
 
 /**
  * Adds a new course to Firestore for a specific user.
@@ -42,6 +40,7 @@ export async function addCourse(firestore: Firestore, userId: string, courseData
 
 /**
  * Updates an existing course in Firestore.
+ * This function also handles creating/updating a public-facing copy if the course is published.
  *
  * @param firestore - The Firestore instance.
  * @param userId - The ID of the user who owns the course.
@@ -49,14 +48,30 @@ export async function addCourse(firestore: Firestore, userId: string, courseData
  * @param courseData - The partial course data to update.
  */
 export function updateCourse(firestore: Firestore, userId: string, courseId: string, courseData: Partial<Omit<Course, 'id' | 'userId'>>) {
-    const courseDocRef = doc(firestore, 'users', userId, 'courses', courseId);
+    const userCourseDocRef = doc(firestore, 'users', userId, 'courses', courseId);
     
     const updateData = {
         ...courseData,
         updatedAt: serverTimestamp(),
     };
+    
+    // Update the user's private copy of the course
+    updateDocumentNonBlocking(userCourseDocRef, updateData);
 
-    updateDocumentNonBlocking(courseDocRef, updateData);
+    // If the course is being published, create/update a public copy
+    if (courseData.published) {
+        const publicCourseDocRef = doc(firestore, 'courses', courseId);
+        const publicData = {
+            ...updateData,
+            userId: userId,
+        };
+        // Use setDoc with merge to create or update the public document
+        setDocumentNonBlocking(publicCourseDocRef, publicData, { merge: true });
+    } else if (courseData.published === false) {
+        // If the course is being unpublished, delete the public copy
+        const publicCourseDocRef = doc(firestore, 'courses', courseId);
+        deleteDocumentNonBlocking(publicCourseDocRef);
+    }
 }
 
 /**
@@ -67,6 +82,10 @@ export function updateCourse(firestore: Firestore, userId: string, courseId: str
  * @param courseId - The ID of the course to delete.
  */
 export function deleteCourse(firestore: Firestore, userId: string, courseId: string) {
-    const courseDocRef = doc(firestore, 'users', userId, 'courses', courseId);
-    deleteDocumentNonBlocking(courseDocRef);
+    const userCourseDocRef = doc(firestore, 'users', userId, 'courses', courseId);
+    deleteDocumentNonBlocking(userCourseDocRef);
+
+    // Also delete the public copy if it exists
+    const publicCourseDocRef = doc(firestore, 'courses', courseId);
+    deleteDocumentNonBlocking(publicCourseDocRef);
 }

@@ -50,6 +50,10 @@
         "youTubeLink": {
           "type": "string",
           "description": "Link to the YouTube video from which the course is based."
+        },
+        "published": {
+            "type": "boolean",
+            "description": "Whether the course is publicly visible."
         }
       },
       "required": [
@@ -128,7 +132,7 @@
           "schema": {
             "$ref": "#/backend/entities/Course"
           },
-          "description": "Stores courses created by the user.",
+          "description": "Stores the private, editable copy of a user's course.",
           "params": [
             {
               "name": "userId",
@@ -164,8 +168,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/courses/{courseId}",
+        "definition": {
+          "entityName": "Course",
+          "schema": {
+            "$ref": "#/backend/entities/Course"
+          },
+          "description": "Stores the public, read-only version of a course. Anyone can read if published:true.",
+          "params": [
+            {
+              "name": "courseId",
+              "description": "The unique identifier of the course."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, support QAPs, and maintain data integrity. It leverages path-based ownership for user-specific data and avoids `get()` calls in security rules by denormalizing authorization context where necessary.\n\n*   **Users Collection:** Stores user profiles.\n*   **Courses Collection:** Courses are stored as subcollections under each user's document (`/users/{userId}/courses/{courseId}`). This reflects the 1:N relationship between users and courses, simplifies ownership-based security rules, and enables efficient querying for courses owned by a specific user.\n*   **Chapters Collection:** Chapters are stored as subcollections under each course (`/users/{userId}/courses/{courseId}/chapters/{chapterId}`). This structure mirrors the hierarchical relationship between users, courses, and chapters, providing a clear and secure way to manage course content. No denormalization is required as the parent path contains the user ID, thus the security rules do not need to `get()` the parent documents.\n\nThis structure facilitates simple, robust, and easily debuggable security rules without relying on complex authorization logic or `get()` calls."
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, support QAPs, and maintain data integrity. It leverages path-based ownership for user-specific data and avoids `get()` calls in security rules by denormalizing authorization context where necessary.\n\n*   **Users Collection:** Stores user profiles.\n*   **Private Courses Collection:** Courses are stored as subcollections under each user's document (`/users/{userId}/courses/{courseId}`). This is the private, editable version of the course. This structure reflects the 1:N relationship between users and courses and simplifies ownership-based security rules.\n*   **Chapters Collection:** Chapters are stored as subcollections under each private course (`/users/{userId}/courses/{courseId}/chapters/{chapterId}`), maintaining the content hierarchy.\n*   **Public Courses Collection:** A top-level `/courses/{courseId}` collection stores a denormalized, public-facing copy of a course. This copy is only created or updated when a course is published. Security rules allow public read access only to documents in this collection where `published == true`. This separation of private and public data is a scalable pattern for handling public content while keeping user data secure."
   }
 }
