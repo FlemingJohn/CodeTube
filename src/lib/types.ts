@@ -31,7 +31,6 @@ export type Course = {
   chapters: Chapter[];
   category?: string;
   interviewQuestions?: InterviewQuestion[];
-  published?: boolean;
 };
 
 export const COURSE_CATEGORIES = [

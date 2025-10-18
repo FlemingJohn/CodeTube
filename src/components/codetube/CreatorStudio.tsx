@@ -245,14 +245,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
     onCourseUpdate({ ...course, category });
   }
 
-  const handlePublishToggle = (published: boolean) => {
-    onCourseUpdate({ ...course, published });
-    toast({
-        title: `Course ${published ? 'Published' : 'Unpublished'}`,
-        description: `Your course is now ${published ? 'publicly visible' : 'private'}.`,
-    });
-  };
-
   return (
     <div className="h-screen bg-background">
       <SidebarProvider
@@ -310,11 +302,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       My Courses
                     </Button>
-                    <div className="flex items-center space-x-2">
-                        <Switch id="publish-switch" checked={course.published} onCheckedChange={handlePublishToggle}/>
-                        <Label htmlFor="publish-switch">Publish</Label>
-                    </div>
-                     <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)} disabled={!course.published}>
+                     <Button variant="outline" size="sm" onClick={() => setShareDialogOpen(true)}>
                         <Share2 className="mr-2 h-4 w-4" />
                         Share
                     </Button>

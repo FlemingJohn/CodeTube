@@ -23,11 +23,7 @@ async function getCourse(courseId: string): Promise<Course | null> {
         const courseSnap = await getDoc(courseRef);
 
         if (courseSnap.exists()) {
-            const courseData = courseSnap.data() as Course;
-            // Only return the course if it's marked as published
-            if (courseData.published) {
-                return { ...courseData, id: courseSnap.id };
-            }
+            return { ...courseSnap.data(), id: courseSnap.id } as Course;
         }
     } catch (error) {
         console.error("Error fetching course:", error);
