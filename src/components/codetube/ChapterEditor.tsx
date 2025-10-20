@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -352,10 +352,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 result = await proofread(localChapter.summary);
             } else if (action === 'rewrite' || action === 'tone') {
                 if (!localChapter.summary) return;
-                const prompt = tone 
-                    ? `Rewrite the following text in a ${tone} tone: ${localChapter.summary}`
-                    : `Rewrite the following text to improve its clarity and flow: ${localChapter.summary}`;
-                result = await rewrite(prompt);
+                result = await rewrite(localChapter.summary, tone);
             } else if (action === 'write') {
                 const prompt = `Write a brief summary for a video chapter titled: "${localChapter.title}"`;
                 result = await write(prompt);
