@@ -122,7 +122,7 @@ export default function CourseMentorPage() {
           ) : (
             <Youtube className="mr-2 h-4 w-4" />
           )}
-          Start Course
+          Add to Course
         </Button>
       </div>
     </Card>
