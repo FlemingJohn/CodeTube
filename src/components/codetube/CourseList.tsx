@@ -4,7 +4,7 @@
 import { Course } from '@/lib/types';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Plus, Trash2, Mic, Share2, Beaker } from 'lucide-react';
+import { Plus, Trash2, Mic, Share2, BookUser } from 'lucide-react';
 import Header from './Header';
 import AuthHeader from '../auth/AuthHeader';
 import Image from 'next/image';
@@ -84,7 +84,7 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
             <div className="flex items-center gap-4">
               <Button variant="outline" asChild>
                 <Link href="/creator/course-mentor">
-                  <Beaker className="mr-2 h-4 w-4" />
+                  <BookUser className="mr-2 h-4 w-4" />
                   Course Mentor
                 </Link>
               </Button>

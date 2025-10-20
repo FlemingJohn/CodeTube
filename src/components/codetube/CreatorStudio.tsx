@@ -14,7 +14,7 @@ import {
   SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, Beaker, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, BookUser, RefreshCw } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
@@ -272,7 +272,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                     <SidebarMenuItem>
                         <Link href="/creator/course-mentor" className='w-full'>
                             <SidebarMenuButton>
-                                <Beaker />
+                                <BookUser />
                                 <span>Course Mentor</span>
                             </SidebarMenuButton>
                         </Link>
