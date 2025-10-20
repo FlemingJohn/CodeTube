@@ -15,7 +15,7 @@ import { fixCodeError } from '@/ai/flows/fix-code-error';
 import { proofreadText } from '@/ai/flows/proofread-text';
 import { summarizeText } from '@/ai/flows/summarize-text';
 import { translateText } from '@/ai/flows/translate-text';
-import { writeText } from '@/aiI/flows/write-text';
+import { writeText } from '@/ai/flows/write-text';
 import { rewriteText } from '@/ai/flows/rewrite-text';
 import { suggestVideos } from '@/ai/flows/suggest-videos-flow';
 import { speechToText } from '@/ai/flows/speech-to-text';
