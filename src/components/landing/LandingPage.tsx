@@ -529,29 +529,20 @@ export default function LandingPage() {
                 intelligent application.
               </p>
             </div>
-            <AnimateOnScroll>
-                <Card className="max-w-4xl mx-auto shadow-2xl">
-                    <CardContent className="p-6">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>API Provider</TableHead>
-                                    <TableHead>Core Features Powered</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {apiUsage.map((api) => (
-                                    <TableRow key={api.name}>
-                                        <TableCell className="font-medium flex items-center gap-3">
-                                            {api.icon} {api.name}
-                                        </TableCell>
-                                        <TableCell>{api.description}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+            <AnimateOnScroll className="max-w-4xl mx-auto">
+                <div className="grid md:grid-cols-2 gap-8">
+                    {apiUsage.map((api) => (
+                        <Card key={api.name} className="flex flex-col">
+                            <CardHeader className="flex flex-row items-center gap-4">
+                                {api.icon}
+                                <CardTitle className="font-headline text-xl">{api.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex-grow">
+                                <p className="text-muted-foreground">{api.description}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </AnimateOnScroll>
           </div>
         </section>
