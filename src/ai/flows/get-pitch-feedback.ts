@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {translateText} from './translate-text';
+import {translateText} from '@/aiflows/translate-text';
 
 const GetPitchFeedbackInputSchema = z.object({
   scenario: z.string().describe('The interview question that was asked.'),

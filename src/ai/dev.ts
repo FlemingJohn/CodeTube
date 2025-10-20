@@ -16,4 +16,5 @@ import '@/ai/flows/fix-code-error';
 import '@/ai/flows/suggest-videos-flow';
 import '@/ai/flows/speech-to-text';
 import '@/ai/flows/summarize-text';
+import '@/aiflows/translate-text';
 

@@ -20,6 +20,7 @@ import { Octokit } from '@octokit/rest';
 import { google } from 'googleapis';
 import { YoutubeTranscript } from 'youtube-transcript';
 import { config } from 'dotenv';
+import { translateText } from '@/aiflows/translate-text';
 
 config();
 
@@ -521,5 +522,14 @@ export async function handleSpeechToText(values: z.infer<typeof speechToTextSche
         return { text: result.text };
     } catch (e: any) {
         return { error: e.message || 'Failed to transcribe audio.' };
+    }
+}
+
+export async function handleTranslateText(text: string, targetLanguage: string) {
+    try {
+        const result = await translateText({ text, targetLanguage });
+        return { translatedText: result.translatedText };
+    } catch (e: any) {
+        return { error: e.message || 'Failed to translate text.' };
     }
 }
