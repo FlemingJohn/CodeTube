@@ -85,7 +85,7 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
               <Button variant="outline" asChild>
                 <Link href="/creator/playground">
                   <Wand2 className="mr-2 h-4 w-4" />
-                  AI Playground
+                  AI Study Hub
                 </Link>
               </Button>
               <Button onClick={onNewCourse} className="transition-transform hover:scale-105">

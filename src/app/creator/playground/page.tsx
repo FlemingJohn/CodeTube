@@ -4,41 +4,26 @@
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Wand2, Type, Languages, CaseUpper, WrapText, Book, ArrowLeft } from 'lucide-react';
+import { Loader2, Wand2, ArrowLeft, Brain, Code, Bug, FileText } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { handleProofreadText, handleSummarizeText, handleTranslateText, handleWriteText, handleRewriteText } from '@/app/actions';
-import { Input } from '@/components/ui/input';
+import { handleWriteText, handleFixCodeError } from '@/app/actions';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
 import Link from 'next/link';
 
-type AITool = 'writer' | 'rewriter' | 'summarizer' | 'proofreader' | 'translator';
-
-const LANGUAGES = [
-    { value: 'English', label: 'English' },
-    { value: 'Spanish', label: 'Spanish' },
-    { value: 'French', label: 'French' },
-    { value: 'German', label: 'German' },
-    { value: 'Japanese', label: 'Japanese' },
-    { value: 'Chinese', label: 'Chinese' },
-    { value: 'Korean', label: 'Korean' },
-];
-
-const TONES = ['Professional', 'Casual', 'Confident', 'Friendly', 'Formal'];
+type AITool = 'explainer' | 'code_example' | 'debugger' | 'readme_writer';
 
 export default function PlaygroundPage() {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
 
     const [inputText, setInputText] = useState('');
+    const [errorText, setErrorText] = useState('');
     const [outputText, setOutputText] = useState('');
-    const [targetLanguage, setTargetLanguage] = useState('Spanish');
-    const [rewriteTone, setRewriteTone] = useState('Professional');
-    const [activeTab, setActiveTab] = useState<AITool>('writer');
+    const [activeTab, setActiveTab] = useState<AITool>('explainer');
     
     const handleGenerate = () => {
         startTransition(async () => {
@@ -46,45 +31,26 @@ export default function PlaygroundPage() {
             let result;
             try {
                 switch (activeTab) {
-                    case 'writer':
-                        if (!inputText) {
-                            toast({ variant: 'destructive', title: 'Prompt is empty' });
-                            return;
-                        }
-                        result = await handleWriteText({ prompt: inputText });
+                    case 'explainer':
+                        if (!inputText) { toast({ variant: 'destructive', title: 'Input is empty' }); return; }
+                        result = await handleWriteText({ prompt: `Explain the following concept in simple terms, as if you were teaching a beginner:\n\n${inputText}` });
                         if(result.writtenText) setOutputText(result.writtenText);
                         break;
-                    case 'rewriter':
-                        if (!inputText) {
-                            toast({ variant: 'destructive', title: 'Input text is empty' });
-                            return;
-                        }
-                        result = await handleRewriteText({ text: inputText, tone: rewriteTone });
-                        if (result.rewrittenText) setOutputText(result.rewrittenText);
+                    case 'code_example':
+                        if (!inputText) { toast({ variant: 'destructive', title: 'Input is empty' }); return; }
+                        result = await handleWriteText({ prompt: `Provide a clear, simple code example for the following request. Include a brief explanation of how the code works. \n\nRequest: "${inputText}"` });
+                        if (result.writtenText) setOutputText(result.writtenText);
                         break;
-                    case 'summarizer':
-                        if (!inputText) {
-                            toast({ variant: 'destructive', title: 'Input text is empty' });
-                            return;
-                        }
-                        result = await handleSummarizeText({ text: inputText });
-                        if (result.summary) setOutputText(result.summary);
+                    case 'debugger':
+                        if (!inputText) { toast({ variant: 'destructive', title: 'Code is empty' }); return; }
+                        if (!errorText) { toast({ variant: 'destructive', title: 'Error message is empty' }); return; }
+                        result = await handleFixCodeError({ code: inputText, error: errorText });
+                        if (result.fixedCode) setOutputText(result.fixedCode);
                         break;
-                    case 'proofreader':
-                        if (!inputText) {
-                            toast({ variant: 'destructive', title: 'Input text is empty' });
-                            return;
-                        }
-                        result = await handleProofreadText({ text: inputText });
-                        if (result.correctedText) setOutputText(result.correctedText);
-                        break;
-                    case 'translator':
-                        if (!inputText) {
-                            toast({ variant: 'destructive', title: 'Input text is empty' });
-                            return;
-                        }
-                        result = await handleTranslateText({ text: inputText, targetLanguage });
-                        if (result.translatedText) setOutputText(result.translatedText);
+                    case 'readme_writer':
+                         if (!inputText) { toast({ variant: 'destructive', title: 'Project description is empty' }); return; }
+                        result = await handleWriteText({ prompt: `Generate a professional README.md file for a project. The project description is: "${inputText}". Include sections for Description, Features, Installation, and Usage.` });
+                        if (result.writtenText) setOutputText(result.writtenText);
                         break;
                 }
 
@@ -99,20 +65,18 @@ export default function PlaygroundPage() {
 
     const getToolConfig = (tool: AITool) => {
         switch (tool) {
-          case 'writer':
-            return { icon: <Type />, title: 'Writer', description: 'Create original and engaging text from a prompt.', inputLabel: 'Your Prompt', outputLabel: 'Generated Text' };
-          case 'rewriter':
-            return { icon: <CaseUpper />, title: 'Rewriter', description: 'Improve content with alternative options and tones.', inputLabel: 'Original Text', outputLabel: 'Rewritten Text' };
-          case 'summarizer':
-            return { icon: <WrapText />, title: 'Summarizer', description: 'Distill complex information into clear insights.', inputLabel: 'Text to Summarize', outputLabel: 'Summary' };
-          case 'proofreader':
-            return { icon: <Book />, title: 'Proofreader', description: 'Correct grammar and spelling mistakes with ease.', inputLabel: 'Text to Proofread', outputLabel: 'Corrected Text' };
-          case 'translator':
-            return { icon: <Languages />, title: 'Translator', description: 'Translate text into your preferred language.', inputLabel: 'Text to Translate', outputLabel: 'Translated Text' };
+          case 'explainer':
+            return { icon: <Brain />, title: 'Explain a Concept', inputLabel: 'Concept to Explain', outputLabel: 'Explanation' };
+          case 'code_example':
+            return { icon: <Code />, title: 'Get a Code Example', inputLabel: 'What code do you need?', outputLabel: 'Generated Code' };
+          case 'debugger':
+            return { icon: <Bug />, title: 'Debug My Code', inputLabel: 'Your Code', outputLabel: 'Fixed Code' };
+          case 'readme_writer':
+            return { icon: <FileText />, title: 'Write a README', inputLabel: 'Project Description', outputLabel: 'Generated README.md' };
         }
     };
     
-    const { icon, title, description, inputLabel, outputLabel } = getToolConfig(activeTab);
+    const { icon, title, inputLabel, outputLabel } = getToolConfig(activeTab);
 
   return (
     <>
@@ -136,64 +100,44 @@ export default function PlaygroundPage() {
                     </Link>
                 </Button>
                 <div className="text-center mt-4">
-                    <h1 className="text-4xl font-bold font-headline">AI Playground</h1>
-                    <p className="text-lg text-muted-foreground mt-2">A suite of powerful AI tools to help you create better content.</p>
+                    <h1 className="text-4xl font-bold font-headline">AI Study Hub</h1>
+                    <p className="text-lg text-muted-foreground mt-2">Your personal AI-powered learning assistant.</p>
                 </div>
             </div>
 
             <Card>
                 <CardContent className="p-4">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AITool)} className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 mb-4">
-                        <TabsTrigger value="writer"><Type className="mr-2"/> Writer</TabsTrigger>
-                        <TabsTrigger value="rewriter"><CaseUpper className="mr-2"/> Rewriter</TabsTrigger>
-                        <TabsTrigger value="summarizer"><WrapText className="mr-2"/> Summarizer</TabsTrigger>
-                        <TabsTrigger value="proofreader"><Book className="mr-2"/> Proofreader</TabsTrigger>
-                        <TabsTrigger value="translator"><Languages className="mr-2"/> Translator</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-4 mb-4">
+                        <TabsTrigger value="explainer"><Brain className="mr-2"/> Explainer</TabsTrigger>
+                        <TabsTrigger value="code_example"><Code className="mr-2"/> Code Example</TabsTrigger>
+                        <TabsTrigger value="debugger"><Bug className="mr-2"/> Debugger</TabsTrigger>
+                        <TabsTrigger value="readme_writer"><FileText className="mr-2"/> README Writer</TabsTrigger>
                     </TabsList>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                         <Card className="bg-muted/30">
                             <CardHeader>
                                 <CardTitle className='flex items-center gap-2'>{icon} {inputLabel}</CardTitle>
-                                {activeTab === 'writer' && <CardDescription>Enter a topic or instruction for the AI to write about.</CardDescription>}
                             </CardHeader>
                             <CardContent className='space-y-4'>
                                 <Textarea
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}
-                                    placeholder={activeTab === 'writer' ? "e.g., Write a short blog post about the benefits of learning React." : "Enter your text here..."}
-                                    rows={10}
+                                    placeholder={activeTab === 'explainer' ? 'e.g., What is a promise in JavaScript?' : 'Enter your text here...'}
+                                    rows={activeTab === 'debugger' ? 6 : 10}
                                     className="text-base"
                                 />
-                                {activeTab === 'translator' && (
+                                {activeTab === 'debugger' && (
                                     <div className='space-y-2'>
-                                        <Label>Target Language</Label>
-                                        <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select language" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {LANGUAGES.map(lang => (
-                                                    <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-                                {activeTab === 'rewriter' && (
-                                    <div className='space-y-2'>
-                                        <Label>Tone</Label>
-                                        <Select value={rewriteTone} onValueChange={setRewriteTone}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select tone" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {TONES.map(tone => (
-                                                    <SelectItem key={tone} value={tone}>{tone}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label>Error Message</Label>
+                                        <Textarea
+                                            value={errorText}
+                                            onChange={(e) => setErrorText(e.target.value)}
+                                            placeholder="Paste the error message from the console here."
+                                            rows={3}
+                                            className="font-mono text-xs"
+                                        />
                                     </div>
                                 )}
                             </CardContent>
@@ -208,7 +152,7 @@ export default function PlaygroundPage() {
                                     readOnly
                                     placeholder="AI output will appear here..."
                                     rows={10}
-                                    className="text-base"
+                                    className={activeTab === 'debugger' || activeTab === 'code_example' || activeTab === 'readme_writer' ? "font-mono text-sm" : "text-base"}
                                 />
                             </CardContent>
                         </Card>

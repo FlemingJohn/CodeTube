@@ -301,7 +301,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                         <Link href="/creator/playground" className='w-full'>
                             <SidebarMenuButton>
                                 <Beaker />
-                                <span>AI Playground</span>
+                                <span>AI Study Hub</span>
                             </SidebarMenuButton>
                         </Link>
                     </SidebarMenuItem>
