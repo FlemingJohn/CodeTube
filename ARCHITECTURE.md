@@ -11,17 +11,40 @@ CodeTube is built on a modern, serverless architecture designed for scalability 
 - **Generative AI:** AI features are powered by **Google's Gemini models** through the **Genkit** framework. This is used for generating chapter summaries and suggesting landing page improvements.
 - **Hosting:** The application is deployed on **Firebase App Hosting**, providing a scalable, secure, and globally distributed environment.
 
+## Technology Roles
+
+It's important to understand the role of each major component in the stack:
+
+- **Firebase Studio**: This is the integrated development environment (IDE) where we write, edit, and manage the application's code.
+- **Genkit**: This is the open-source TypeScript framework we use to structure and orchestrate our AI logic. It helps us define `flows` that can call AI models, use tools, and return structured data.
+- **Gemini API**: This is the actual generative model from Google that performs the AI tasks. Genkit calls the Gemini API to generate text, summarize content, translate, and more.
+- **Firebase**: This is the suite of backend services providing the application's database (Firestore), user login system (Authentication), and deployment platform (App Hosting).
+
 ## API Usage
 
 The application integrates with several external APIs to power its features:
 
-| API Provider        | Library Used                 | Features Powered                                                                                                                                                                                                                                                               |
-| ------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Google (YouTube)**| `googleapis`, `youtube-transcript` | **Video & Transcript Import:** Fetches video titles, descriptions, and full transcripts when a user provides a YouTube URL. This is the foundational step for all content analysis.                                                                                    |
-| **Google (Gemini)** | `genkit`, `@genkit-ai/google-genai` | **Core AI Capabilities:** Powers all generative features, including chapter summaries, code explanations, quiz generation, interview question creation, AI-powered code fixing, and the entire AI Playground (Proofreader, Summarizer, Translator, Writer, Rewriter). |
-| **GitHub**          | `@octokit/rest`              | **Export to GitHub:** Creates a new repository, generates Markdown files for the course, and pushes the content to the user's GitHub account.                                                                                                                                    |
-| **Judge0**          | `axios` (within a Genkit flow) | **Interactive Code Execution:** Allows users to run code snippets directly within a chapter and see the output, supporting multiple programming languages.                                                                                                                   |
+| API Provider | Library Used | Core Features Powered |
+| :--- | :--- | :--- |
+| **Google (YouTube)** | `googleapis`, `youtube-transcript` | **Video & Transcript Import:** Fetches video titles, descriptions, and full transcripts. This is the foundation for all content analysis. |
+| **GitHub** | `@octokit/rest` | **Export to GitHub:** Creates a new repository, generates Markdown files for the course, and pushes the content to the user's GitHub account. |
+| **Judge0** | `axios` (within a Genkit flow) | **Interactive Code Execution:** Allows users to run code snippets directly within a chapter and see the output. |
 
+### AI Study Hub & In-App AI Features (Powered by Gemini API via Genkit)
+
+Our core AI capabilities are custom-built flows that use the Gemini API. These are not third-party services but are integral to the CodeTube application.
+
+- **Prompt API**: The fundamental capability to generate dynamic user prompts and get structured outputs. It supports multimodal input (image, audio) and is the basis for all other AI features.
+- **Proofreader API**: Corrects grammar and spelling mistakes with ease. Used in the "AI Edit" feature within the Chapter Editor.
+- **Summarizer API**: Distills complex information into clear insights. Used for the "Generate Summary" feature for each chapter.
+- **Translator API**: Adds multilingual capabilities. Currently available in the AI Study Hub.
+- **Writer API**: Creates original and engaging text from a prompt. Used in the "Write from Topic" feature in the Chapter Editor and throughout the AI Study Hub.
+- **Rewriter API**: Improves content with alternative options and tones. Used in the "AI Edit" feature for chapter notes.
+- **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions.
+- **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content.
+- **Pitch Feedback System**: Analyzes a user's spoken answer to an interview question and provides constructive feedback.
+- **Code Explainer**: Generates a step-by-step explanation for a given code snippet.
+- **Code Error Fixer**: Analyzes incorrect code and an error message to provide a corrected version.
 
 ## User Flow
 
