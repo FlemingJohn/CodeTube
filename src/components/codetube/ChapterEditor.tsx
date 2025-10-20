@@ -98,6 +98,18 @@ const QuizCard = ({ quiz, index }: { quiz: Quiz; index: number }) => {
     );
 };
 
+// Language IDs from Judge0 documentation
+const languageOptions = [
+    { value: '63', label: 'JavaScript' },
+    { value: '71', label: 'Python' },
+    { value: '74', label: 'TypeScript' },
+    { value: '62', label: 'Java' },
+    { value: '54', label: 'C++' },
+    { value: '50', label: 'C' },
+    { value: '60', label: 'Go' },
+    { value: '51', label: 'C#' },
+];
+
 export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
@@ -105,6 +117,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
   const [isRunCodePending, startRunCodeTransition] = useTransition();
   const [codeOutput, setCodeOutput] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
 
   useEffect(() => {
     setLocalChapter(chapter);
@@ -190,7 +203,10 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     }
     startRunCodeTransition(async () => {
       setCodeOutput('Running code...');
-      const result = await handleRunCode({ source_code: localChapter.code, language_id: 63 }); // 63 is Javascript
+      const result = await handleRunCode({ 
+        source_code: localChapter.code, 
+        language_id: parseInt(selectedLanguage) 
+      });
       if (result.error) {
         setCodeOutput(`Error: ${result.error}`);
         toast({
@@ -242,14 +258,14 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Label htmlFor="code">Code Snippet</Label>
-              <Select defaultValue="63">
+              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
                 <SelectTrigger className="h-8 w-fit">
                   <SelectValue placeholder="Language" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="63">JavaScript</SelectItem>
-                  <SelectItem value="71">Python</SelectItem>
-                  <SelectItem value="74">TypeScript</SelectItem>
+                  {languageOptions.map(lang => (
+                    <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
