@@ -289,6 +289,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
 
               <ChapterList
                 chapters={course.chapters}
+                videoId={course.videoId}
                 onChaptersUpdate={(newChapters) => onCourseUpdate({ ...course, chapters: newChapters })}
                 selectedChapterId={selectedChapterId}
                 playingChapterId={playingChapterId}

@@ -3,12 +3,14 @@
 
 import type { Chapter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Camera } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface ChapterListProps {
   chapters: Chapter[];
+  videoId: string | null;
   onChaptersUpdate: (chapters: Chapter[]) => void;
   selectedChapterId: string | null;
   playingChapterId: string | null;
@@ -17,6 +19,7 @@ interface ChapterListProps {
 
 export default function ChapterList({
   chapters,
+  videoId,
   onChaptersUpdate,
   selectedChapterId,
   playingChapterId,
@@ -45,6 +48,16 @@ export default function ChapterList({
     }
   };
 
+  const captureThumbnail = (chapterId: string) => {
+    if (!videoId) return;
+    const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+    const updatedChapters = chapters.map(c => 
+      c.id === chapterId ? { ...c, thumbnail: thumbnailUrl } : c
+    );
+    onChaptersUpdate(updatedChapters);
+  };
+
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -69,21 +82,37 @@ export default function ChapterList({
                     }
                   )}
               >
-                <div className="truncate">
+                {chapter.thumbnail && (
+                   <Image src={chapter.thumbnail} alt={chapter.title} width={48} height={36} className="rounded-sm mr-2 object-cover aspect-video" />
+                )}
+                <div className="truncate flex-1">
                   <p className="text-sm font-medium">{chapter.title}</p>
                   <p className="text-xs text-muted-foreground">{chapter.timestamp}</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteChapter(chapter.id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center opacity-0 group-hover:opacity-100">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            captureThumbnail(chapter.id);
+                        }}
+                    >
+                        <Camera className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            deleteChapter(chapter.id);
+                        }}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
               </div>
             ))
           ) : (

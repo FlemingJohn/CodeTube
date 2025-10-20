@@ -21,6 +21,7 @@ export type Chapter = {
   transcript: string;
   quiz?: Quiz[];
   interviewQuestions?: InterviewQuestion[];
+  thumbnail?: string;
 };
 
 export type Course = {
