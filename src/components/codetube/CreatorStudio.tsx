@@ -8,10 +8,13 @@ import {
   SidebarHeader,
   SidebarContent,
   SidebarTrigger,
-  SidebarRail
+  SidebarRail,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2 } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, Beaker } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
@@ -36,6 +39,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { updateCourse } from '@/lib/courses';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 interface CreatorStudioProps {
     course: Course;
@@ -290,6 +294,19 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                 playingChapterId={playingChapterId}
                 onChapterSelect={handleChapterSelect}
               />
+
+              <div className="mt-auto">
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <Link href="/creator/playground" className='w-full'>
+                            <SidebarMenuButton>
+                                <Beaker />
+                                <span>AI Playground</span>
+                            </SidebarMenuButton>
+                        </Link>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+              </div>
             </div>
           </SidebarContent>
         </Sidebar>

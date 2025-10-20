@@ -11,6 +11,11 @@ import { generatePitchScenario } from '@/ai/flows/generate-pitch-scenario';
 import { getPitchFeedback } from '@/ai/flows/get-pitch-feedback';
 import { runCode } from '@/ai/flows/judge0-flow';
 import { fixCodeError } from '@/ai/flows/fix-code-error';
+import { proofreadText } from '@/ai/flows/proofread-text';
+import { summarizeText } from '@/ai/flows/summarize-text';
+import { translateText } from '@/ai/flows/translate-text';
+import { writeText } from '@/ai/flows/write-text';
+import { rewriteText } from '@/ai/flows/rewrite-text';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -451,4 +456,81 @@ export async function handleFixCodeError(values: z.infer<typeof fixCodeErrorSche
         console.error(e);
         return { error: e.message || 'Failed to fix code.' };
     }
+}
+
+const proofreadTextSchema = z.object({
+  text: z.string(),
+});
+
+export async function handleProofreadText(values: z.infer<typeof proofreadTextSchema>) {
+  const validatedFields = proofreadTextSchema.safeParse(values);
+  if (!validatedFields.success) return { error: 'Invalid fields' };
+  try {
+    const result = await proofreadText(validatedFields.data);
+    return { correctedText: result.correctedText };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to proofread text.' };
+  }
+}
+
+const summarizeTextSchema = z.object({
+  text: z.string(),
+});
+
+export async function handleSummarizeText(values: z.infer<typeof summarizeTextSchema>) {
+  const validatedFields = summarizeTextSchema.safeParse(values);
+  if (!validatedFields.success) return { error: 'Invalid fields' };
+  try {
+    const result = await summarizeText(validatedFields.data);
+    return { summary: result.summary };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to summarize text.' };
+  }
+}
+
+const translateTextSchema = z.object({
+  text: z.string(),
+  targetLanguage: z.string(),
+});
+
+export async function handleTranslateText(values: z.infer<typeof translateTextSchema>) {
+  const validatedFields = translateTextSchema.safeParse(values);
+  if (!validatedFields.success) return { error: 'Invalid fields' };
+  try {
+    const result = await translateText(validatedFields.data);
+    return { translatedText: result.translatedText };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to translate text.' };
+  }
+}
+
+const writeTextSchema = z.object({
+  prompt: z.string(),
+});
+
+export async function handleWriteText(values: z.infer<typeof writeTextSchema>) {
+  const validatedFields = writeTextSchema.safeParse(values);
+  if (!validatedFields.success) return { error: 'Invalid fields' };
+  try {
+    const result = await writeText(validatedFields.data);
+    return { writtenText: result.writtenText };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to write text.' };
+  }
+}
+
+const rewriteTextSchema = z.object({
+  text: z.string(),
+  tone: z.string().optional(),
+});
+
+export async function handleRewriteText(values: z.infer<typeof rewriteTextSchema>) {
+  const validatedFields = rewriteTextSchema.safeParse(values);
+  if (!validatedFields.success) return { error: 'Invalid fields' };
+  try {
+    const result = await rewriteText(validatedFields.data);
+    return { rewrittenText: result.rewrittenText };
+  } catch (e: any) {
+    return { error: e.message || 'Failed to rewrite text.' };
+  }
 }
