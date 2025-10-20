@@ -36,7 +36,7 @@ CodeTube is built on a modern, serverless architecture designed for scalability 
 - **Frontend:** A responsive web application built with **Next.js**, **React**, and **TypeScript**. Styling is handled by **Tailwind CSS** and **ShadCN UI** for a polished, component-based design.
 - **Backend & Authentication:** **Firebase** is used for user authentication (Email/Password) and as a **Firestore** database to save user-created courses and chapters.
 - **Generative AI:** AI features are powered by the **Google Gemini API**, orchestrated through the open-source **Genkit** framework. This is used for all intelligent features, from generating summaries to interview prep.
-- **Hosting:** The application is deployed on **Firebase App Hosting**, providing a scalable, secure, and globally distributed environment.
+- **Hosting:** The application is deployed on **Vercel**, providing a scalable, secure, and globally distributed environment.
 
 ### Technology Roles
 
@@ -45,7 +45,7 @@ It's important to understand the role of each major component in the stack:
 - **Firebase Studio**: This is the integrated development environment (IDE) where we write, edit, and manage the application's code.
 - **Genkit**: This is the open-source TypeScript framework we use to structure and orchestrate our AI logic. It helps us define `flows` that can call AI models, use tools, and return structured data.
 - **Gemini API**: This is the actual generative model from Google that performs the AI tasks. Genkit calls the Gemini API to generate text, summarize content, translate, and more.
-- **Firebase**: This is the suite of backend services providing the application's database (Firestore), user login system (Authentication), and deployment platform (App Hosting).
+- **Firebase**: This is the suite of backend services providing the application's database (Firestore) and user login system (Authentication).
 
 ### API Usage
 
