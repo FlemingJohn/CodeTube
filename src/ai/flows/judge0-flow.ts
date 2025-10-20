@@ -10,7 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import axios from 'axios';
 
 const RunCodeInputSchema = z.object({
@@ -73,11 +73,7 @@ const runCodeFlow = ai.defineFlow(
             await new Promise(resolve => setTimeout(resolve, 1000));
             const resultResponse = await axios.request({
                 method: 'GET',
-                url: `https://${apiHost}/submissions/${submission.token}`,
-                params: {
-                    base64_encoded: 'false',
-                    fields: '*'
-                },
+                url: `https://${apiHost}/submissions/${submission.token}?base64_encoded=false&fields=*`,
                 headers: {
                     'X-RapidAPI-Key': apiKey,
                     'X-RapidAPI-Host': apiHost
@@ -90,7 +86,7 @@ const runCodeFlow = ai.defineFlow(
 
     } catch (error: any) {
         console.error("Judge0 API Error:", error.response ? error.response.data : error.message);
-        throw new Error(error.response ? error.response.data.error : 'Failed to execute code via Judge0.');
+        throw new Error(error.response?.data?.error || 'Failed to execute code via Judge0.');
     }
   }
 );
