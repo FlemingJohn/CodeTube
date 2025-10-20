@@ -39,9 +39,12 @@ export function useChromeAi() {
 
   useEffect(() => {
     const initializeAi = async () => {
-      // The `window.ai` object is not available in all browsers.
-      // You should not rely on it being present.
-      if (window.ai && (await window.ai.canCreateTextSession()) === 'readily') {
+      if (typeof window.ai?.canCreateTextSession !== 'function') {
+        setAiAvailable(false);
+        return;
+      }
+
+      if ((await window.ai.canCreateTextSession()) === 'readily') {
         setAiAvailable(true);
         const [summarizer, proofreader, writer, rewriter, translator] = await Promise.all([
             window.ai.createTextSession({ topK: 3, temperature: 0.3 }),
@@ -60,7 +63,6 @@ export function useChromeAi() {
     return () => {
         Object.values(sessions).forEach(session => session?.destroy());
     };
-    // The empty dependency array ensures this effect runs only once on mount.
   }, []);
 
   const callAi = useCallback(
@@ -88,8 +90,9 @@ export function useChromeAi() {
     [sessions]
   );
 
-  const summarize = useCallback((text: string, onStream?: (chunk: string) => void) => {
-    return callAi('summarizer', `Summarize the following text:\n${text}`, onStream);
+  const summarize = useCallback((text: string, title: string, onStream?: (chunk: string) => void) => {
+    const prompt = `You are an expert educator. Create concise notes in bullet points for a chapter titled "${title}" based on the following transcript:\n\n${text}`;
+    return callAi('summarizer', prompt, onStream);
   }, [callAi]);
 
   const proofread = useCallback((text: string, onStream?: (chunk: string) => void) => {
@@ -120,3 +123,5 @@ export function useChromeAi() {
     translate,
   };
 }
+
+    

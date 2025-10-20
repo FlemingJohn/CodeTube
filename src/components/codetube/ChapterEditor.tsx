@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -30,6 +30,7 @@ interface ChapterEditorProps {
 }
 
 const TONES = ['Explanatory', 'Concise', 'Beginner-Friendly', 'Technical', 'Formal'];
+const LANGUAGES = ['Spanish', 'French', 'German', 'Japanese', 'Mandarin'];
 
 const FormattedText = ({ text }: { text: string }) => {
     const markdownToHtml = (markdown: string) => {
@@ -136,7 +137,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const [fixExplanation, setFixExplanation] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
   const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const { aiAvailable, proofread, rewrite, write } = useChromeAi();
+  const { aiAvailable, proofread, rewrite, write, summarize, translate } = useChromeAi();
 
 
   useEffect(() => {
@@ -341,39 +342,45 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
 
   const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
-  const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone', tone?: string) => {
+  const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone' | 'translate' | 'summarize', context?: string) => {
     startAiEditTransition(async () => {
       let result;
+      const originalText = localChapter.summary;
+      if (!originalText && ['proofread', 'rewrite', 'tone', 'translate'].includes(action)) {
+        toast({ variant: 'destructive', title: 'Nothing to edit', description: 'Please write some notes first.' });
+        return;
+      }
+
       try {
         if (aiAvailable) {
             // Use client-side AI
-            if (action === 'proofread') {
-                if (!localChapter.summary) return;
-                result = await proofread(localChapter.summary);
-            } else if (action === 'rewrite' || action === 'tone') {
-                if (!localChapter.summary) return;
-                result = await rewrite(localChapter.summary, tone);
-            } else if (action === 'write') {
-                const prompt = `Write a brief summary for a video chapter titled: "${localChapter.title}"`;
-                result = await write(prompt);
-            }
+            if (action === 'proofread') result = await proofread(originalText);
+            else if (action === 'rewrite' || action === 'tone') result = await rewrite(originalText, context);
+            else if (action === 'write') result = await write(`Write a brief summary for a video chapter titled: "${localChapter.title}"`);
+            else if (action === 'summarize') result = await summarize(localChapter.transcript, localChapter.title);
+            else if (action === 'translate') result = await translate(originalText, context!);
         } else {
             // Fallback to server-side AI
             if (action === 'proofread') {
-                if (!localChapter.summary) return;
-                const serverResult = await handleProofreadText(localChapter.summary);
+                const serverResult = await handleProofreadText(originalText);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.proofreadText;
             } else if (action === 'rewrite' || action === 'tone') {
-                if (!localChapter.summary) return;
-                const serverResult = await handleRewriteText(localChapter.summary, tone);
+                const serverResult = await handleRewriteText(originalText, context);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.rewrittenText;
             } else if (action === 'write') {
-                const prompt = `Write a brief summary for a video chapter titled: "${localChapter.title}"`;
-                const serverResult = await handleWriteText(prompt);
+                const serverResult = await handleWriteText(`Write a brief summary for a video chapter titled: "${localChapter.title}"`);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.writtenText;
+            } else if (action === 'summarize') {
+                const serverResult = await handleGenerateSummary({ transcript: localChapter.transcript, chapterTitle: localChapter.title });
+                if (serverResult.error) throw new Error(serverResult.error);
+                result = serverResult.summary;
+            } else if (action === 'translate') {
+                const serverResult = await handleTranslateText(originalText, context!);
+                if (serverResult.error) throw new Error(serverResult.error);
+                result = serverResult.translatedText;
             }
         }
 
@@ -382,13 +389,12 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
             toast({ title: 'AI Edit Successful', description: `Your text has been updated.` });
         }
       } catch (e: any) {
-        toast({ variant: 'destructive', title: 'AI Edit Failed', description: e.message });
+        toast({ variant: 'destructive', title: 'AI Task Failed', description: e.message });
       }
     });
   };
 
   const AiEditButton = ({children, ...props}: React.ComponentProps<typeof Button>) => {
-    const isClientAi = aiAvailable;
     return (
         <TooltipProvider>
             <Tooltip>
@@ -399,7 +405,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 </TooltipTrigger>
                 <TooltipContent>
                     <p className="flex items-center gap-2">
-                        {isClientAi ? (
+                        {aiAvailable ? (
                             <><CheckCircle2 className="h-4 w-4 text-green-500" /> Using on-device AI</>
                         ) : (
                             <><Cloud className="h-4 w-4 text-blue-500" /> Using cloud AI</>
@@ -443,7 +449,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
         </div>
 
         <Tabs defaultValue="edit" className="w-full">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
                 <Label htmlFor="summary">Chapter Notes</Label>
                 <div className="flex items-center gap-2">
                 <TabsList className="grid grid-cols-2 h-8">
@@ -451,12 +457,11 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                     <TabsTrigger value="preview" className='h-6'>Preview</TabsTrigger>
                 </TabsList>
                 {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
-                    {!localChapter.summary && (
-                         <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('write')} disabled={isAiEditing}>
-                            <Type className="mr-2"/> Write from Topic
-                         </AiEditButton>
-                    )}
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter.transcript}>
+                        <Type className="mr-2"/> Generate Summary
+                     </AiEditButton>
                     {localChapter.summary && (
+                        <>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <AiEditButton size="sm" variant="ghost" disabled={isAiEditing}>
@@ -488,6 +493,21 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                                 </div>
                             </PopoverContent>
                         </Popover>
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <AiEditButton size="sm" variant="ghost" disabled={isAiEditing}>
+                                    <Languages className="mr-2" /> Translate
+                                </AiEditButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {LANGUAGES.map(lang => (
+                                    <DropdownMenuItem key={lang} onClick={() => handleAiEdit('translate', lang)}>
+                                        {lang}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        </>
                     )}
                 </div>
             </div>
@@ -701,3 +721,5 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
+
+    
