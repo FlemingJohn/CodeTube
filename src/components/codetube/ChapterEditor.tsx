@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError } from '@/app/actions';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useChromeAi } from '@/hooks/useChromeAi';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 
 interface ChapterEditorProps {
@@ -345,25 +345,45 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     startAiEditTransition(async () => {
       let result;
       try {
-        if (action === 'proofread') {
-          if (!localChapter.summary) return;
-          result = await proofread(localChapter.summary);
-          handleSummaryChange(result);
-        } else if (action === 'rewrite') {
-          if (!localChapter.summary) return;
-          result = await rewrite(localChapter.summary);
-          handleSummaryChange(result);
-        } else if (action === 'tone') {
-          if (!localChapter.summary || !tone) return;
-          const prompt = `Rewrite the following text in a ${tone} tone: ${localChapter.summary}`;
-          result = await rewrite(prompt);
-          handleSummaryChange(result);
-        } else if (action === 'write') {
-          const prompt = `Write a brief summary for a video chapter titled: "${localChapter.title}"`;
-          result = await write(prompt);
-          handleSummaryChange(result);
+        if (aiAvailable) {
+            // Use client-side AI
+            if (action === 'proofread') {
+                if (!localChapter.summary) return;
+                result = await proofread(localChapter.summary);
+            } else if (action === 'rewrite' || action === 'tone') {
+                if (!localChapter.summary) return;
+                const prompt = tone 
+                    ? `Rewrite the following text in a ${tone} tone: ${localChapter.summary}`
+                    : `Rewrite the following text to improve its clarity and flow: ${localChapter.summary}`;
+                result = await rewrite(prompt);
+            } else if (action === 'write') {
+                const prompt = `Write a brief summary for a video chapter titled: "${localChapter.title}"`;
+                result = await write(prompt);
+            }
+        } else {
+            // Fallback to server-side AI
+            if (action === 'proofread') {
+                if (!localChapter.summary) return;
+                const serverResult = await handleProofreadText(localChapter.summary);
+                if (serverResult.error) throw new Error(serverResult.error);
+                result = serverResult.proofreadText;
+            } else if (action === 'rewrite' || action === 'tone') {
+                if (!localChapter.summary) return;
+                const serverResult = await handleRewriteText(localChapter.summary, tone);
+                if (serverResult.error) throw new Error(serverResult.error);
+                result = serverResult.rewrittenText;
+            } else if (action === 'write') {
+                const prompt = `Write a brief summary for a video chapter titled: "${localChapter.title}"`;
+                const serverResult = await handleWriteText(prompt);
+                if (serverResult.error) throw new Error(serverResult.error);
+                result = serverResult.writtenText;
+            }
         }
-        toast({ title: 'AI Edit Successful', description: `Your text has been updated.` });
+
+        if (result) {
+            handleSummaryChange(result);
+            toast({ title: 'AI Edit Successful', description: `Your text has been updated.` });
+        }
       } catch (e: any) {
         toast({ variant: 'destructive', title: 'AI Edit Failed', description: e.message });
       }
@@ -371,21 +391,27 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   };
 
   const AiEditButton = ({children, ...props}: React.ComponentProps<typeof Button>) => {
-    if (!aiAvailable) {
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button {...props} disabled>
-              {children}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p className="flex items-center gap-2"><Info className="h-4 w-4" /> AI features require Chrome 127+.</p>
-          </TooltipContent>
-        </Tooltip>
-      );
-    }
-    return <Button {...props}>{children}</Button>;
+    const isClientAi = aiAvailable;
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button {...props}>
+                        {children}
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p className="flex items-center gap-2">
+                        {isClientAi ? (
+                            <><CheckCircle2 className="h-4 w-4 text-green-500" /> Using on-device AI</>
+                        ) : (
+                            <><Cloud className="h-4 w-4 text-blue-500" /> Using cloud AI</>
+                        )}
+                    </p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    );
   }
 
 

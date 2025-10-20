@@ -14,13 +14,19 @@ import { runCode } from '@/ai/flows/judge0-flow';
 import { fixCodeError } from '@/ai/flows/fix-code-error';
 import { suggestVideos } from '@/ai/flows/suggest-videos-flow';
 import { speechToText } from '@/ai/flows/speech-to-text';
+import { summarizeText } from '@/ai/flows/summarize-text';
+import { translateText } from '@/aiflows/translate-text';
+import { proofreadText } from '@/ai/flows/proofread-text';
+import { rewriteText } from '@/ai/flows/rewrite-text';
+import { writeText } from '@/ai/flows/write-text';
+
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { google } from 'googleapis';
 import { YoutubeTranscript } from 'youtube-transcript';
 import { config } from 'dotenv';
-import { translateText } from '@/aiflows/translate-text';
+
 
 config();
 
@@ -531,5 +537,32 @@ export async function handleTranslateText(text: string, targetLanguage: string) 
         return { translatedText: result.translatedText };
     } catch (e: any) {
         return { error: e.message || 'Failed to translate text.' };
+    }
+}
+
+export async function handleProofreadText(text: string) {
+    try {
+        const result = await proofreadText({ text });
+        return { proofreadText: result.proofreadText };
+    } catch (e: any) {
+        return { error: e.message || 'Failed to proofread text.' };
+    }
+}
+
+export async function handleRewriteText(text: string, tone?: string) {
+    try {
+        const result = await rewriteText({ text, tone });
+        return { rewrittenText: result.rewrittenText };
+    } catch (e: any) {
+        return { error: e.message || 'Failed to rewrite text.' };
+    }
+}
+
+export async function handleWriteText(prompt: string) {
+    try {
+        const result = await writeText({ prompt });
+        return { writtenText: result.writtenText };
+    } catch (e: any) {
+        return { error: e.message || 'Failed to write text.' };
     }
 }

@@ -38,6 +38,8 @@ export function useChromeAi() {
 
   useEffect(() => {
     const initializeAi = async () => {
+      // The `window.ai` object is not available in all browsers.
+      // You should not rely on it being present.
       if (window.ai && (await window.ai.canCreateTextSession()) === 'readily') {
         setAiAvailable(true);
         const [summarizer, proofreader, writer, rewriter, translator] = await Promise.all([
@@ -57,6 +59,7 @@ export function useChromeAi() {
     return () => {
         Object.values(sessions).forEach(session => session?.destroy());
     };
+    // The empty dependency array ensures this effect runs only once on mount.
   }, []);
 
   const callAi = useCallback(
