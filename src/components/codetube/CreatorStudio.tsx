@@ -354,7 +354,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                           <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="flex items-center gap-2 font-headline text-2xl">
                               <Sparkles className="w-6 h-6 text-primary" />
-                              Take notes
+                              Chapter Summary
                             </CardTitle>
                             <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
                                 {isSummaryPending ? (
@@ -362,7 +362,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                                 ) : (
                                     <Sparkles className="mr-2 h-4 w-4" />
                                 )}
-                                Generate Notes
+                                Generate Summary
                             </Button>
                           </CardHeader>
                           <CardContent>
@@ -371,7 +371,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                                 name="summary"
                                 value={selectedChapter.summary}
                                 onChange={handleSummaryChange}
-                                placeholder="Click 'Generate Notes' to get an AI summary or write your own notes here."
+                                placeholder="Click 'Generate Summary' to get an AI-powered summary or write your own notes here."
                                 rows={8}
                                 className="text-base"
                             />
@@ -466,3 +466,5 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
     </div>
   );
 }
+
+    

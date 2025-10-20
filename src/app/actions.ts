@@ -534,3 +534,5 @@ export async function handleRewriteText(values: z.infer<typeof rewriteTextSchema
     return { error: e.message || 'Failed to rewrite text.' };
   }
 }
+
+    

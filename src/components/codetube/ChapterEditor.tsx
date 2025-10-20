@@ -8,20 +8,25 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { RunCodeOutput } from '@/ai/flows/judge0-flow';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 interface ChapterEditorProps {
   chapter: Chapter;
   onUpdateChapter: (chapter: Chapter) => void;
   courseTitle: string;
 }
+
+const TONES = ['Professional', 'Casual', 'Confident', 'Friendly', 'Formal'];
+
 
 const FormattedExplanation = ({ text }: { text: string }) => {
     const paragraphs = text.split(/\n+/);
@@ -114,6 +119,7 @@ const languageOptions = [
 export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
+  const [isAiEditing, startAiEditTransition] = useTransition();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
   const [isRunCodePending, startRunCodeTransition] = useTransition();
@@ -132,6 +138,12 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     setLocalChapter(updatedChapter);
     onUpdateChapter(updatedChapter);
   };
+  
+  const handleSummaryChange = (newSummary: string) => {
+    const updatedChapter = { ...localChapter, summary: newSummary };
+    setLocalChapter(updatedChapter);
+    onUpdateChapter(updatedChapter);
+  }
 
   const handleCodeChange = (code: string) => {
     const updatedChapter = { ...localChapter, code: code };
@@ -267,6 +279,35 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
 
   const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
+  const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone', tone?: string) => {
+    startAiEditTransition(async () => {
+      let result;
+      if (action === 'proofread') {
+        if (!localChapter.summary) return;
+        result = await handleProofreadText({ text: localChapter.summary });
+        if (result.correctedText) handleSummaryChange(result.correctedText);
+      } else if (action === 'rewrite') {
+        if (!localChapter.summary) return;
+        result = await handleRewriteText({ text: localChapter.summary });
+        if (result.rewrittenText) handleSummaryChange(result.rewrittenText);
+      } else if (action === 'tone') {
+        if (!localChapter.summary || !tone) return;
+        result = await handleRewriteText({ text: localChapter.summary, tone });
+        if (result.rewrittenText) handleSummaryChange(result.rewrittenText);
+      } else if (action === 'write') {
+        result = await handleWriteText({ prompt: `Write a brief summary for a video chapter titled: "${localChapter.title}"` });
+        if (result.writtenText) handleSummaryChange(result.writtenText);
+      }
+
+      if (result && result.error) {
+        toast({ variant: 'destructive', title: 'AI Edit Failed', description: result.error });
+      } else {
+        toast({ title: 'AI Edit Successful', description: `Your text has been ${action === 'proofread' ? 'corrected' : 'updated'}.`});
+      }
+    });
+  };
+
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -296,6 +337,63 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
             />
           </div>
         </div>
+
+        <div className="space-y-2">
+            <div className="flex justify-between items-center mb-2">
+                <Label htmlFor="summary">Chapter Notes</Label>
+                <div className="flex items-center gap-2">
+                    {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
+                    {!localChapter.summary && (
+                         <Button size="sm" variant="ghost" onClick={() => handleAiEdit('write')} disabled={isAiEditing}>
+                            <Type className="mr-2"/> Write from Topic
+                         </Button>
+                    )}
+                    {localChapter.summary && (
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button size="sm" variant="ghost" disabled={isAiEditing}>
+                                    <Wand2 className="mr-2" /> AI Edit
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-2">
+                                <div className="grid gap-1">
+                                    <Button variant="ghost" className="justify-start" onClick={() => handleAiEdit('rewrite')}>
+                                        <CaseUpper className="mr-2"/> Improve Writing
+                                    </Button>
+                                    <Button variant="ghost" className="justify-start" onClick={() => handleAiEdit('proofread')}>
+                                        <Book className="mr-2"/> Fix Grammar
+                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="justify-start">
+                                                <Pilcrow className="mr-2"/> Change Tone
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent side="right" align="start">
+                                            {TONES.map(tone => (
+                                                <DropdownMenuItem key={tone} onClick={() => handleAiEdit('tone', tone)}>
+                                                    {tone}
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                </div>
+            </div>
+            <Textarea
+                id="summary"
+                name="summary"
+                value={localChapter.summary}
+                onChange={handleChange}
+                placeholder="Write your notes here, or use the AI tools to generate them."
+                rows={4}
+                className="text-base"
+            />
+        </div>
+
 
         <div className="space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-2">
@@ -457,3 +555,5 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
+
+    
