@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Wand2, ArrowLeft, Youtube, Sparkles } from 'lucide-react';
+import { Loader2, Search, ArrowLeft, Youtube, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/codetube/Header';
@@ -171,7 +171,7 @@ export default function CourseMentorPage() {
                 onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               />
               <Button onClick={handleGenerate} disabled={isPending}>
-                <Wand2 className="mr-2 h-4 w-4" />
+                <Search className="mr-2 h-4 w-4" />
                 Get Suggestions
               </Button>
             </div>
