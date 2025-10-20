@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -39,10 +40,10 @@ const runCodeFlow = ai.defineFlow(
   },
   async ({ source_code, language_id }) => {
     const apiKey = process.env.JUDGE0_API_KEY;
-    const apiHost = process.env.JUDGE0_API_HOST;
+    const apiHost = 'judge0-ce.p.rapidapi.com';
 
-    if (!apiKey || !apiHost) {
-        throw new Error('Judge0 API key or host is not configured.');
+    if (!apiKey) {
+        throw new Error('Judge0 API key is not configured.');
     }
 
     const options = {
