@@ -30,7 +30,7 @@ export type Course = {
   title: string;
   videoId: string | null;
   chapters: Chapter[];
-  category?: string;
+  category?: CourseCategory;
   interviewQuestions?: InterviewQuestion[];
 };
 

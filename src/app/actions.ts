@@ -4,6 +4,7 @@
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
 import { explainCode } from '@/ai/flows/explain-code';
+import { findCodeInTranscript } from '@/ai/flows/find-code-in-transcript';
 import { youtubeSearch } from '@/ai/flows/youtube-search';
 import { generateQuiz } from '@/ai/flows/generate-quiz';
 import { generateInterviewQuestions } from '@/ai/flows/generate-interview-questions';
@@ -14,7 +15,7 @@ import { fixCodeError } from '@/ai/flows/fix-code-error';
 import { proofreadText } from '@/ai/flows/proofread-text';
 import { summarizeText } from '@/ai/flows/summarize-text';
 import { translateText } from '@/ai/flows/translate-text';
-import { writeText } from '@/ai/flows/write-text';
+import { writeText } from '@/aiI/flows/write-text';
 import { rewriteText } from '@/ai/flows/rewrite-text';
 import { suggestVideos } from '@/ai/flows/suggest-videos-flow';
 import { speechToText } from '@/ai/flows/speech-to-text';
@@ -95,7 +96,7 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
-function parseChaptersFromDescription(description: string, fullTranscript: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>): Chapter[] {
+async function parseChaptersFromDescription(description: string, fullTranscript: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>): Promise<Chapter[]> {
     const chapters: Chapter[] = [];
     const lines = (description || '').split('\n');
     const timestampRegex = /(?:(\d{1,2}:)?\d{1,2}:\d{2})/;
@@ -134,9 +135,8 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
 
     if (chapterData.length > 0) {
         // Process chapters normally if they were found in the description
-        chapterData.forEach((currentChapter, index) => {
+        for (const [index, currentChapter] of chapterData.entries()) {
             const nextChapter = chapterData[index + 1];
-            // Use video duration for the last chapter's end time if available
             const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration) / 1000 : Infinity;
             const endTime = nextChapter ? nextChapter.startTime : videoDuration;
 
@@ -148,32 +148,50 @@ function parseChaptersFromDescription(description: string, fullTranscript: Await
             // Combine description and chapter transcript for better AI context
             const fullContext = `Video Description:\n${description || 'No description provided.'}\n\nTranscript for this chapter:\n${chapterTranscript || 'No transcript for this segment.'}`;
 
+            let codeSnippet = '';
+            if (fullContext.trim()) {
+                const codeResult = await findCodeInTranscript({
+                    transcript: fullContext,
+                    chapterTitle: currentChapter.title,
+                });
+                codeSnippet = codeResult.code;
+            }
+
             chapters.push({
                 id: `${Date.now()}-${index}`,
                 timestamp: currentChapter.timestamp,
                 title: currentChapter.title,
                 summary: '',
-                code: '',
+                code: codeSnippet,
                 codeExplanation: '',
                 transcript: fullContext,
             });
-        });
+        }
     } else if (fullTranscript.length > 0) {
         // If NO chapters were found, but a transcript exists, treat the whole video as one chapter.
         const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
         const fullContext = `Video Description:\n${description || 'No description provided.'}\n\nTranscript:\n${fullTranscriptText}`;
+        
+        let codeSnippet = '';
+        if (fullContext.trim()) {
+            const codeResult = await findCodeInTranscript({
+                transcript: fullContext,
+                chapterTitle: 'Full Video Content',
+            });
+            codeSnippet = codeResult.code;
+        }
+
         chapters.push({
             id: `${Date.now()}-0`,
             timestamp: '00:00',
             title: 'Full Video Content',
             summary: '',
-            code: '',
+            code: codeSnippet,
             codeExplanation: '',
             transcript: fullContext,
         });
     }
     
-    // If no chapters and no transcript, an empty chapters array is returned, which is the correct state.
     return chapters;
 }
 
@@ -215,10 +233,8 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
       transcriptError = true;
     }
 
-    const chapters = parseChaptersFromDescription(description || '', transcriptResponse);
+    const chapters = await parseChaptersFromDescription(description || '', transcriptResponse);
 
-    // Only warn if transcript fetch failed AND there are no chapters to parse from the description.
-    // If we have chapters from description, transcript failure is less critical.
     if (transcriptError && chapters.length === 0) {
         transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
     }

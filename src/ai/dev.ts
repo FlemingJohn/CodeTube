@@ -5,6 +5,7 @@ config();
 import '@/ai/flows/suggest-landing-page-improvements.ts';
 import '@/ai/flows/generate-chapter-summary.ts';
 import '@/ai/flows/explain-code.ts';
+import '@/ai/flows/find-code-in-transcript.ts';
 import '@/ai/flows/youtube-search.ts';
 import '@/ai/flows/generate-quiz.ts';
 import '@/ai/flows/generate-interview-questions.ts';
@@ -19,4 +20,3 @@ import '@/ai/flows/write-text';
 import '@/ai/flows/rewrite-text';
 import '@/ai/flows/suggest-videos-flow';
 import '@/ai/flows/speech-to-text';
-
