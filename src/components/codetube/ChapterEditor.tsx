@@ -25,7 +25,7 @@ interface ChapterEditorProps {
   courseTitle: string;
 }
 
-const TONES = ['Professional', 'Casual', 'Confident', 'Friendly', 'Formal'];
+const TONES = ['Explanatory', 'Concise', 'Beginner-Friendly', 'Technical', 'Formal'];
 
 
 const FormattedExplanation = ({ text }: { text: string }) => {
@@ -555,5 +555,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
+
+    
 
     
