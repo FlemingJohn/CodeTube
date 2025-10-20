@@ -12,15 +12,15 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const SummarizeTextInputSchema = z.object({
+const SummarizeTextInputSchema = z.object({
   text: z.string().describe('The text to be summarized.'),
 });
-export type SummarizeTextInput = z.infer<typeof SummarizeTextInputSchema>;
+type SummarizeTextInput = z.infer<typeof SummarizeTextInputSchema>;
 
-export const SummarizeTextOutputSchema = z.object({
+const SummarizeTextOutputSchema = z.object({
   summary: z.string().describe('The summarized version of the text.'),
 });
-export type SummarizeTextOutput = z.infer<typeof SummarizeTextOutputSchema>;
+type SummarizeTextOutput = z.infer<typeof SummarizeTextOutputSchema>;
 
 const prompt = ai.definePrompt({
   name: 'summarizeTextPrompt',

@@ -12,15 +12,15 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const ProofreadTextInputSchema = z.object({
+const ProofreadTextInputSchema = z.object({
   text: z.string().describe('The text to be proofread.'),
 });
-export type ProofreadTextInput = z.infer<typeof ProofreadTextInputSchema>;
+type ProofreadTextInput = z.infer<typeof ProofreadTextInputSchema>;
 
-export const ProofreadTextOutputSchema = z.object({
+const ProofreadTextOutputSchema = z.object({
   correctedText: z.string().describe('The corrected version of the text.'),
 });
-export type ProofreadTextOutput = z.infer<typeof ProofreadTextOutputSchema>;
+type ProofreadTextOutput = z.infer<typeof ProofreadTextOutputSchema>;
 
 const prompt = ai.definePrompt({
   name: 'proofreadTextPrompt',

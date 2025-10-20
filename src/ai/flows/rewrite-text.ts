@@ -12,16 +12,16 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-export const RewriteTextInputSchema = z.object({
+const RewriteTextInputSchema = z.object({
   text: z.string().describe('The text to be rewritten.'),
   tone: z.string().optional().describe('The desired tone for the rewritten text (e.g., professional, casual, confident).'),
 });
-export type RewriteTextInput = z.infer<typeof RewriteTextInputSchema>;
+type RewriteTextInput = z.infer<typeof RewriteTextInputSchema>;
 
-export const RewriteTextOutputSchema = z.object({
+const RewriteTextOutputSchema = z.object({
   rewrittenText: z.string().describe('The rewritten version of the text.'),
 });
-export type RewriteTextOutput = z.infer<typeof RewriteTextOutputSchema>;
+type RewriteTextOutput = z.infer<typeof RewriteTextOutputSchema>;
 
 
 const prompt = ai.definePrompt({
