@@ -189,9 +189,9 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
     onCourseUpdate({ ...course, chapters: newChapters });
   };
   
-  const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleSummaryChange = (newSummary: string) => {
     if (!selectedChapter) return;
-    const updatedChapter = { ...selectedChapter, summary: e.target.value };
+    const updatedChapter = { ...selectedChapter, summary: newSummary };
     handleUpdateChapter(updatedChapter);
   };
 
@@ -366,14 +366,14 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                             </Button>
                           </CardHeader>
                           <CardContent>
-                            <Textarea
-                                id="summary"
-                                name="summary"
-                                value={selectedChapter.summary}
-                                onChange={handleSummaryChange}
-                                placeholder="Click 'Generate Summary' to get an AI-powered summary or write your own notes here."
-                                rows={8}
-                                className="text-base"
+                          <Textarea
+                              id="summary"
+                              name="summary"
+                              value={selectedChapter.summary}
+                              onChange={(e) => handleSummaryChange(e.target.value)}
+                              placeholder="Click 'Generate Summary' to get an AI-powered summary or write your own notes here."
+                              rows={8}
+                              className="text-base"
                             />
                           </CardContent>
                         </Card>
@@ -466,5 +466,3 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
     </div>
   );
 }
-
-    

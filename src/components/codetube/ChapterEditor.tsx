@@ -1,14 +1,14 @@
 
 'use client';
 
-import React, { useState, useTransition, useEffect } from 'react';
+import React, { useState, useTransition, useEffect, useRef } from 'react';
 import type { Chapter, Quiz } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { RunCodeOutput } from '@/ai/flows/judge0-flow';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 interface ChapterEditorProps {
   chapter: Chapter;
@@ -27,32 +29,36 @@ interface ChapterEditorProps {
 
 const TONES = ['Explanatory', 'Concise', 'Beginner-Friendly', 'Technical', 'Formal'];
 
+const FormattedText = ({ text }: { text: string }) => {
+    const markdownToHtml = (markdown: string) => {
+        let html = markdown
+            // Bold
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // Italic
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            // Inline code
+            .replace(/`(.*?)`/g, '<code class="bg-muted text-foreground font-code px-1 py-0.5 rounded-sm text-xs">$1</code>');
 
-const FormattedExplanation = ({ text }: { text: string }) => {
-    const paragraphs = text.split(/\n+/);
-    const codeRegex = /`([^`]+)`/g;
-  
+        // Lists
+        const listRegex = /((?:^\s*[-*]\s+.*\n?)+)/gm;
+        html = html.replace(listRegex, (match) => {
+            const items = match.trim().split('\n').map(item =>
+                `<li class="ml-4">${item.replace(/^\s*[-*]\s+/, '')}</li>`
+            ).join('');
+            return `<ul class="list-disc list-outside space-y-1 my-2">${items}</ul>`;
+        });
+        
+        return html;
+    };
+
+    const paragraphs = text.split(/\n\n+/);
+
     return (
-      <div className="space-y-4">
-        {paragraphs.map((paragraph, pIndex) => {
-          const parts = paragraph.split(codeRegex);
-          
-          return (
-            <p key={pIndex} className="text-sm font-sans leading-relaxed">
-              {parts.map((part, index) => {
-                if (index % 2 === 1) {
-                  return (
-                    <code key={index} className="bg-muted text-foreground font-code px-1 py-0.5 rounded-sm text-xs">
-                      {part}
-                    </code>
-                  );
-                }
-                return part;
-              })}
-            </p>
-          );
-        })}
-      </div>
+        <div className="space-y-4 prose prose-sm dark:prose-invert max-w-none">
+            {paragraphs.map((paragraph, pIndex) => (
+                 <p key={pIndex} dangerouslySetInnerHTML={{ __html: markdownToHtml(paragraph) }} />
+            ))}
+        </div>
     );
 };
   
@@ -126,6 +132,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const [isFixCodePending, startFixCodeTransition] = useTransition();
   const [codeOutput, setCodeOutput] = useState<RunCodeOutput | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
+  const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
+
 
   useEffect(() => {
     setLocalChapter(chapter);
@@ -150,6 +158,54 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     setLocalChapter(updatedChapter);
     onUpdateChapter(updatedChapter);
   }
+
+  const applyMarkdown = (syntax: 'bold' | 'italic' | 'code' | 'list') => {
+    const textarea = summaryTextareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    let newText;
+
+    switch (syntax) {
+        case 'bold':
+            newText = `**${selectedText}**`;
+            break;
+        case 'italic':
+            newText = `*${selectedText}*`;
+            break;
+        case 'code':
+            newText = `\`${selectedText}\``;
+            break;
+        case 'list':
+            const lines = selectedText.split('\n');
+            if (lines.every(line => line.startsWith('- '))) {
+                // If it's already a list, unlist it
+                newText = lines.map(line => line.substring(2)).join('\n');
+            } else {
+                newText = lines.map(line => `- ${line}`).join('\n');
+            }
+            break;
+        default:
+            newText = selectedText;
+    }
+
+    const updatedValue = textarea.value.substring(0, start) + newText + textarea.value.substring(end);
+    handleSummaryChange(updatedValue);
+    
+    // Focus and re-select text for convenience
+    setTimeout(() => {
+      textarea.focus();
+      if (selectedText) {
+          textarea.setSelectionRange(start, start + newText.length);
+      } else {
+          const newCursorPos = start + (syntax === 'list' ? 2 : (syntax === 'bold' ? 2 : 1));
+          textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }
+    }, 0);
+  };
+
 
   const onExplainCode = () => {
     if (!localChapter.code) {
@@ -338,11 +394,15 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
           </div>
         </div>
 
-        <div className="space-y-2">
+        <Tabs defaultValue="edit" className="w-full">
             <div className="flex justify-between items-center mb-2">
                 <Label htmlFor="summary">Chapter Notes</Label>
                 <div className="flex items-center gap-2">
-                    {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
+                <TabsList className="grid grid-cols-2 h-8">
+                    <TabsTrigger value="edit" className='h-6'>Edit</TabsTrigger>
+                    <TabsTrigger value="preview" className='h-6'>Preview</TabsTrigger>
+                </TabsList>
+                {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
                     {!localChapter.summary && (
                          <Button size="sm" variant="ghost" onClick={() => handleAiEdit('write')} disabled={isAiEditing}>
                             <Type className="mr-2"/> Write from Topic
@@ -383,16 +443,40 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                     )}
                 </div>
             </div>
-            <Textarea
-                id="summary"
-                name="summary"
-                value={localChapter.summary}
-                onChange={handleChange}
-                placeholder="Write your notes here, or use the AI tools to generate them."
-                rows={4}
-                className="text-base"
-            />
-        </div>
+            <TabsContent value="edit" className="mt-0">
+                <div className="rounded-md border border-input">
+                    <div className="p-1 border-b">
+                        <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('bold')}><Bold className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('italic')}><Italic className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('code')}><CodeIcon className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('list')}><List className="h-4 w-4"/></Button>
+                        </div>
+                    </div>
+                    <Textarea
+                        id="summary"
+                        name="summary"
+                        ref={summaryTextareaRef}
+                        value={localChapter.summary}
+                        onChange={e => handleSummaryChange(e.target.value)}
+                        placeholder="Write your notes here, or use the AI tools to generate them."
+                        rows={6}
+                        className="text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
+                </div>
+            </TabsContent>
+             <TabsContent value="preview" className="mt-0">
+                <Card className="min-h-[158px]">
+                    <CardContent className="p-4">
+                        {localChapter.summary ? (
+                            <FormattedText text={localChapter.summary} />
+                        ) : (
+                            <p className="text-muted-foreground text-sm">Nothing to preview. Add some notes in the edit tab.</p>
+                        )}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
 
 
         <div className="space-y-2">
@@ -506,7 +590,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
             </Label>
              <Card className="bg-muted/40">
                <CardContent className="p-4">
-                 <FormattedExplanation text={localChapter.codeExplanation} />
+                 <FormattedText text={localChapter.codeExplanation} />
                </CardContent>
              </Card>
            </div>
@@ -555,7 +639,3 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
-
-    
-
-    
