@@ -10,7 +10,18 @@ CodeTube is built on a modern, serverless architecture designed for scalability 
 - **Backend & Authentication:** **Firebase** is used for user authentication (Email/Password) and as a **Firestore** database to save user-created courses and chapters.
 - **Generative AI:** AI features are powered by **Google's Gemini models** through the **Genkit** framework. This is used for generating chapter summaries and suggesting landing page improvements.
 - **Hosting:** The application is deployed on **Firebase App Hosting**, providing a scalable, secure, and globally distributed environment.
-- **API Interaction:** We use **Octokit** to interact with the GitHub API for exporting courses to repositories.
+
+## API Usage
+
+The application integrates with several external APIs to power its features:
+
+| API Provider        | Library Used                 | Features Powered                                                                                                                                                                                                                                                               |
+| ------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Google (YouTube)**| `googleapis`, `youtube-transcript` | **Video & Transcript Import:** Fetches video titles, descriptions, and full transcripts when a user provides a YouTube URL. This is the foundational step for all content analysis.                                                                                    |
+| **Google (Gemini)** | `genkit`, `@genkit-ai/google-genai` | **Core AI Capabilities:** Powers all generative features, including chapter summaries, code explanations, quiz generation, interview question creation, AI-powered code fixing, and the entire AI Playground (Proofreader, Summarizer, Translator, Writer, Rewriter). |
+| **GitHub**          | `@octokit/rest`              | **Export to GitHub:** Creates a new repository, generates Markdown files for the course, and pushes the content to the user's GitHub account.                                                                                                                                    |
+| **Judge0**          | `axios` (within a Genkit flow) | **Interactive Code Execution:** Allows users to run code snippets directly within a chapter and see the output, supporting multiple programming languages.                                                                                                                   |
+
 
 ## User Flow
 
