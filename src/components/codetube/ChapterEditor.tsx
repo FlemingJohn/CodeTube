@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -19,6 +19,8 @@ import { RunCodeOutput } from '@/ai/flows/judge0-flow';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useChromeAi } from '@/hooks/useChromeAi';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 
 interface ChapterEditorProps {
@@ -134,6 +136,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const [fixExplanation, setFixExplanation] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
   const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const { aiAvailable, proofread, rewrite, write } = useChromeAi();
 
 
   useEffect(() => {
@@ -341,30 +344,49 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone', tone?: string) => {
     startAiEditTransition(async () => {
       let result;
-      if (action === 'proofread') {
-        if (!localChapter.summary) return;
-        result = await handleProofreadText({ text: localChapter.summary });
-        if (result.correctedText) handleSummaryChange(result.correctedText);
-      } else if (action === 'rewrite') {
-        if (!localChapter.summary) return;
-        result = await handleRewriteText({ text: localChapter.summary });
-        if (result.rewrittenText) handleSummaryChange(result.rewrittenText);
-      } else if (action === 'tone') {
-        if (!localChapter.summary || !tone) return;
-        result = await handleRewriteText({ text: localChapter.summary, tone });
-        if (result.rewrittenText) handleSummaryChange(result.rewrittenText);
-      } else if (action === 'write') {
-        result = await handleWriteText({ prompt: `Write a brief summary for a video chapter titled: "${localChapter.title}"` });
-        if (result.writtenText) handleSummaryChange(result.writtenText);
-      }
-
-      if (result && result.error) {
-        toast({ variant: 'destructive', title: 'AI Edit Failed', description: result.error });
-      } else {
-        toast({ title: 'AI Edit Successful', description: `Your text has been ${action === 'proofread' ? 'corrected' : 'updated'}.`});
+      try {
+        if (action === 'proofread') {
+          if (!localChapter.summary) return;
+          result = await proofread(localChapter.summary);
+          handleSummaryChange(result);
+        } else if (action === 'rewrite') {
+          if (!localChapter.summary) return;
+          result = await rewrite(localChapter.summary);
+          handleSummaryChange(result);
+        } else if (action === 'tone') {
+          if (!localChapter.summary || !tone) return;
+          const prompt = `Rewrite the following text in a ${tone} tone: ${localChapter.summary}`;
+          result = await rewrite(prompt);
+          handleSummaryChange(result);
+        } else if (action === 'write') {
+          const prompt = `Write a brief summary for a video chapter titled: "${localChapter.title}"`;
+          result = await write(prompt);
+          handleSummaryChange(result);
+        }
+        toast({ title: 'AI Edit Successful', description: `Your text has been updated.` });
+      } catch (e: any) {
+        toast({ variant: 'destructive', title: 'AI Edit Failed', description: e.message });
       }
     });
   };
+
+  const AiEditButton = ({children, ...props}: React.ComponentProps<typeof Button>) => {
+    if (!aiAvailable) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button {...props} disabled>
+              {children}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="flex items-center gap-2"><Info className="h-4 w-4" /> AI features require Chrome 127+.</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+    return <Button {...props}>{children}</Button>;
+  }
 
 
   return (
@@ -407,16 +429,16 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 </TabsList>
                 {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
                     {!localChapter.summary && (
-                         <Button size="sm" variant="ghost" onClick={() => handleAiEdit('write')} disabled={isAiEditing}>
+                         <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('write')} disabled={isAiEditing}>
                             <Type className="mr-2"/> Write from Topic
-                         </Button>
+                         </AiEditButton>
                     )}
                     {localChapter.summary && (
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button size="sm" variant="ghost" disabled={isAiEditing}>
+                                <AiEditButton size="sm" variant="ghost" disabled={isAiEditing}>
                                     <Wand2 className="mr-2" /> AI Edit
-                                </Button>
+                                </AiEditButton>
                             </PopoverTrigger>
                             <PopoverContent className="w-56 p-2">
                                 <div className="grid gap-1">
