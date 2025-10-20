@@ -14,7 +14,7 @@ import {
   SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, Beaker } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, Beaker, RefreshCw } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
@@ -30,15 +30,12 @@ import { useAuth, useFirestore } from '@/firebase';
 import VideoPlayer from './VideoPlayer';
 import VideoSearchDialog from './VideoSearchDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Textarea } from '../ui/textarea';
-import { handleGenerateSummary, handleGenerateInterviewQuestions } from '@/app/actions';
+import { handleGenerateInterviewQuestions } from '@/app/actions';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { ScrollArea } from '../ui/scroll-area';
 import { updateCourse } from '@/lib/courses';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 
 interface CreatorStudioProps {
@@ -101,7 +98,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isShareDialogOpen, setShareDialogOpen] = useState(false);
-  const [isSummaryPending, startSummaryTransition] = useTransition();
   const [isInterviewPending, startInterviewTransition] = useTransition();
   const [player, setPlayer] = useState<any>(null);
 
@@ -116,7 +112,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   }, [course.chapters, selectedChapterId]);
 
   useEffect(() => {
-    // If the course is new and has no video, open the search dialog.
     if (!initialCourse.videoId) {
       setSearchDialogOpen(true);
     }
@@ -149,7 +144,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
         
             let activeChapterId = null;
         
-            // Find the chapter that is currently playing
             for (let i = chapterStartTimes.length - 1; i >= 0; i--) {
                 if (currentTime >= chapterStartTimes[i].startTime) {
                     activeChapterId = chapterStartTimes[i].id;
@@ -159,65 +153,42 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
         
             setPlayingChapterId(activeChapterId);
         } catch (e) {
-            // Can happen if the player is destroyed
             clearInterval(interval);
         }
-    }, 1000); // Check every second
+    }, 1000);
   
     return () => clearInterval(interval);
   }, [player, chapterStartTimes]);
-  
-  useEffect(() => {
-    if (selectedChapter && !selectedChapter.interviewQuestions && selectedChapter.transcript) {
-        startInterviewTransition(async () => {
-            const result = await handleGenerateInterviewQuestions({
-                transcript: selectedChapter.transcript,
-                chapterTitle: selectedChapter.title,
-            });
-            if (result.questions) {
-                const updatedChapter = { ...selectedChapter, interviewQuestions: result.questions };
-                handleUpdateChapter(updatedChapter);
-            }
-        });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChapter]);
-
 
   const handleUpdateChapter = (updatedChapter: Chapter) => {
     const newChapters = course.chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
     onCourseUpdate({ ...course, chapters: newChapters });
   };
-  
-  const handleSummaryChange = (newSummary: string) => {
-    if (!selectedChapter) return;
-    const updatedChapter = { ...selectedChapter, summary: newSummary };
-    handleUpdateChapter(updatedChapter);
-  };
 
-  const onGenerateSummary = () => {
-    if (!selectedChapter) return;
-    startSummaryTransition(async () => {
-      const result = await handleGenerateSummary({ 
-        transcript: selectedChapter.transcript,
-        chapterTitle: selectedChapter.title,
-      });
-      if (result.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: result.error,
+  const onGenerateInterviewQuestions = (replace: boolean = false) => {
+    if (!selectedChapter || !selectedChapter.transcript) {
+        toast({ variant: 'destructive', title: 'Missing context', description: 'This chapter needs a transcript to generate questions.' });
+        return;
+    }
+    startInterviewTransition(async () => {
+        const result = await handleGenerateInterviewQuestions({
+            transcript: selectedChapter.transcript,
+            chapterTitle: selectedChapter.title,
         });
-      } else if (result.summary) {
-        const updatedChapter = { ...selectedChapter, summary: result.summary };
-        handleUpdateChapter(updatedChapter);
-        toast({
-          title: 'Summary Generated',
-          description: 'The AI-powered summary has been added.',
-        });
-      }
+
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        } else if (result.questions) {
+            const existingQuestions = replace ? [] : (selectedChapter.interviewQuestions || []);
+            const updatedChapter = { 
+                ...selectedChapter, 
+                interviewQuestions: [...existingQuestions, ...result.questions] 
+            };
+            handleUpdateChapter(updatedChapter);
+            toast({ title: 'Interview questions generated!' });
+        }
     });
-  };
+  }
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -357,10 +328,25 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                                     <Bot className="w-6 h-6 text-primary" />
                                     Interview Prep
                                 </CardTitle>
-                                {isInterviewPending && <Loader2 className="h-6 h-6 animate-spin" />}
+                                <div className="flex items-center gap-2">
+                                  {selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 && (
+                                    <Button size="sm" variant="outline" onClick={() => onGenerateInterviewQuestions(true)} disabled={isInterviewPending}>
+                                      <RefreshCw className="mr-2"/> Regenerate
+                                    </Button>
+                                  )}
+                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending}>
+                                    {isInterviewPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
+                                    Generate
+                                  </Button>
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                {selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 ? (
+                                {isInterviewPending && (!selectedChapter.interviewQuestions || selectedChapter.interviewQuestions.length === 0) ? (
+                                    <div className="text-center text-sm text-muted-foreground py-8">
+                                        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2"/>
+                                        <p>Generating interview questions...</p>
+                                    </div>
+                                ) : selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 ? (
                                     <Accordion type="single" collapsible className="w-full space-y-2">
                                         {selectedChapter.interviewQuestions.map((item, index) => (
                                             <AccordionItem key={index} value={`item-${index}`} className="bg-background/50 rounded-md border px-4">
@@ -378,11 +364,8 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                                     </Accordion>
                                 ) : (
                                 <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
-                                    {isInterviewPending ? (
-                                        <p>Generating interview questions...</p>
-                                    ) : (
-                                        <p>Interview questions for this chapter will be generated automatically.</p>
-                                    )}
+                                    <p>No interview questions for this chapter yet.</p>
+                                    <p>Click "Generate" to create some.</p>
                                 </div>
                                 )}
                             </CardContent>
