@@ -19,6 +19,7 @@ import {
   GraduationCap,
   Rocket,
   TrendingUp,
+  Check,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -104,20 +105,29 @@ const targetAudience = [
     {
       icon: <GraduationCap className="h-10 w-10 text-primary" />,
       title: 'For Students',
-      description:
-        'Turn dense lectures into interactive study guides. Use AI-generated quizzes and interview questions to ace your exams and build a project for your portfolio.',
+      benefits: [
+        'Turn dense lectures into interactive study guides.',
+        'Use AI-quizzes to ace your exams.',
+        'Build a verifiable project for your portfolio.',
+      ],
     },
     {
       icon: <Rocket className="h-10 w-10 text-primary" />,
       title: 'For Junior Developers',
-      description:
-        "Bridge the gap between tutorials and job-readiness. Practice your interview pitch with AI feedback and export your completed course to GitHub to showcase your skills.",
+      benefits: [
+        'Bridge the gap between tutorials and job-readiness.',
+        'Practice interview pitches with AI feedback.',
+        'Export completed courses to GitHub to showcase skills.',
+      ],
     },
     {
       icon: <TrendingUp className="h-10 w-10 text-primary" />,
       title: 'For Working Professionals',
-      description:
-        'Quickly upskill on new technologies without the friction. Instantly summarize long videos and extract key concepts to stay ahead in your career.',
+      benefits: [
+        'Quickly upskill on new technologies without friction.',
+        'Instantly summarize long videos to extract key concepts.',
+        'Stay ahead of the curve in your career.',
+      ],
     },
   ];
 
@@ -410,7 +420,7 @@ export default function LandingPage() {
                 <div className="grid md:grid-cols-3 gap-8">
                     {targetAudience.map((target, index) => (
                         <AnimateOnScroll key={target.title} delay={index * 100}>
-                            <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
+                            <Card className="h-full flex flex-col text-center transition-all duration-300 hover:scale-105 hover:-translate-y-2">
                                 <CardHeader>
                                     <div className="mx-auto bg-primary/10 p-4 rounded-full w-fit">
                                         {target.icon}
@@ -419,10 +429,15 @@ export default function LandingPage() {
                                         {target.title}
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <p className="text-muted-foreground">
-                                        {target.description}
-                                    </p>
+                                <CardContent className="flex-grow">
+                                    <ul className="space-y-2 text-left">
+                                        {target.benefits.map((benefit, i) => (
+                                            <li key={i} className="flex items-start gap-2">
+                                                <Check className="h-5 w-5 text-green-500 mt-1 shrink-0" />
+                                                <span className="text-muted-foreground">{benefit}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </CardContent>
                             </Card>
                         </AnimateOnScroll>
@@ -611,4 +626,5 @@ export default function LandingPage() {
   );
 }
 
+    
     
