@@ -17,6 +17,7 @@ import { translateText } from '@/ai/flows/translate-text';
 import { writeText } from '@/ai/flows/write-text';
 import { rewriteText } from '@/ai/flows/rewrite-text';
 import { suggestVideos } from '@/ai/flows/suggest-videos-flow';
+import { speechToText } from '@/ai/flows/speech-to-text';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -571,5 +572,20 @@ export async function handleSuggestVideos(values: z.infer<typeof suggestVideosSc
         return { suggestions: result };
     } catch (e: any) {
         return { error: e.message || 'Failed to suggest videos.' };
+    }
+}
+
+const speechToTextSchema = z.object({
+    audioDataUri: z.string(),
+});
+
+export async function handleSpeechToText(values: z.infer<typeof speechToTextSchema>) {
+    const validatedFields = speechToTextSchema.safeParse(values);
+    if (!validatedFields.success) return { error: 'Invalid fields' };
+    try {
+        const result = await speechToText(validatedFields.data);
+        return { text: result.text };
+    } catch (e: any) {
+        return { error: e.message || 'Failed to transcribe audio.' };
     }
 }

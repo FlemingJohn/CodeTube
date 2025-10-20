@@ -18,3 +18,5 @@ import '@/aiflows/translate-text';
 import '@/ai/flows/write-text';
 import '@/ai/flows/rewrite-text';
 import '@/ai/flows/suggest-videos-flow';
+import '@/ai/flows/speech-to-text';
+

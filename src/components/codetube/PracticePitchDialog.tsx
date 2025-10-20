@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,27 +10,21 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mic, Bot, Sparkles, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Mic, Bot, Sparkles, CheckCircle, XCircle, MicOff, Square } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { handleGeneratePitchScenario, handleGetPitchFeedback } from '@/app/actions';
+import { handleGeneratePitchScenario, handleGetPitchFeedback, handleSpeechToText } from '@/app/actions';
 import type { Course } from '@/lib/types';
 import { Card, CardContent } from '../ui/card';
 import { Textarea } from '../ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { GetPitchFeedbackOutput } from '@/ai/flows/get-pitch-feedback';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 interface PracticePitchDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   course: Course;
 }
-
-type Feedback = {
-  overallFeedback: string;
-  feedbackBreakdown: {
-    isPositive: boolean;
-    feedback: string;
-  }[];
-};
 
 enum PitchState {
   Idle,
@@ -40,14 +34,25 @@ enum PitchState {
   FeedbackReady,
 }
 
+enum RecordingState {
+    Idle,
+    RequestingPermission,
+    Recording,
+    Transcribing,
+}
+
 export default function PracticePitchDialog({ isOpen, setIsOpen, course }: PracticePitchDialogProps) {
   const { toast } = useToast();
   const [pitchState, setPitchState] = useState<PitchState>(PitchState.Idle);
+  const [recordingState, setRecordingState] = useState<RecordingState>(RecordingState.Idle);
   const [scenario, setScenario] = useState('');
   const [userAnswer, setUserAnswer] = useState('');
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [feedback, setFeedback] = useState<GetPitchFeedbackOutput | null>(null);
   const [getFeedbackPending, startGetFeedbackTransition] = useTransition();
   const [generateScenarioPending, startGenerateScenarioTransition] = useTransition();
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const onGenerateScenario = async () => {
     startGenerateScenarioTransition(async () => {
@@ -71,11 +76,55 @@ export default function PracticePitchDialog({ isOpen, setIsOpen, course }: Pract
     });
   };
 
+  const startRecording = async () => {
+    setRecordingState(RecordingState.RequestingPermission);
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        audioChunksRef.current = [];
+
+        mediaRecorderRef.current.ondataavailable = (event) => {
+            audioChunksRef.current.push(event.data);
+        };
+
+        mediaRecorderRef.current.onstop = async () => {
+            setRecordingState(RecordingState.Transcribing);
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+                const base64Audio = reader.result as string;
+                const result = await handleSpeechToText({ audioDataUri: base64Audio });
+                if (result.error) {
+                    toast({ variant: 'destructive', title: 'Transcription Error', description: result.error });
+                    setRecordingState(RecordingState.Idle);
+                } else {
+                    setUserAnswer(result.text || '');
+                    setRecordingState(RecordingState.Idle);
+                }
+            };
+        };
+
+        mediaRecorderRef.current.start();
+        setRecordingState(RecordingState.Recording);
+    } catch (err) {
+        toast({ variant: 'destructive', title: 'Microphone Access Denied', description: 'Please allow microphone access in your browser settings.' });
+        setRecordingState(RecordingState.Idle);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+    }
+  };
+
+
   const onSubmitAnswer = () => {
     if (!userAnswer) {
       toast({
         variant: 'destructive',
-        title: 'Please enter your answer.',
+        title: 'Please provide an answer first.',
       });
       return;
     }
@@ -95,6 +144,7 @@ export default function PracticePitchDialog({ isOpen, setIsOpen, course }: Pract
 
   const reset = () => {
     setPitchState(PitchState.Idle);
+    setRecordingState(RecordingState.Idle);
     setScenario('');
     setUserAnswer('');
     setFeedback(null);
@@ -125,14 +175,54 @@ export default function PracticePitchDialog({ isOpen, setIsOpen, course }: Pract
       case PitchState.ScenarioReady:
         return (
           <div className="space-y-4">
-            <p className="font-semibold text-lg">Your Answer:</p>
-            <Textarea
-              value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Type your response here..."
-              rows={8}
-            />
-            <Button onClick={onSubmitAnswer} disabled={getFeedbackPending || !userAnswer}>
+             <Tabs defaultValue="text" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="text">Type Answer</TabsTrigger>
+                    <TabsTrigger value="speech">Speak Answer</TabsTrigger>
+                </TabsList>
+                <TabsContent value="text">
+                    <Textarea
+                        value={userAnswer}
+                        onChange={(e) => setUserAnswer(e.target.value)}
+                        placeholder="Type your response here..."
+                        rows={8}
+                    />
+                </TabsContent>
+                <TabsContent value="speech">
+                    <div className="flex flex-col items-center justify-center gap-4 rounded-md border min-h-[180px] p-4">
+                        {recordingState === RecordingState.Recording ? (
+                            <>
+                                <Button onClick={stopRecording} variant="destructive" size="lg">
+                                    <Square className="mr-2" /> Stop Recording
+                                </Button>
+                                <p className="text-sm text-muted-foreground">Recording in progress...</p>
+                            </>
+                        ) : recordingState === RecordingState.Transcribing || recordingState === RecordingState.RequestingPermission ? (
+                             <>
+                                <Button disabled size="lg">
+                                    <Loader2 className="mr-2 animate-spin" /> 
+                                    {recordingState === RecordingState.Transcribing ? "Transcribing..." : "Please wait..."}
+                                </Button>
+                                <p className="text-sm text-muted-foreground">{recordingState === RecordingState.Transcribing ? "Converting your speech to text." : "Requesting microphone access."}</p>
+                            </>
+                        ) : (
+                            <Button onClick={startRecording} size="lg">
+                                <Mic className="mr-2" /> Start Recording
+                            </Button>
+                        )}
+                    </div>
+                     {userAnswer && (
+                        <Card className="mt-4 bg-muted/30">
+                            <CardContent className="p-3">
+                                <p className="text-sm font-semibold mb-1">Transcribed Answer:</p>
+                                <p className="text-sm text-muted-foreground italic">"{userAnswer}"</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </TabsContent>
+            </Tabs>
+
+            <Button onClick={onSubmitAnswer} disabled={getFeedbackPending || !userAnswer} className="w-full">
               {getFeedbackPending ? (
                 <Loader2 className="mr-2 animate-spin" />
               ) : null}
@@ -153,9 +243,15 @@ export default function PracticePitchDialog({ isOpen, setIsOpen, course }: Pract
         return (
           <div className="space-y-6">
              <Card>
-              <CardContent className="p-4">
+              <CardContent className="p-4 space-y-2">
                 <p className="font-semibold text-lg">Your Answer:</p>
                 <p className="text-foreground/80 italic">"{userAnswer}"</p>
+                {feedback.translation?.translatedAnswer && (
+                    <div className="pt-2 border-t mt-3">
+                        <p className="text-sm font-semibold">Translation ({feedback.translation.detectedLanguage} to English):</p>
+                        <p className="text-sm text-muted-foreground italic">"{feedback.translation.translatedAnswer}"</p>
+                    </div>
+                )}
               </CardContent>
             </Card>
 
@@ -200,7 +296,7 @@ export default function PracticePitchDialog({ isOpen, setIsOpen, course }: Pract
             <Mic /> Practice Your Pitch
           </DialogTitle>
           <DialogDescription>
-            Hone your interview skills by responding to an AI-generated scenario.
+            Hone your interview skills by responding to an AI-generated scenario. You can type or record your answer.
           </DialogDescription>
         </DialogHeader>
 
