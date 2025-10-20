@@ -25,34 +25,24 @@ CodeTube addresses these challenges by providing a suite of tools for creators t
 
 This turns a simple video into a structured, interactive course that promotes active learning.
 
-## Architecture
-
-CodeTube is built on a modern, serverless architecture designed for scalability and rapid development.
-
-- **Frontend:** A responsive web application built with **Next.js**, **React**, and **TypeScript**. Styling is handled by **Tailwind CSS** and **ShadCN UI** for a polished, component-based design.
-- **Backend & Authentication:** **Firebase** is used for user authentication (Email/Password) and as a **Firestore** database to save user-created courses and chapters.
-- **Generative AI:** AI features are powered by **Google's Gemini models** through the **Genkit** framework. This is used for generating chapter summaries and suggesting landing page improvements.
-- **Hosting:** The application is deployed on **Firebase App Hosting**, providing a scalable, secure, and globally distributed environment.
-
-## User Flow
-
-1.  **Landing Page:** New users arrive at a landing page that explains the product's features and benefits.
-2.  **Authentication:** Users can **Sign Up** for a new account or **Sign In** to an existing one using their email and password.
-3.  **Creator Studio:** After logging in, users are taken to the Creator Studio.
-4.  **Import Video:** Users paste a YouTube video URL. The application fetches the video title and automatically detects any chapters listed in the video's description.
-5.  **Edit Chapters:** Users can select individual chapters to edit. They can refine the title, add a code snippet, and use the AI feature to **generate a summary** of the chapter's transcript.
-6.  **Export to GitHub:** Once the course is ready, the user can click "Export to GitHub," provide their username and a new repository name, and the app will create a public repository with the course content formatted in Markdown.
-
 ## Tech Stack
 
 - **Framework:** [Next.js](https://nextjs.org/) (App Router)
 - **Language:** [TypeScript](https://www.typescriptlang.org/)
 - **UI:** [React](https://react.dev/), [ShadCN UI](https://ui.shadcn.com/), [Tailwind CSS](https://tailwindcss.com/)
-- **AI:** [Genkit (Google's Gemini)](https://firebase.google.com/docs/genkit)
-- **Database & Auth:** [Firebase (Firestore & Authentication)](https://firebase.google.com/)
+- **Database & Auth:** [Firebase](https://firebase.google.com/) (Firestore & Authentication)
 - **Deployment:** [Firebase App Hosting](https://firebase.google.com/docs/hosting)
 - **Icons:** [Lucide React](https://lucide.dev/)
-- **API Interaction:** [Octokit](https://github.com/octokit/rest.js) for GitHub API
+
+### API Usage
+
+| API Provider | Library/SDK Used | Features Powered |
+|---|---|---|
+| **Google (YouTube)** | `googleapis`, `youtube-transcript` | Fetches video titles, descriptions, and transcripts for course creation. |
+| **Google (Gemini)** | `@genkit-ai/google-genai` | Powers all generative AI features: chapter summaries, code explanations, quiz generation, interview prep, and the AI Study Hub (Proofreader, Explainer, Debugger, etc.). |
+| **GitHub** | `@octokit/rest` | Creates new repositories and pushes course content as Markdown files when a user exports their course. |
+| **Judge0** | `axios` (via Genkit flow) | Enables interactive code execution within chapters for multiple programming languages. |
+
 
 ## MIT License
 
