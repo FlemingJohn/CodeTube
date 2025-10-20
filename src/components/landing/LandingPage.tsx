@@ -20,10 +20,12 @@ import {
   Rocket,
   TrendingUp,
   Check,
+  Github,
+  Terminal,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
-import { SiFirebase, SiNextdotjs } from '@icons-pack/react-simple-icons';
+import { SiFirebase, SiNextdotjs, SiGoogle, SiGithub } from '@icons-pack/react-simple-icons';
 import {
   Accordion,
   AccordionContent,
@@ -40,6 +42,7 @@ import {
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
 import React from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 
 const features = [
   {
@@ -131,25 +134,27 @@ const targetAudience = [
     },
   ];
 
-const mainTech = [
-  {
-    icon: <SiNextdotjs className="h-10 w-10" />,
-    title: 'Next.js & React',
-    description:
-      'The application is built with the latest Next.js App Router for a fast, modern, and server-driven user experience.',
-  },
-  {
-    icon: <SiFirebase className="h-10 w-10 text-orange-500" />,
-    title: 'Firebase',
-    description:
-      'Firebase provides secure user authentication and a scalable Firestore database for storing course data.',
-  },
-  {
-    icon: <BrainCircuit className="h-10 w-10 text-blue-500" />,
-    title: "Powered by Google AI",
-    description:
-      "Google's Gemini models power the AI features, such as chapter summaries, through the Genkit framework.",
-  },
+const apiUsage = [
+    {
+        icon: <SiGoogle size={24} className="text-red-500" />,
+        name: "Google (YouTube)",
+        description: "Fetches video titles, descriptions, and transcripts for course creation."
+    },
+    {
+        icon: <BrainCircuit size={24} className="text-blue-500" />,
+        name: "Google (Gemini)",
+        description: "Powers all generative AI features: summaries, quizzes, interview prep, and the AI Study Hub."
+    },
+    {
+        icon: <SiGithub size={24} />,
+        name: "GitHub",
+        description: "Creates new repositories and pushes course content as Markdown files."
+    },
+    {
+        icon: <Terminal size={24} className="text-green-500" />,
+        name: "Judge0",
+        description: "Enables interactive code execution within chapters for multiple programming languages."
+    }
 ];
 
 const testimonials = [
@@ -512,39 +517,42 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Tech Stack Section */}
+        {/* API Usage Section */}
         <section className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container">
             <div className="text-center max-w-3xl mx-auto mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font headline">
-                Built With a Modern Tech Stack
+                Powered by a Modern API Stack
               </h2>
               <p className="text-lg text-muted-foreground mt-4">
-                Leveraging the best tools for a fast, scalable, and
+                Leveraging the best services for a fast, scalable, and
                 intelligent application.
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {mainTech.map((tech, index) => (
-                <AnimateOnScroll key={tech.title} delay={index * 100}>
-                  <Card className="text-center h-full transition-all duration-300 hover:scale-105 hover:-translate-y-2">
-                    <CardHeader>
-                      <div className="mx-auto p-4 rounded-full w-fit">
-                        {tech.icon}
-                      </div>
-                      <CardTitle className="font-headline text-xl pt-4">
-                        {tech.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground">
-                        {tech.description}
-                      </p>
+            <AnimateOnScroll>
+                <Card className="max-w-4xl mx-auto shadow-2xl">
+                    <CardContent className="p-6">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>API Provider</TableHead>
+                                    <TableHead>Core Features Powered</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {apiUsage.map((api) => (
+                                    <TableRow key={api.name}>
+                                        <TableCell className="font-medium flex items-center gap-3">
+                                            {api.icon} {api.name}
+                                        </TableCell>
+                                        <TableCell>{api.description}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </CardContent>
-                  </Card>
-                </AnimateOnScroll>
-              ))}
-            </div>
+                </Card>
+            </AnimateOnScroll>
           </div>
         </section>
         
@@ -625,6 +633,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-    
-    
