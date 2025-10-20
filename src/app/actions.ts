@@ -1,8 +1,5 @@
 
 'use server';
-import { config } from 'dotenv';
-config({ path: '.env' });
-
 
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';

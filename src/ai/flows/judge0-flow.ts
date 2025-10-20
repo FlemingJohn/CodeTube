@@ -46,43 +46,58 @@ const runCodeFlow = ai.defineFlow(
         throw new Error('Judge0 API key is not configured.');
     }
 
-    const options = {
-        method: 'POST',
-        url: `https://${apiHost}/submissions`,
-        params: {
-          base64_encoded: 'false',
-          fields: '*'
-        },
-        headers: {
-          'content-type': 'application/json',
-          'X-RapidAPI-Key': apiKey,
-          'X-RapidAPI-Host': apiHost
-        },
-        data: {
-          language_id,
-          source_code,
-        }
-      };
-
     try {
-        const response = await axios.request(options);
-        let submission = response.data;
+        const submissionResponse = await axios.request({
+            method: 'POST',
+            url: `https://${apiHost}/submissions`,
+            params: {
+              base64_encoded: 'false',
+              fields: 'token' // Only get token on submission
+            },
+            headers: {
+              'content-type': 'application/json',
+              'X-RapidAPI-Key': apiKey,
+              'X-RapidAPI-Host': apiHost
+            },
+            data: {
+              language_id,
+              source_code,
+            }
+        });
+
+        const { token } = submissionResponse.data;
+
+        if (!token) {
+            throw new Error('Failed to get submission token from Judge0.');
+        }
         
-        // Poll for result
-        while (submission.status.id <= 2) { // 1: In Queue, 2: Processing
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        let submissionResult;
+        
+        // Poll for the result
+        while (true) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before polling
             const resultResponse = await axios.request({
                 method: 'GET',
-                url: `https://${apiHost}/submissions/${submission.token}?base64_encoded=false&fields=*`,
+                url: `https://${apiHost}/submissions/${token}`,
+                params: {
+                    base64_encoded: 'false',
+                    fields: '*'
+                },
                 headers: {
                     'X-RapidAPI-Key': apiKey,
                     'X-RapidAPI-Host': apiHost
                 }
             });
-            submission = resultResponse.data;
+            
+            submissionResult = resultResponse.data;
+
+            // Stop polling if the status is not "In Queue" or "Processing"
+            if (submissionResult.status.id > 2) {
+                break;
+            }
         }
 
-        return submission;
+        return submissionResult;
 
     } catch (error: any) {
         console.error("Judge0 API Error:", error.response ? error.response.data : error.message);
