@@ -4,7 +4,7 @@
 import { Course } from '@/lib/types';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Plus, Trash2, Mic, Share2 } from 'lucide-react';
+import { Plus, Trash2, Mic, Share2, Wand2 } from 'lucide-react';
 import Header from './Header';
 import AuthHeader from '../auth/AuthHeader';
 import Image from 'next/image';
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import PracticePitchDialog from './PracticePitchDialog';
 import ShareDialog from './ShareDialog';
+import Link from 'next/link';
 
 interface CourseListProps {
   courses: Course[];
@@ -80,10 +81,18 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
         <main className="container py-8">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold font-headline">My Courses</h1>
-            <Button onClick={onNewCourse} className="transition-transform hover:scale-105">
-              <Plus className="mr-2 h-4 w-4" />
-              New Course
-            </Button>
+            <div className="flex items-center gap-4">
+              <Button variant="outline" asChild>
+                <Link href="/creator/playground">
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  AI Playground
+                </Link>
+              </Button>
+              <Button onClick={onNewCourse} className="transition-transform hover:scale-105">
+                <Plus className="mr-2 h-4 w-4" />
+                New Course
+              </Button>
+            </div>
           </div>
 
           {courses.length > 0 ? (
