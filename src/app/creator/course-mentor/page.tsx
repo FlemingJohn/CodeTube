@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -13,6 +14,8 @@ import { handleSuggestVideos, getYoutubeChapters } from '@/app/actions';
 import Image from 'next/image';
 import { Course } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { useUser, useFirestore } from '@/firebase';
+import { addCourse } from '@/lib/courses';
 
 type VideoSuggestion = {
   videoId: string;
@@ -31,6 +34,8 @@ type CategorizedSuggestions = {
 export default function CourseMentorPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [isPending, startTransition] = useTransition();
   const [isImporting, startImportTransition] = useTransition();
 
@@ -72,6 +77,15 @@ export default function CourseMentorPage() {
 
   const handleImportCourse = (videoId: string) => {
     startImportTransition(async () => {
+      if (!user || !firestore) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "You must be logged in to add a course.",
+        });
+        return;
+      }
+
       const result = await getYoutubeChapters(videoId);
       if (result.error) {
         toast({
@@ -79,17 +93,29 @@ export default function CourseMentorPage() {
           title: 'Error Importing Video',
           description: result.error,
         });
-      } else {
-        // This is a simplified import. A real implementation might redirect to the creator studio
-        // with the new course pre-filled. For now, we'll just show a success message.
-        toast({
-          title: 'Course Ready to Create!',
-          description: `Video "${result.videoTitle}" is ready. Redirecting to creator studio...`,
-        });
-        // This is a simplified flow. A better UX would be to create the course
-        // and then redirect the user to the new course's editing page.
-        // For simplicity, we are just redirecting to the main creator page.
-        router.push('/creator');
+      } else if (result.videoTitle && result.chapters) {
+        const newCourseData: Partial<Omit<Course, 'id'>> = {
+            title: result.videoTitle,
+            videoId: videoId,
+            chapters: result.chapters,
+            userId: user.uid,
+        };
+
+        const newCourseId = await addCourse(firestore, user.uid, newCourseData);
+
+        if (newCourseId) {
+            toast({
+              title: 'Course Added!',
+              description: `"${result.videoTitle}" has been added to your courses.`,
+            });
+            router.push('/creator');
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Error Adding Course',
+                description: 'Could not create the new course in the database.',
+            });
+        }
       }
     });
   };
