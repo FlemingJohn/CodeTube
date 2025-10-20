@@ -351,40 +351,12 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                     {selectedChapter && (
                       <>
                         <Card>
-                          <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                              <Sparkles className="w-6 h-6 text-primary" />
-                              Chapter Summary
-                            </CardTitle>
-                            <Button size="sm" variant="outline" onClick={onGenerateSummary} disabled={isSummaryPending}>
-                                {isSummaryPending ? (
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Sparkles className="mr-2 h-4 w-4" />
-                                )}
-                                Generate Summary
-                            </Button>
-                          </CardHeader>
-                          <CardContent>
-                          <Textarea
-                              id="summary"
-                              name="summary"
-                              value={selectedChapter.summary}
-                              onChange={(e) => handleSummaryChange(e.target.value)}
-                              placeholder="Click 'Generate Summary' to get an AI-powered summary or write your own notes here."
-                              rows={8}
-                              className="text-base"
-                            />
-                          </CardContent>
-                        </Card>
-                        
-                        <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle className="flex items-center gap-2 font-headline text-2xl">
                                     <Bot className="w-6 h-6 text-primary" />
                                     Interview Prep
                                 </CardTitle>
-                                {isInterviewPending && <Loader2 className="h-6 w-6 animate-spin" />}
+                                {isInterviewPending && <Loader2 className="h-6 h-6 animate-spin" />}
                             </CardHeader>
                             <CardContent>
                                 {selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 ? (
