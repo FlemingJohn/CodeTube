@@ -64,12 +64,12 @@ Our core AI capabilities are custom-built flows that use the Gemini API. These a
 - **Prompt API**: The fundamental capability to generate dynamic user prompts and get structured outputs. It supports multimodal input (image, audio) and is the basis for all other AI features.
 - **Proofreader API**: Corrects grammar and spelling mistakes with ease. Used in the "AI Edit" feature within the Chapter Editor.
 - **Summarizer API**: Distills complex information into clear insights. Used for the "Generate Summary" feature for each chapter.
-- **Translator API**: Adds multilingual capabilities. Currently available in the AI Study Hub.
-- **Writer API**: Creates original and engaging text from a prompt. Used in the "Write from Topic" feature in the Chapter Editor and throughout the AI Study Hub.
+- **Translator API**: Adds multilingual capabilities. Used automatically in the Pitch Feedback System if a non-English language is detected.
+- **Writer API**: Creates original and engaging text from a prompt. Used in the "Write from Topic" feature in the Chapter Editor.
 - **Rewriter API**: Improves content with alternative options and tones. Used in the "AI Edit" feature for chapter notes.
-- **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions.
-- **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content.
-- **Pitch Feedback System**: Analyzes a user's spoken answer to an interview question and provides constructive feedback.
+- **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions. Used in the "Knowledge Check" section.
+- **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content. Used in the "Interview Prep" section.
+- **Pitch Feedback System**: Analyzes a user's spoken answer (via audio) to an interview question and provides constructive feedback.
 - **Code Explainer**: Generates a step-by-step explanation for a given code snippet.
 - **Code Error Fixer**: Analyzes incorrect code and an error message to provide a corrected version.
 
