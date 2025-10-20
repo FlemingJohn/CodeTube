@@ -451,7 +451,7 @@ export async function handleFixCodeError(values: z.infer<typeof fixCodeErrorSche
 
     try {
         const result = await fixCodeError(validatedFields.data);
-        return { fixedCode: result.fixedCode };
+        return { fixedCode: result.fixedCode, explanation: result.explanation };
     } catch (e: any) {
         console.error(e);
         return { error: e.message || 'Failed to fix code.' };

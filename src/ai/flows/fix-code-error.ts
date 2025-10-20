@@ -20,6 +20,7 @@ export type FixCodeErrorInput = z.infer<typeof FixCodeErrorInputSchema>;
 
 const FixCodeErrorOutputSchema = z.object({
   fixedCode: z.string().describe('The corrected version of the code. Return only the code, without any explanations or markdown formatting.'),
+  explanation: z.string().describe('A step-by-step explanation of what the error was and how the fix addresses it. Use Markdown for formatting.'),
 });
 export type FixCodeErrorOutput = z.infer<typeof FixCodeErrorOutputSchema>;
 
@@ -28,13 +29,16 @@ const prompt = ai.definePrompt({
     name: 'fixCodeErrorPrompt',
     input: { schema: FixCodeErrorInputSchema },
     output: { schema: FixCodeErrorOutputSchema },
-    prompt: `You are an expert programmer who can debug and fix code.
+    prompt: `You are an expert programmer who can debug and fix code, and clearly explain the solution to a beginner.
 
-    The user has provided a code snippet that produced an error. Your task is to fix the code.
+    The user has provided a code snippet that produced an error. Your task is to fix the code and explain the fix.
     
-    - Analyze the provided code and the error message.
-    - Return only the corrected, complete code snippet.
-    - Do not provide any explanations, comments, or markdown formatting like \`\`\`. Just return the raw, fixed code.
+    1.  **Analyze the Error**: Understand the root cause of the error message based on the provided code.
+    2.  **Fix the Code**: Correct the code to resolve the error.
+    3.  **Explain the Fix**: Provide a clear, step-by-step explanation. Describe what the original error was and how your changes solve the problem.
+    4.  **Format Output**:
+        *   Return the corrected, complete code snippet in the 'fixedCode' field. Do not add any extra comments or markdown to the code itself.
+        *   Return the explanation in the 'explanation' field. You can use Markdown for lists or code formatting within the explanation.
 
     Original Code:
     \`\`\`

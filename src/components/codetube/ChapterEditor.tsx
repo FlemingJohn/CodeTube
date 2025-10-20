@@ -131,6 +131,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const [isRunCodePending, startRunCodeTransition] = useTransition();
   const [isFixCodePending, startFixCodeTransition] = useTransition();
   const [codeOutput, setCodeOutput] = useState<RunCodeOutput | null>(null);
+  const [fixExplanation, setFixExplanation] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
   const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -279,6 +280,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     }
     startRunCodeTransition(async () => {
       setCodeOutput(null); // Clear previous output
+      setFixExplanation(null);
       const result = await handleRunCode({ 
         source_code: localChapter.code, 
         language_id: parseInt(selectedLanguage) 
@@ -322,11 +324,12 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
           title: 'AI Fix Failed',
           description: result.error,
         });
-      } else if (result.fixedCode) {
+      } else if (result.fixedCode && result.explanation) {
         handleCodeChange(result.fixedCode);
+        setFixExplanation(result.explanation);
         toast({
           title: 'Code Fixed!',
-          description: 'The AI has corrected the code. Try running it again.',
+          description: 'The AI has corrected the code and provided an explanation.',
         });
         setCodeOutput(null); // Clear the error output
       }
@@ -580,6 +583,20 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                     )}
                 </Card>
             </div>
+        )}
+        
+        {fixExplanation && (
+             <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                <Bot className="h-4 w-4" />
+                AI Fix Explanation
+                </Label>
+                <Card className="bg-blue-500/10 border-blue-500/30">
+                    <CardContent className="p-4">
+                        <FormattedText text={fixExplanation} />
+                    </CardContent>
+                </Card>
+             </div>
         )}
 
         {localChapter.codeExplanation && (
