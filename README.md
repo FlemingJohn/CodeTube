@@ -35,7 +35,7 @@ CodeTube is built on a modern, serverless architecture designed for scalability 
 
 - **Frontend:** A responsive web application built with **Next.js**, **React**, and **TypeScript**. Styling is handled by **Tailwind CSS** and **ShadCN UI** for a polished, component-based design.
 - **Backend & Authentication:** **Firebase** is used for user authentication (Email/Password) and as a **Firestore** database to save user-created courses and chapters.
-- **Generative AI:** AI features are powered by the **Google Gemini API**, orchestrated through the open-source **Genkit** framework. This is used for all intelligent features, from generating summaries to interview prep.
+- **Generative AI:** A hybrid AI model is used. For browsers that support it (like Chrome 127+), AI features run **on-device** for instant feedback. For other browsers, the app seamlessly falls back to server-side AI powered by the **Google Gemini API**, orchestrated through the open-source **Genkit** framework.
 - **Hosting:** The application is deployed on **Vercel**, providing a scalable, secure, and globally distributed environment.
 
 ### Technology Roles
@@ -43,8 +43,9 @@ CodeTube is built on a modern, serverless architecture designed for scalability 
 It's important to understand the role of each major component in the stack:
 
 - **Firebase Studio**: This is the integrated development environment (IDE) where we write, edit, and manage the application's code.
-- **Genkit**: This is the open-source TypeScript framework we use to structure and orchestrate our AI logic. It helps us define `flows` that can call AI models, use tools, and return structured data.
-- **Gemini API**: This is the actual generative model from Google that performs the AI tasks. Genkit calls the Gemini API to generate text, summarize content, translate, and more.
+- **Chrome's Built-in AI**: For supported browsers, this provides fast, on-device AI for tasks like summarizing and editing text, offering a better user experience without needing a server call.
+- **Genkit**: This is the open-source TypeScript framework we use to structure and orchestrate our server-side AI logic, which serves as a reliable fallback for all users. It helps us define `flows` that can call AI models.
+- **Gemini API**: This is the actual generative model from Google that performs the AI tasks when server-side processing is needed. Genkit calls the Gemini API to generate text, summarize content, and more.
 - **Firebase**: This is the suite of backend services providing the application's database (Firestore) and user login system (Authentication).
 
 ### API Usage
@@ -57,21 +58,20 @@ The application integrates with several external APIs to power its features:
 | **GitHub** | `@octokit/rest` | **Export to GitHub:** Creates a new repository, generates Markdown files for the course, and pushes the content to the user's GitHub account. |
 | **Judge0** | `axios` (within a Genkit flow) | **Interactive Code Execution:** Allows users to run code snippets directly within a chapter and see the output. |
 
-#### AI Study Hub & In-App AI Features (Powered by Gemini API via Genkit)
+#### In-App AI Features (Hybrid Client/Server Model)
 
-Our core AI capabilities are custom-built flows that use the Gemini API. These are not third-party services but are integral to the CodeTube application.
+Our core AI capabilities are delivered through a hybrid approach for the best performance and reliability.
 
-- **Prompt API**: The fundamental capability to generate dynamic user prompts and get structured outputs. It supports multimodal input (image, audio) and is the basis for all other AI features.
-- **Proofreader API**: Corrects grammar and spelling mistakes with ease. Used in the "AI Edit" feature within the Chapter Editor.
-- **Summarizer API**: Distills complex information into clear insights. Used for the "Generate Summary" feature for each chapter.
-- **Translator API**: Adds multilingual capabilities. Used automatically in the Pitch Feedback System if a non-English language is detected.
-- **Writer API**: Creates original and engaging text from a prompt. Used in the "Write from Topic" feature in the Chapter Editor.
-- **Rewriter API**: Improves content with alternative options and tones. Used in the "AI Edit" feature for chapter notes.
-- **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions. Used in the "Knowledge Check" section.
-- **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content. Used in the "Interview Prep" section.
-- **Pitch Feedback System**: Analyzes a user's spoken answer (via audio) to an interview question and provides constructive feedback.
-- **Code Explainer**: Generates a step-by-step explanation for a given code snippet.
-- **Code Error Fixer**: Analyzes incorrect code and an error message to provide a corrected version.
+- **Client-Side First (Chrome Built-in AI)**: For users on supported browsers, the following features run directly on-device for instant results:
+    - **"Generate Summary" / "Write from Topic"**: Creates initial notes for a chapter.
+    - **"AI Edit" (Proofreader, Rewriter)**: Corrects grammar or refines existing notes.
+
+- **Server-Side Fallback & Advanced Features (Gemini API via Genkit)**: If the browser's AI is unavailable, the above features seamlessly fall back to our server-side Genkit flows. The following more complex features always run on the server:
+    - **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions.
+    - **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content.
+    - **Pitch Feedback System**: Analyzes a user's spoken answer to an interview question and provides constructive feedback.
+    - **Code Explainer**: Generates a step-by-step explanation for a given code snippet.
+    - **Code Error Fixer**: Analyzes incorrect code and an error message to provide a corrected version.
 
 ### User Flow
 
@@ -89,7 +89,7 @@ The following is a typical user journey through the CodeTube application.
 
 5.  **Edit Chapters:** The detected chapters are displayed in a list. The user can:
     - Select a chapter to edit its title, timestamp, and add a code snippet.
-    - Click **"Generate Summary"** to trigger an AI flow. This flow sends the chapter's transcript (currently a placeholder) to a Gemini model via Genkit to generate a concise summary.
+    - Click **"Generate Summary"** to trigger an AI flow. This will use the browser's built-in AI if available, or fall back to a server call to generate a concise summary.
     - Click **"Explain Code"** to get an AI-powered explanation of the code snippet they provided.
 
 6.  **Export to GitHub:** Once the course is complete, the user can open the "Export to GitHub" dialog.
