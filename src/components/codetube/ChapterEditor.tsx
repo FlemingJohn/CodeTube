@@ -2,19 +2,19 @@
 'use client';
 
 import React, { useState, useTransition, useEffect } from 'react';
-import type { Chapter, InterviewQuestion, Quiz } from '@/lib/types';
+import type { Chapter, Quiz } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface ChapterEditorProps {
   chapter: Chapter;
@@ -103,6 +103,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const { toast } = useToast();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
+  const [isRunCodePending, startRunCodeTransition] = useTransition();
+  const [codeOutput, setCodeOutput] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalChapter(chapter);
@@ -177,6 +179,35 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
       });
   }
 
+  const onRunCode = () => {
+    if (!localChapter.code) {
+      toast({
+        variant: 'destructive',
+        title: 'No Code Found',
+        description: 'Please add a code snippet before running.',
+      });
+      return;
+    }
+    startRunCodeTransition(async () => {
+      setCodeOutput('Running code...');
+      const result = await handleRunCode({ source_code: localChapter.code, language_id: 63 }); // 63 is Javascript
+      if (result.error) {
+        setCodeOutput(`Error: ${result.error}`);
+        toast({
+          variant: 'destructive',
+          title: 'Execution Error',
+          description: result.error,
+        });
+      } else if (result.output) {
+        setCodeOutput(result.output);
+        toast({
+          title: 'Code Executed',
+          description: 'The output is displayed below the code snippet.',
+        });
+      }
+    });
+  }
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -209,8 +240,33 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
 
         <div className="space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <Label htmlFor="code">Code Snippet</Label>
             <div className="flex items-center gap-2">
+              <Label htmlFor="code">Code Snippet</Label>
+              <Select defaultValue="63">
+                <SelectTrigger className="h-8 w-fit">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="63">JavaScript</SelectItem>
+                  <SelectItem value="71">Python</SelectItem>
+                  <SelectItem value="74">TypeScript</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={onRunCode}
+                    disabled={isRunCodePending || !localChapter.code}
+                >
+                    {isRunCodePending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Play className="mr-2 h-4 w-4" />
+                    )}
+                    Run Code
+                </Button>
                 <Button
                     size="sm"
                     variant="outline"
@@ -236,6 +292,17 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
             className="font-code text-sm"
           />
         </div>
+
+        {codeOutput && (
+            <div className="space-y-2">
+                <Label>Code Output</Label>
+                <Card className="bg-muted/40">
+                    <CardContent className="p-4 font-code text-sm">
+                        <pre>{codeOutput}</pre>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
 
         {localChapter.codeExplanation && (
            <div className="space-y-2">

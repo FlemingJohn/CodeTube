@@ -9,6 +9,7 @@ import { generateQuiz } from '@/ai/flows/generate-quiz';
 import { generateInterviewQuestions } from '@/ai/flows/generate-interview-questions';
 import { generatePitchScenario } from '@/ai/flows/generate-pitch-scenario';
 import { getPitchFeedback } from '@/ai/flows/get-pitch-feedback';
+import { runCode } from '@/ai/flows/judge0-flow';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -401,5 +402,27 @@ export async function handleGetPitchFeedback(values: z.infer<typeof getPitchFeed
     } catch (e: any) {
         console.error(e);
         return { error: 'Failed to get pitch feedback. Please try again.' };
+    }
+}
+
+const runCodeSchema = z.object({
+  source_code: z.string(),
+  language_id: z.number(),
+});
+
+export async function handleRunCode(values: z.infer<typeof runCodeSchema>) {
+    const validatedFields = runCodeSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields' };
+    }
+
+    try {
+        const result = await runCode(validatedFields.data);
+        const output = result.stdout || result.stderr || result.compile_output || 'No output';
+        return { output };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || 'Failed to run code.' };
     }
 }
