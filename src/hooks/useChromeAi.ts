@@ -33,8 +33,9 @@ type AiSessions = {
 };
 
 export function useChromeAi() {
-  const [aiAvailable, setAiAvailable] = useState(false);
   const [sessions, setSessions] = useState<AiSessions>({});
+  const [aiAvailable, setAiAvailable] = useState(false);
+
 
   useEffect(() => {
     const initializeAi = async () => {
@@ -100,13 +101,14 @@ export function useChromeAi() {
     return callAi('writer', prompt, onStream);
   }, [callAi]);
   
-  const rewrite = useCallback((text: string, onStream?: (chunk: string) => void) => {
-      const prompt = `Rewrite the following text to improve its clarity and flow. If a tone is specified in the text, adapt to it. Only return the rewritten text, without any introductory phrases:\n\n'${text}'`;
+  const rewrite = useCallback((text: string, tone?: string, onStream?: (chunk: string) => void) => {
+    const prompt = `Rewrite the following text to improve its clarity and flow. ${tone ? `Adapt to a ${tone} tone.` : ''} Only return the rewritten text, without any introductory phrases:\n\n'${text}'`;
     return callAi('rewriter', prompt, onStream);
   }, [callAi]);
 
   const translate = useCallback((text: string, targetLanguage: string, onStream?: (chunk: string) => void) => {
-    return callAi('translator', `Translate the following text to ${targetLanguage}:\n${text}`, onStream);
+    const prompt = `Translate this text into ${targetLanguage} while keeping the original meaning, clarity, and educational tone intact:\n\n${text}`;
+    return callAi('translator', prompt, onStream);
   }, [callAi]);
 
   return {
