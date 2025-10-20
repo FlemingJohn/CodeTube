@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -48,9 +49,13 @@ const generateChapterSummaryFlow = ai.defineFlow(
     Based on the chapter title and the provided transcript, generate a summary as a list of bullet points.
     Focus only on the key points relevant to the chapter title.
     
-    Chapter Title: ${input.chapterTitle}
-    Transcript: ${input.transcript}
-    `
+    Chapter Title: "${input.chapterTitle}"
+    
+    Transcript:
+    \`\`\`
+    ${input.transcript}
+    \`\`\`
+    `;
     const { summary } = await summarizeText({text: prompt})
     return { summary };
   }

@@ -89,15 +89,17 @@ export function useChromeAi() {
   }, [callAi]);
 
   const proofread = useCallback((text: string, onStream?: (chunk: string) => void) => {
-    return callAi('proofreader', `Proofread the following text, correcting any grammar and spelling mistakes. Only return the corrected text:\n${text}`, onStream);
+    const prompt = `Proofread the following text, correcting any grammar and spelling mistakes. Only return the corrected text, without any introductory phrases:\n\n'${text}'`;
+    return callAi('proofreader', prompt, onStream);
   }, [callAi]);
 
   const write = useCallback((prompt: string, onStream?: (chunk: string) => void) => {
     return callAi('writer', prompt, onStream);
   }, [callAi]);
   
-  const rewrite = useCallback((prompt: string, onStream?: (chunk: string) => void) => {
-    return callAi('rewriter', `Rewrite the following text to improve its clarity and flow. If a tone is specified, adapt to it:\n${prompt}`, onStream);
+  const rewrite = useCallback((text: string, onStream?: (chunk: string) => void) => {
+      const prompt = `Rewrite the following text to improve its clarity and flow. If a tone is specified in the text, adapt to it. Only return the rewritten text, without any introductory phrases:\n\n'${text}'`;
+    return callAi('rewriter', prompt, onStream);
   }, [callAi]);
 
   const translate = useCallback((text: string, targetLanguage: string, onStream?: (chunk: string) => void) => {
