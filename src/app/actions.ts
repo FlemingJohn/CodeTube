@@ -241,15 +241,38 @@ const githubExportSchema = z.object({
 
 function chapterToMarkdown(chapter: Chapter) {
   let content = `## ${chapter.title} (${chapter.timestamp})\n\n`;
+  
   if (chapter.summary) {
-    content += `### AI-Generated Summary\n${chapter.summary}\n\n`;
+    content += `### Chapter Notes\n${chapter.summary}\n\n`;
   }
+  
   if (chapter.code) {
-    content += `### Code Snippet\n\`\`\`javascript\n${chapter.code}\n\`\`\`\n`;
+    content += `### Code Snippet\n\`\`\`javascript\n${chapter.code}\n\`\`\`\n\n`;
   }
+
   if (chapter.codeExplanation) {
-    content += `### Code Explanation\n${chapter.codeExplanation}\n\n`;
+    content += `### AI Code Explanation\n${chapter.codeExplanation}\n\n`;
   }
+
+  if (chapter.quiz && chapter.quiz.length > 0) {
+    content += `### Knowledge Check\n\n`;
+    chapter.quiz.forEach((q, index) => {
+      content += `${index + 1}. **${q.question}**\n`;
+      q.options.forEach(opt => {
+        content += `   - \`${opt}\`\n`;
+      });
+      content += `\n   *Answer: \`${q.answer}\`*\n\n`;
+    });
+  }
+
+  if (chapter.interviewQuestions && chapter.interviewQuestions.length > 0) {
+    content += `### Interview Prep\n\n`;
+    chapter.interviewQuestions.forEach((iq, index) => {
+      content += `**Question ${index + 1}: ${iq.question}**\n\n`;
+      content += `**Answer:**\n${iq.answer}\n\n`;
+    });
+  }
+
   return content;
 }
 
