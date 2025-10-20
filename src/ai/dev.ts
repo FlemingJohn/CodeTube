@@ -14,6 +14,7 @@ import '@/ai/flows/judge0-flow';
 import '@/ai/flows/fix-code-error';
 import '@/ai/flows/proofread-text';
 import '@/ai/flows/summarize-text';
-import '@/ai/flows/translate-text';
+import '@/aiflows/translate-text';
 import '@/ai/flows/write-text';
 import '@/ai/flows/rewrite-text';
+import '@/ai/flows/suggest-videos-flow';

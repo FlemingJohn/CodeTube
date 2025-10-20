@@ -16,6 +16,7 @@ import { summarizeText } from '@/ai/flows/summarize-text';
 import { translateText } from '@/ai/flows/translate-text';
 import { writeText } from '@/ai/flows/write-text';
 import { rewriteText } from '@/ai/flows/rewrite-text';
+import { suggestVideos } from '@/ai/flows/suggest-videos-flow';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -558,4 +559,17 @@ export async function handleRewriteText(values: z.infer<typeof rewriteTextSchema
   }
 }
 
-    
+const suggestVideosSchema = z.object({
+    query: z.string(),
+});
+
+export async function handleSuggestVideos(values: z.infer<typeof suggestVideosSchema>) {
+    const validatedFields = suggestVideosSchema.safeParse(values);
+    if (!validatedFields.success) return { error: 'Invalid fields' };
+    try {
+        const result = await suggestVideos(validatedFields.data);
+        return { suggestions: result };
+    } catch (e: any) {
+        return { error: e.message || 'Failed to suggest videos.' };
+    }
+}

@@ -83,9 +83,9 @@ export default function CourseList({ courses, onSelectCourse, onNewCourse, onDel
             <h1 className="text-3xl font-bold font-headline">My Courses</h1>
             <div className="flex items-center gap-4">
               <Button variant="outline" asChild>
-                <Link href="/creator/playground">
+                <Link href="/creator/course-mentor">
                   <Wand2 className="mr-2 h-4 w-4" />
-                  AI Study Hub
+                  Course Mentor
                 </Link>
               </Button>
               <Button onClick={onNewCourse} className="transition-transform hover:scale-105">

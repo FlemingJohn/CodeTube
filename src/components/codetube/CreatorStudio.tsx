@@ -270,10 +270,10 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
               <div className="mt-auto">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <Link href="/creator/playground" className='w-full'>
+                        <Link href="/creator/course-mentor" className='w-full'>
                             <SidebarMenuButton>
                                 <Beaker />
-                                <span>AI Study Hub</span>
+                                <span>Course Mentor</span>
                             </SidebarMenuButton>
                         </Link>
                     </SidebarMenuItem>
