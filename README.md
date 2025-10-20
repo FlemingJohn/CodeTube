@@ -63,10 +63,10 @@ The application integrates with several external APIs to power its features:
 Our core AI capabilities are delivered through a hybrid approach for the best performance and reliability.
 
 - **Client-Side First (Chrome Built-in AI)**: For users on supported browsers, the following features run directly on-device for instant results:
-    - **"Generate Summary" / "Write from Topic"**: Creates initial notes for a chapter.
-    - **"AI Edit" (Proofreader, Rewriter)**: Corrects grammar or refines existing notes.
+    - **"Generate Summary"**: Creates initial notes for a chapter based on the transcript.
+    - **"AI Edit" (Proofreader, Rewriter, Translator)**: Corrects grammar, refines existing notes, or translates them into different languages.
 
-- **Server-Side Fallback & Advanced Features (Gemini API via Genkit)**: If the browser's AI is unavailable, the above features seamlessly fall back to our server-side Genkit flows. The following more complex features always run on the server:
+- **Server-Side Fallback & Advanced Features (Gemini API via Genkit)**: If the browser's built-in AI is unavailable, the above features seamlessly fall back to our server-side Genkit flows. The following more complex features always run on the server:
     - **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions.
     - **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content.
     - **Pitch Feedback System**: Analyzes a user's spoken answer to an interview question and provides constructive feedback.
