@@ -10,11 +10,15 @@ import { generateInterviewQuestions } from '@/ai/flows/generate-interview-questi
 import { generatePitchScenario } from '@/ai/flows/generate-pitch-scenario';
 import { getPitchFeedback } from '@/ai/flows/get-pitch-feedback';
 import { runCode } from '@/ai/flows/judge0-flow';
+import { fixCodeError } from '@/ai/flows/fix-code-error';
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { google } from 'googleapis';
 import { YoutubeTranscript } from 'youtube-transcript';
+import { config } from 'dotenv';
+
+config();
 
 const generateSummarySchema = z.object({
   transcript: z.string(),
@@ -419,10 +423,32 @@ export async function handleRunCode(values: z.infer<typeof runCodeSchema>) {
 
     try {
         const result = await runCode(validatedFields.data);
-        const output = result.stdout || result.stderr || result.compile_output || 'No output';
-        return { output };
+        // The result now has a more complex structure, so we pass it all back.
+        return { result };
     } catch (e: any) {
         console.error(e);
+        // Ensure we pass back an object with an 'error' key that matches the client expectation.
         return { error: e.message || 'Failed to run code.' };
+    }
+}
+
+const fixCodeErrorSchema = z.object({
+  code: z.string(),
+  error: z.string(),
+});
+
+export async function handleFixCodeError(values: z.infer<typeof fixCodeErrorSchema>) {
+    const validatedFields = fixCodeErrorSchema.safeParse(values);
+
+    if (!validatedFields.success) {
+        return { error: 'Invalid fields' };
+    }
+
+    try {
+        const result = await fixCodeError(validatedFields.data);
+        return { fixedCode: result.fixedCode };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || 'Failed to fix code.' };
     }
 }

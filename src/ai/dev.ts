@@ -1,6 +1,6 @@
 
 import { config } from 'dotenv';
-config({ path: '.env' });
+config();
 
 import '@/ai/flows/suggest-landing-page-improvements.ts';
 import '@/ai/flows/generate-chapter-summary.ts';
@@ -11,3 +11,4 @@ import '@/ai/flows/generate-interview-questions.ts';
 import '@/ai/flows/generate-pitch-scenario';
 import '@/ai/flows/get-pitch-feedback';
 import '@/ai/flows/judge0-flow';
+import '@/ai/flows/fix-code-error';

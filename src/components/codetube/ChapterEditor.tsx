@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz, handleRunCode } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { ScrollArea } from '../ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { RunCodeOutput } from '@/ai/flows/judge0-flow';
 
 interface ChapterEditorProps {
   chapter: Chapter;
@@ -116,7 +117,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
   const [isRunCodePending, startRunCodeTransition] = useTransition();
-  const [codeOutput, setCodeOutput] = useState<string | null>(null);
+  const [isFixCodePending, startFixCodeTransition] = useTransition();
+  const [codeOutput, setCodeOutput] = useState<RunCodeOutput | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
 
   useEffect(() => {
@@ -130,6 +132,12 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     setLocalChapter(updatedChapter);
     onUpdateChapter(updatedChapter);
   };
+
+  const handleCodeChange = (code: string) => {
+    const updatedChapter = { ...localChapter, code: code };
+    setLocalChapter(updatedChapter);
+    onUpdateChapter(updatedChapter);
+  }
 
   const onExplainCode = () => {
     if (!localChapter.code) {
@@ -202,27 +210,62 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
       return;
     }
     startRunCodeTransition(async () => {
-      setCodeOutput('Running code...');
+      setCodeOutput(null); // Clear previous output
       const result = await handleRunCode({ 
         source_code: localChapter.code, 
         language_id: parseInt(selectedLanguage) 
       });
+      
       if (result.error) {
-        setCodeOutput(`Error: ${result.error}`);
         toast({
           variant: 'destructive',
           title: 'Execution Error',
           description: result.error,
         });
-      } else if (result.output) {
-        setCodeOutput(result.output);
+      } else if (result.result) {
+        setCodeOutput(result.result);
         toast({
           title: 'Code Executed',
-          description: 'The output is displayed below the code snippet.',
+          description: `Status: ${result.result.status.description}`,
         });
       }
     });
   }
+
+  const onFixCode = () => {
+    const errorLog = codeOutput?.stderr || codeOutput?.compile_output;
+    if (!localChapter.code || !errorLog) {
+      toast({
+        variant: 'destructive',
+        title: 'Nothing to Fix',
+        description: 'No code or error message found to fix.',
+      });
+      return;
+    }
+    startFixCodeTransition(async () => {
+      const result = await handleFixCodeError({
+        code: localChapter.code,
+        error: errorLog,
+      });
+
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'AI Fix Failed',
+          description: result.error,
+        });
+      } else if (result.fixedCode) {
+        handleCodeChange(result.fixedCode);
+        toast({
+          title: 'Code Fixed!',
+          description: 'The AI has corrected the code. Try running it again.',
+        });
+        setCodeOutput(null); // Clear the error output
+      }
+    });
+  };
+
+  const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
@@ -309,13 +352,50 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
           />
         </div>
 
-        {codeOutput && (
+        {isRunCodePending && (
             <div className="space-y-2">
                 <Label>Code Output</Label>
                 <Card className="bg-muted/40">
-                    <CardContent className="p-4 font-code text-sm">
-                        <pre>{codeOutput}</pre>
+                    <CardContent className="p-4 font-code text-sm flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin"/>
+                        <span>Running code...</span>
                     </CardContent>
+                </Card>
+            </div>
+        )}
+
+        {codeOutput && (
+            <div className="space-y-2">
+                <Label>Code Output</Label>
+                <Card className={cn("font-code text-sm", hasError ? "bg-destructive/10 border-destructive/50" : "bg-muted/40")}>
+                    <CardHeader className="p-4 flex flex-row items-center justify-between">
+                      <CardTitle className={cn("text-base flex items-center gap-2", hasError ? "text-destructive" : "")}>
+                        {hasError && <ShieldAlert className="h-5 w-5" />}
+                        Status: {codeOutput.status.description}
+                      </CardTitle>
+                      {hasError && (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={onFixCode}
+                            disabled={isFixCodePending}
+                          >
+                            {isFixCodePending ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Wand2 className="mr-2 h-4 w-4" />
+                            )}
+                            Fix Error with AI
+                          </Button>
+                      )}
+                    </CardHeader>
+                    {(codeOutput.stdout || codeOutput.stderr || codeOutput.compile_output) && (
+                      <CardContent className="p-4 pt-0">
+                          <pre className="bg-background/50 p-3 rounded-md whitespace-pre-wrap">
+                              {codeOutput.stdout || codeOutput.stderr || codeOutput.compile_output}
+                          </pre>
+                      </CardContent>
+                    )}
                 </Card>
             </div>
         )}
