@@ -67,6 +67,12 @@ Our core AI capabilities are delivered through a hybrid approach for the best pe
     - **"AI Edit" (Proofreader, Rewriter, Translator)**: Corrects grammar, refines existing notes, or translates them into different languages.
 
 - **Server-Side Fallback & Advanced Features (Gemini API via Genkit)**: If the browser's built-in AI is unavailable, the above features seamlessly fall back to our server-side Genkit flows. The following more complex features always run on the server:
+    - **Course Mentor & Learning Plan Generator**:
+        - **Generate Learning Roadmap**: For any given topic, the AI generates a step-by-step learning plan, breaking down complex subjects into manageable steps.
+        - **Prerequisite Identification**: Automatically identifies and suggests videos for prerequisite knowledge needed before tackling the main topic.
+        - **Key Concept Summary**: Provides a list of key concepts and jargon to familiarize the user with the topic's terminology.
+        - **AI-Powered Video Suggestions**: Finds relevant YouTube videos for each step of the roadmap.
+        - **Video Comparison Tool**: Allows users to select multiple videos and receive an AI-generated comparison to help them choose the best one for their needs.
     - **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions.
     - **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content.
     - **Pitch Feedback System**: Analyzes a user's spoken answer to an interview question and provides constructive feedback.
