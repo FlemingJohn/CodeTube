@@ -25,7 +25,7 @@ const KeyConceptSchema = z.object({
   description: z.string().describe('A brief, one-sentence explanation of the concept.'),
 });
 
-export const VideoSuggestionSchema = z.object({
+const VideoSuggestionSchema = z.object({
   videoId: z.string().describe("The YouTube video's ID."),
   title: z.string().describe('The title of the YouTube video.'),
   channelTitle: z.string().describe("The YouTube channel's name."),
