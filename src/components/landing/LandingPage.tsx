@@ -467,56 +467,6 @@ export default function LandingPage() {
         </section>
 
 
-        {/* Testimonials Section */}
-        <section className="w-full py-20 md:py-28">
-          <div className="container">
-            <div className="text-center max-w-3xl mx-auto mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold font-headline">
-                Loved by Developers and Students
-              </h2>
-              <p className="text-lg text-muted-foreground mt-4">
-                See what people are saying about their experience with CodeTube.
-              </p>
-            </div>
-            <Carousel
-              plugins={[autoplayPlugin.current]}
-              onMouseEnter={autoplayPlugin.current.stop}
-              onMouseLeave={autoplayPlugin.current.reset}
-              className="w-full max-w-5xl mx-auto"
-            >
-              <CarouselContent>
-                {testimonials.map((testimonial, index) => (
-                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                    <div className="p-1 h-full">
-                      <Card className="h-full flex flex-col justify-between transition-all duration-300 hover:scale-105 hover:-translate-y-2">
-                        <CardContent className="pt-6">
-                          <div className="flex gap-1 mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className="h-5 w-5 text-yellow-400 fill-yellow-400"
-                              />
-                            ))}
-                          </div>
-                          <p className="text-foreground italic mb-4">
-                            "{testimonial.quote}"
-                          </p>
-                        </CardContent>
-                        <CardHeader className="pt-0">
-                          <div className="font-semibold">{testimonial.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {testimonial.title}
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
-          </div>
-        </section>
-
         {/* API Usage Section */}
         <section className="w-full bg-secondary/50 py-20 md:py-28">
           <div className="container">
