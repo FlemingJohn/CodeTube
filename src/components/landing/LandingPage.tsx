@@ -22,6 +22,7 @@ import {
   Check,
   Github,
   Terminal,
+  BookUser,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -52,16 +53,16 @@ const features = [
       'Paste any YouTube link to automatically generate transcripts and detect chapters in seconds.',
   },
   {
+    icon: <BookUser className="h-10 w-10 text-primary" />,
+    title: 'AI Learning Roadmap',
+    description:
+      'Generate a step-by-step learning plan for any topic, complete with prerequisites, key concepts, and suggested videos.',
+  },
+  {
     icon: <Sparkles className="h-10 w-10 text-primary" />,
     title: 'AI-Powered Notes',
     description:
       'Generate concise, AI-powered summaries and notes for each chapter to enhance learning.',
-  },
-  {
-    icon: <Code className="h-10 w-10 text-primary" />,
-    title: 'Interactive Code Snippets',
-    description:
-      'Automatically find and embed editable code snippets for hands-on practice directly within your course.',
   },
    {
     icon: <HelpCircle className="h-10 w-10 text-primary" />,
@@ -85,16 +86,16 @@ const features = [
 
 const howItWorks = [
   {
-    icon: <Youtube className="h-8 w-8 text-primary" />,
-    title: '1. Import & Structure',
+    icon: <BookUser className="h-8 w-8 text-primary" />,
+    title: '1. Plan Your Learning',
     description:
-      'Paste a YouTube link. CodeTube fetches the video, transcript, and chapters automatically.',
+      'Use the AI Course Mentor to generate a step-by-step roadmap for any topic you want to learn.',
   },
   {
-    icon: <FileEdit className="h-8 w-8 text-primary" />,
-    title: '2. Enrich with AI',
+    icon: <Youtube className="h-8 w-8 text-primary" />,
+    title: '2. Import & Enrich',
     description:
-      'Generate notes, find code snippets, create quizzes, and add interview questions with one click.',
+      'Import a suggested YouTube video. Then, use AI to generate notes, find code, and create quizzes.',
   },
   {
     icon: <Mic className="h-8 w-8 text-primary" />,
