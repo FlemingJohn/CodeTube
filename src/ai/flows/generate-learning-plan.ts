@@ -41,8 +41,14 @@ const RoadmapStepSchema = z.object({
   suggestedVideos: z.array(VideoSuggestionSchema).describe('A list of suggested videos for this step.'),
 });
 
+const PrerequisiteSchema = z.object({
+    topic: z.string().describe('The prerequisite topic.'),
+    suggestedVideos: z.array(VideoSuggestionSchema).describe('A list of suggested videos for this prerequisite.'),
+});
+
+
 const LearningPlanSchema = z.object({
-  prerequisites: z.array(z.string()).describe('A list of prerequisite topics the user should know.'),
+  prerequisites: z.array(PrerequisiteSchema).describe('A list of prerequisite topics the user should know, with video suggestions.'),
   keyConcepts: z.array(KeyConceptSchema).describe('A list of key concepts related to the topic.'),
   roadmap: z.array(RoadmapStepSchema).describe('A step-by-step learning roadmap.'),
 });
@@ -94,8 +100,19 @@ const generateLearningPlanFlow = ai.defineFlow(
         })
     );
 
+    // Step 3: For each prerequisite, find relevant videos
+    const prerequisitesWithVideos = await Promise.all(
+        planStructure.prerequisites.map(async (prereqTopic) => {
+            const videoSuggestions = await suggestVideos({ query: `${prereqTopic} tutorial for beginners` });
+            return {
+                topic: prereqTopic,
+                suggestedVideos: videoSuggestions.videos.slice(0, 3), // Take top 3
+            };
+        })
+    );
+
     return {
-        prerequisites: planStructure.prerequisites,
+        prerequisites: prerequisitesWithVideos,
         keyConcepts: planStructure.keyConcepts,
         roadmap: roadmapWithVideos,
     };

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, ArrowLeft, Youtube, Sparkles, Lightbulb, BookCopy, GitBranch, ChevronsRight, Award } from 'lucide-react';
@@ -23,6 +23,15 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
+import Autoplay from "embla-carousel-autoplay"
+
 
 export default function CourseMentorPage() {
   const { toast } = useToast();
@@ -38,6 +47,7 @@ export default function CourseMentorPage() {
   const [videosToCompare, setVideosToCompare] = useState<{[step: number]: string[]}>({});
   const [comparisonResults, setComparisonResults] = useState<{[step: number]: string}>({});
   const [isComparing, startComparisonTransition] = useTransition();
+  const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
 
 
   const handleGenerate = () => {
@@ -263,19 +273,57 @@ export default function CourseMentorPage() {
           <div className="mt-12 space-y-12">
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card>
-                  <CardHeader>
-                      <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                          <GitBranch /> Prerequisites
-                      </CardTitle>
-                      <CardDescription>Topics you should be familiar with before starting.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                          {learningPlan.prerequisites.map((p, i) => <Badge key={i} variant="secondary">{p}</Badge>)}
-                      </div>
-                  </CardContent>
-              </Card>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                            <GitBranch /> Prerequisites
+                        </CardTitle>
+                        <CardDescription>Recommended videos for topics you should know first.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Carousel 
+                            plugins={[autoplayPlugin.current]}
+                            className="w-full"
+                            onMouseEnter={() => autoplayPlugin.current.stop()}
+                            onMouseLeave={() => autoplayPlugin.current.reset()}
+                        >
+                            <CarouselContent>
+                                {learningPlan.prerequisites.flatMap(p => p.suggestedVideos).map((video, index) => (
+                                    <CarouselItem key={index}>
+                                        <div className="p-1">
+                                            <Card>
+                                                <CardContent className="flex flex-col items-center justify-center p-4 gap-4">
+                                                     <Image
+                                                        src={video.thumbnailUrl}
+                                                        alt={video.title}
+                                                        width={200}
+                                                        height={112}
+                                                        className="rounded-md w-full aspect-video object-cover"
+                                                        />
+                                                    <div className='w-full'>
+                                                        <p className="font-semibold text-sm line-clamp-2">{video.title}</p>
+                                                        <p className="text-xs text-muted-foreground">{video.channelTitle}</p>
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        className='w-full'
+                                                        onClick={() => handleImportCourse(video.videoId)}
+                                                        disabled={isImporting}
+                                                    >
+                                                        {isImporting ? <Loader2 className="animate-spin" /> : <Youtube className="mr-2" />}
+                                                        Add Course
+                                                    </Button>
+                                                </CardContent>
+                                            </Card>
+                                        </div>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious />
+                            <CarouselNext />
+                        </Carousel>
+                    </CardContent>
+                </Card>
 
               <Card>
                   <CardHeader>
