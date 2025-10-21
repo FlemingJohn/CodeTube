@@ -22,6 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 export default function CourseMentorPage() {
   const { toast } = useToast();
@@ -163,7 +164,7 @@ export default function CourseMentorPage() {
 
 
   const SuggestionCard = ({ video, stepIndex }: { video: VideoSuggestion, stepIndex: number }) => (
-    <Card className="flex flex-col md:flex-row gap-4 p-4 relative">
+    <Card className="flex flex-col md:flex-row gap-4 p-4 relative transition-shadow hover:shadow-md">
         <div className="absolute top-2 right-2">
             <Checkbox
                 id={`compare-${stepIndex}-${video.videoId}`}
@@ -261,94 +262,97 @@ export default function CourseMentorPage() {
         {learningPlan && (
           <div className="mt-12 space-y-12">
             
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                        <GitBranch /> Prerequisites
-                    </CardTitle>
-                    <CardDescription>Topics you should be familiar with before starting.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                        {learningPlan.prerequisites.map((p, i) => <Badge key={i} variant="secondary">{p}</Badge>)}
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                          <GitBranch /> Prerequisites
+                      </CardTitle>
+                      <CardDescription>Topics you should be familiar with before starting.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                          {learningPlan.prerequisites.map((p, i) => <Badge key={i} variant="secondary">{p}</Badge>)}
+                      </div>
+                  </CardContent>
+              </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                        <BookCopy /> Key Concepts
-                    </CardTitle>
-                    <CardDescription>Core ideas and technologies you will encounter.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ul className="list-disc pl-5 space-y-2">
-                        {learningPlan.keyConcepts.map((kc, i) => (
-                            <li key={i}>
-                                <span className="font-semibold">{kc.concept}:</span> {kc.description}
-                            </li>
-                        ))}
-                    </ul>
-                </CardContent>
-            </Card>
+              <Card>
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                          <BookCopy /> Key Concepts
+                      </CardTitle>
+                      <CardDescription>Core ideas and technologies you will encounter.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      <ul className="list-disc pl-5 space-y-2">
+                          {learningPlan.keyConcepts.map((kc, i) => (
+                              <li key={i}>
+                                  <span className="font-semibold">{kc.concept}:</span> {kc.description}
+                              </li>
+                          ))}
+                      </ul>
+                  </CardContent>
+              </Card>
+            </div>
             
             <div>
-              <h2 className="text-3xl font-bold font-headline mb-4 text-center">Your Learning Roadmap</h2>
-              <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="step-0">
+              <h2 className="text-3xl font-bold font-headline mb-8 text-center">Your Learning Roadmap</h2>
+              <div className="relative pl-6">
+                {/* The vertical timeline bar */}
+                <div className="absolute left-[34px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
+                
+                <div className="space-y-12">
                   {learningPlan.roadmap.map((step, index) => (
-                      <AccordionItem key={index} value={`step-${index}`} className="border-none">
-                          <Card>
-                            <AccordionTrigger className="p-6 hover:no-underline">
-                                <div className="flex items-center gap-4">
-                                    <div className="bg-primary text-primary-foreground rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">{step.step}</div>
-                                    <div>
-                                        <h3 className="text-xl font-headline text-left">{step.title}</h3>
-                                        <p className="text-sm text-muted-foreground text-left">{step.description}</p>
-                                    </div>
+                    <div key={index} className="relative">
+                      <div className="absolute left-[34px] top-1 h-8 w-8 bg-primary rounded-full -translate-x-1/2 flex items-center justify-center">
+                        <span className="text-lg font-bold text-primary-foreground">{step.step}</span>
+                      </div>
+                      <div className="ml-12 pl-4">
+                        <Card className="shadow-lg">
+                          <CardHeader>
+                            <CardTitle className="font-headline text-xl">{step.title}</CardTitle>
+                            <CardDescription>{step.description}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <h4 className="font-semibold">Suggested Videos for this step:</h4>
+                            <div className="space-y-4">
+                                {step.suggestedVideos.map((video) => (
+                                    <SuggestionCard key={video.videoId} video={video} stepIndex={index} />
+                                ))}
+                            </div>
+                            <div className="mt-6">
+                                <Button 
+                                    onClick={() => handleCompare(index)} 
+                                    disabled={isComparing || (videosToCompare[index]?.length || 0) < 2}
+                                >
+                                    {isComparing ? <Loader2 className="mr-2 animate-spin" /> : <ChevronsRight className="mr-2" />}
+                                    Compare Selected Videos
+                                </Button>
+                            </div>
+                            {isComparing && comparisonResults[index] === undefined && (
+                                  <div className="text-center mt-6">
+                                    <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                                    <p className="mt-2 text-muted-foreground">Comparing videos...</p>
                                 </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="p-6 pt-0">
-                                <h4 className="font-semibold mb-4">Suggested Videos for this step:</h4>
-                                <div className="space-y-4">
-                                    {step.suggestedVideos.map((video) => (
-                                        <SuggestionCard key={video.videoId} video={video} stepIndex={index} />
-                                    ))}
-                                </div>
-
-                                <div className="mt-6">
-                                    <Button 
-                                        onClick={() => handleCompare(index)} 
-                                        disabled={isComparing || (videosToCompare[index]?.length || 0) < 2}
-                                    >
-                                        {isComparing ? <Loader2 className="mr-2 animate-spin" /> : <ChevronsRight className="mr-2" />}
-                                        Compare Selected Videos
-                                    </Button>
-                                </div>
-
-                                {isComparing && comparisonResults[index] === undefined && (
-                                     <div className="text-center mt-6">
-                                        <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
-                                        <p className="mt-2 text-muted-foreground">Comparing videos...</p>
-                                    </div>
-                                )}
-
-                                {comparisonResults[index] && (
-                                    <Alert className="mt-6">
-                                        <Sparkles className="h-4 w-4" />
-                                        <AlertTitle className="font-headline">AI Comparison</AlertTitle>
-                                        <AlertDescription>
-                                            <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: comparisonResults[index] }}></div>
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                            </AccordionContent>
-                          </Card>
-                      </AccordionItem>
+                            )}
+                            {comparisonResults[index] && (
+                                <Alert className="mt-6">
+                                    <Sparkles className="h-4 w-4" />
+                                    <AlertTitle className="font-headline">AI Comparison</AlertTitle>
+                                    <AlertDescription>
+                                        <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: comparisonResults[index] }}></div>
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
                   ))}
-              </Accordion>
+                </div>
+              </div>
             </div>
-
           </div>
         )}
       </main>
