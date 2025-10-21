@@ -20,5 +20,6 @@ import '@/aiflows/translate-text';
 import '@/ai/flows/proofread-text';
 import '@/ai/flows/rewrite-text';
 import '@/ai/flows/write-text';
+import '@/ai/flows/generate-learning-plan';
 
 

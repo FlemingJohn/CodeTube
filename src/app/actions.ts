@@ -19,6 +19,7 @@ import { translateText } from '@/aiflows/translate-text';
 import { proofreadText } from '@/ai/flows/proofread-text';
 import { rewriteText } from '@/ai/flows/rewrite-text';
 import { writeText } from '@/ai/flows/write-text';
+import { generateLearningPlan, compareVideos } from '@/ai/flows/generate-learning-plan';
 
 import { Chapter } from '@/lib/types';
 import { z } from 'zod';
@@ -564,5 +565,42 @@ export async function handleWriteText(prompt: string) {
         return { writtenText: result.writtenText };
     } catch (e: any) {
         return { error: e.message || 'Failed to write text.' };
+    }
+}
+
+const generateLearningPlanSchema = z.object({
+    topic: z.string(),
+});
+
+export async function handleGenerateLearningPlan(values: z.infer<typeof generateLearningPlanSchema>) {
+    const validatedFields = generateLearningPlanSchema.safeParse(values);
+    if (!validatedFields.success) return { error: 'Invalid fields' };
+    try {
+        const result = await generateLearningPlan(validatedFields.data);
+        return { plan: result };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || 'Failed to generate learning plan.' };
+    }
+}
+
+const compareVideosSchema = z.object({
+    topic: z.string(),
+    videos: z.array(z.object({
+        id: z.string(),
+        title: z.string(),
+        channelTitle: z.string(),
+    })),
+});
+
+export async function handleCompareVideos(values: z.infer<typeof compareVideosSchema>) {
+    const validatedFields = compareVideosSchema.safeParse(values);
+    if (!validatedFields.success) return { error: 'Invalid fields' };
+    try {
+        const result = await compareVideos(validatedFields.data);
+        return { comparison: result.comparison };
+    } catch (e: any) {
+        console.error(e);
+        return { error: e.message || 'Failed to compare videos.' };
     }
 }

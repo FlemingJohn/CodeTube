@@ -3,46 +3,41 @@
 
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Search, ArrowLeft, Youtube, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Loader2, Search, ArrowLeft, Youtube, Sparkles, Lightbulb, BookCopy, GitBranch, ChevronsRight, Award } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
 import Link from 'next/link';
-import { handleSuggestVideos, getYoutubeChapters } from '@/app/actions';
+import { handleGenerateLearningPlan, getYoutubeChapters, handleCompareVideos } from '@/app/actions';
 import Image from 'next/image';
 import { Course } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { useUser, useFirestore } from '@/firebase';
 import { addCourse } from '@/lib/courses';
-
-type VideoSuggestion = {
-  videoId: string;
-  title: string;
-  channelTitle: string;
-  thumbnailUrl: string;
-  justification: string;
-};
-
-type CategorizedSuggestions = {
-  highlyRecommended: VideoSuggestion[];
-  recommended: VideoSuggestion[];
-  optional: VideoSuggestion[];
-};
+import { LearningPlan, VideoSuggestion } from '@/ai/flows/generate-learning-plan';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function CourseMentorPage() {
   const { toast } = useToast();
   const router = useRouter();
   const { user } = useUser();
   const firestore = useFirestore();
-  const [isPending, startTransition] = useTransition();
+  const [isGenerating, startGenerationTransition] = useTransition();
   const [isImporting, startImportTransition] = useTransition();
 
   const [topic, setTopic] = useState('');
-  const [suggestions, setSuggestions] = useState<CategorizedSuggestions | null>(
-    null
-  );
+  const [learningPlan, setLearningPlan] = useState<LearningPlan | null>(null);
+  
+  const [videosToCompare, setVideosToCompare] = useState<{[step: number]: string[]}>({});
+  const [comparisonResults, setComparisonResults] = useState<{[step: number]: string}>({});
+  const [isComparing, startComparisonTransition] = useTransition();
+
 
   const handleGenerate = () => {
     if (!topic) {
@@ -52,18 +47,20 @@ export default function CourseMentorPage() {
       });
       return;
     }
-    startTransition(async () => {
-      setSuggestions(null);
+    startGenerationTransition(async () => {
+      setLearningPlan(null);
+      setComparisonResults({});
+      setVideosToCompare({});
       try {
-        const result = await handleSuggestVideos({ query: topic });
+        const result = await handleGenerateLearningPlan({ topic });
         if (result.error) {
           toast({
             variant: 'destructive',
             title: 'An error occurred',
             description: result.error,
           });
-        } else if (result.suggestions) {
-          setSuggestions(result.suggestions);
+        } else if (result.plan) {
+          setLearningPlan(result.plan);
         }
       } catch (e: any) {
         toast({
@@ -120,8 +117,61 @@ export default function CourseMentorPage() {
     });
   };
 
-  const SuggestionCard = ({ video }: { video: VideoSuggestion }) => (
-    <Card className="flex flex-col md:flex-row gap-4 p-4">
+  const toggleVideoForComparison = (stepIndex: number, videoId: string) => {
+    setVideosToCompare(prev => {
+        const currentStepSelection = prev[stepIndex] || [];
+        const isSelected = currentStepSelection.includes(videoId);
+        let newSelection;
+        if (isSelected) {
+            newSelection = currentStepSelection.filter(id => id !== videoId);
+        } else {
+            if (currentStepSelection.length < 3) {
+                newSelection = [...currentStepSelection, videoId];
+            } else {
+                toast({ variant: 'destructive', title: 'You can only compare up to 3 videos.'})
+                return prev;
+            }
+        }
+        return { ...prev, [stepIndex]: newSelection };
+    });
+  };
+
+  const handleCompare = (stepIndex: number) => {
+    const videoIds = videosToCompare[stepIndex];
+    if (!videoIds || videoIds.length < 2) {
+        toast({ variant: 'destructive', title: 'Select at least 2 videos to compare.' });
+        return;
+    }
+
+    startComparisonTransition(async () => {
+        const step = learningPlan?.roadmap[stepIndex];
+        if (!step) return;
+
+        const videos = videoIds.map(id => {
+            const video = step.suggestedVideos.find(v => v.videoId === id);
+            return { id: video!.videoId, title: video!.title, channelTitle: video!.channelTitle };
+        });
+
+        const result = await handleCompareVideos({ topic, videos });
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Comparison Failed', description: result.error });
+        } else {
+            setComparisonResults(prev => ({ ...prev, [stepIndex]: result.comparison! }));
+        }
+    });
+  };
+
+
+  const SuggestionCard = ({ video, stepIndex }: { video: VideoSuggestion, stepIndex: number }) => (
+    <Card className="flex flex-col md:flex-row gap-4 p-4 relative">
+        <div className="absolute top-2 right-2">
+            <Checkbox
+                id={`compare-${stepIndex}-${video.videoId}`}
+                onCheckedChange={() => toggleVideoForComparison(stepIndex, video.videoId)}
+                checked={(videosToCompare[stepIndex] || []).includes(video.videoId)}
+            />
+            <label htmlFor={`compare-${stepIndex}-${video.videoId}`} className="sr-only">Compare</label>
+        </div>
       <div className="md:w-1/3">
         <Image
           src={video.thumbnailUrl}
@@ -134,10 +184,6 @@ export default function CourseMentorPage() {
       <div className="md:w-2/3 space-y-2">
         <p className="font-semibold">{video.title}</p>
         <p className="text-sm text-muted-foreground">{video.channelTitle}</p>
-        <p className="text-xs text-muted-foreground italic">
-          <Sparkles className="w-3 h-3 inline-block mr-1" />
-          {video.justification}
-        </p>
         <Button
           size="sm"
           onClick={() => handleImportCourse(video.videoId)}
@@ -148,7 +194,7 @@ export default function CourseMentorPage() {
           ) : (
             <Youtube className="mr-2 h-4 w-4" />
           )}
-          Add to Course
+          Add to Courses
         </Button>
       </div>
     </Card>
@@ -178,8 +224,7 @@ export default function CourseMentorPage() {
           <div className="text-center mt-4">
             <h1 className="text-4xl font-bold font-headline">Course Mentor</h1>
             <p className="text-lg text-muted-foreground mt-2">
-              Your personal AI guide to finding the best learning resources on
-              YouTube.
+              Your personal AI guide to finding and structuring your learning path.
             </p>
           </div>
         </div>
@@ -191,60 +236,119 @@ export default function CourseMentorPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Input
-                placeholder="e.g., React hooks for beginners"
+                placeholder="e.g., React state management"
                 value={topic}
                 onChange={e => setTopic(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               />
-              <Button onClick={handleGenerate} disabled={isPending}>
-                <Search className="mr-2 h-4 w-4" />
-                Get Suggestions
+              <Button onClick={handleGenerate} disabled={isGenerating}>
+                {isGenerating ? <Loader2 className="animate-spin mr-2"/> : <Search className="mr-2 h-4 w-4" />}
+                Generate Plan
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {isPending && (
+        {isGenerating && (
           <div className="text-center mt-12">
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
             <p className="mt-4 text-muted-foreground">
-              Finding and analyzing the best videos for you...
+              Building your personalized learning plan...
             </p>
           </div>
         )}
 
-        {suggestions && (
+        {learningPlan && (
           <div className="mt-12 space-y-12">
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                        <GitBranch /> Prerequisites
+                    </CardTitle>
+                    <CardDescription>Topics you should be familiar with before starting.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                        {learningPlan.prerequisites.map((p, i) => <Badge key={i} variant="secondary">{p}</Badge>)}
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                        <BookCopy /> Key Concepts
+                    </CardTitle>
+                    <CardDescription>Core ideas and technologies you will encounter.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ul className="list-disc pl-5 space-y-2">
+                        {learningPlan.keyConcepts.map((kc, i) => (
+                            <li key={i}>
+                                <span className="font-semibold">{kc.concept}:</span> {kc.description}
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+            
             <div>
-              <h2 className="text-2xl font-bold font-headline mb-4">
-                Highly Recommended
-              </h2>
-              <div className="space-y-4">
-                {suggestions.highlyRecommended.map(video => (
-                  <SuggestionCard key={video.videoId} video={video} />
-                ))}
-              </div>
+              <h2 className="text-3xl font-bold font-headline mb-4 text-center">Your Learning Roadmap</h2>
+              <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="step-0">
+                  {learningPlan.roadmap.map((step, index) => (
+                      <AccordionItem key={index} value={`step-${index}`} className="border-none">
+                          <Card>
+                            <AccordionTrigger className="p-6 hover:no-underline">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-primary text-primary-foreground rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">{step.step}</div>
+                                    <div>
+                                        <h3 className="text-xl font-headline text-left">{step.title}</h3>
+                                        <p className="text-sm text-muted-foreground text-left">{step.description}</p>
+                                    </div>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="p-6 pt-0">
+                                <h4 className="font-semibold mb-4">Suggested Videos for this step:</h4>
+                                <div className="space-y-4">
+                                    {step.suggestedVideos.map((video) => (
+                                        <SuggestionCard key={video.videoId} video={video} stepIndex={index} />
+                                    ))}
+                                </div>
+
+                                <div className="mt-6">
+                                    <Button 
+                                        onClick={() => handleCompare(index)} 
+                                        disabled={isComparing || (videosToCompare[index]?.length || 0) < 2}
+                                    >
+                                        {isComparing ? <Loader2 className="mr-2 animate-spin" /> : <ChevronsRight className="mr-2" />}
+                                        Compare Selected Videos
+                                    </Button>
+                                </div>
+
+                                {isComparing && comparisonResults[index] === undefined && (
+                                     <div className="text-center mt-6">
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                                        <p className="mt-2 text-muted-foreground">Comparing videos...</p>
+                                    </div>
+                                )}
+
+                                {comparisonResults[index] && (
+                                    <Alert className="mt-6">
+                                        <Sparkles className="h-4 w-4" />
+                                        <AlertTitle className="font-headline">AI Comparison</AlertTitle>
+                                        <AlertDescription>
+                                            <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: comparisonResults[index] }}></div>
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </AccordionContent>
+                          </Card>
+                      </AccordionItem>
+                  ))}
+              </Accordion>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold font-headline mb-4">
-                Recommended
-              </h2>
-              <div className="space-y-4">
-                {suggestions.recommended.map(video => (
-                  <SuggestionCard key={video.videoId} video={video} />
-                ))}
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold font-headline mb-4">
-                Optional
-              </h2>
-              <div className="space-y-4">
-                {suggestions.optional.map(video => (
-                  <SuggestionCard key={video.videoId} video={video} />
-                ))}
-              </div>
-            </div>
+
           </div>
         )}
       </main>
