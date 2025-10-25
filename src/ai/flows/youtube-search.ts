@@ -34,7 +34,7 @@ const youtubeSearchFlow = ai.defineFlow(
     outputSchema: YoutubeSearchOutputSchema,
   },
   async ({query}) => {
-    const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+    const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey) {
       throw new Error('YouTube API key is not configured.');
     }

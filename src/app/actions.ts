@@ -200,7 +200,7 @@ async function parseChaptersFromDescription(description: string, fullTranscript:
 
 
 export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string, warning?: string }> {
-  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  const apiKey = process.env.YOUTUBE_API_KEY;
 
   if (!apiKey) {
     return { error: 'YouTube API key is not configured in environment variables.' };
