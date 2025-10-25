@@ -4,7 +4,7 @@
 import { useState, useTransition, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Search, ArrowLeft, Youtube, Sparkles, Lightbulb, BookCopy, GitBranch, ChevronsRight, Award } from 'lucide-react';
+import { Loader2, Search, ArrowLeft, Youtube, Sparkles, Lightbulb, BookCopy, GitBranch, ChevronsRight, Award, Wand2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/codetube/Header';
@@ -31,6 +31,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
+import { useChromeAi } from '@/hooks/useChromeAi';
 
 
 export default function CourseMentorPage() {
@@ -48,6 +49,8 @@ export default function CourseMentorPage() {
   const [comparisonResults, setComparisonResults] = useState<{[step: number]: string}>({});
   const [isComparing, startComparisonTransition] = useTransition();
   const autoplayPlugin = useRef(Autoplay({ delay: 3000, stopOnInteraction: true }));
+  const { aiAvailable, improvePrompt } = useChromeAi();
+  const [isImprovingPrompt, startImprovePromptTransition] = useTransition();
 
 
   const handleGenerate = () => {
@@ -80,6 +83,19 @@ export default function CourseMentorPage() {
           description: e.message,
         });
       }
+    });
+  };
+
+  const handleImprovePrompt = () => {
+    if (!topic) return;
+    startImprovePromptTransition(async () => {
+        try {
+            const improved = await improvePrompt(topic);
+            setTopic(improved);
+            toast({ title: 'Prompt Improved!', description: 'Your learning topic has been enhanced by AI.' });
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Could not improve prompt', description: e.message });
+        }
     });
   };
 
@@ -252,6 +268,11 @@ export default function CourseMentorPage() {
                 onChange={e => setTopic(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               />
+              {aiAvailable && (
+                <Button variant="ghost" size="icon" onClick={handleImprovePrompt} disabled={isImprovingPrompt || !topic} title="Improve Prompt">
+                    {isImprovingPrompt ? <Loader2 className="animate-spin" /> : <Wand2 />}
+                </Button>
+              )}
               <Button onClick={handleGenerate} disabled={isGenerating}>
                 {isGenerating ? <Loader2 className="animate-spin mr-2"/> : <Search className="mr-2 h-4 w-4" />}
                 Generate Plan
@@ -407,3 +428,5 @@ export default function CourseMentorPage() {
     </>
   );
 }
+
+    

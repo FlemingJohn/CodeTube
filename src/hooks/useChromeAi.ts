@@ -30,6 +30,7 @@ type AiSessions = {
   writer?: AiTextSession;
   rewriter?: AiTextSession;
   translator?: AiTextSession;
+  promptImprover?: AiTextSession;
 };
 
 export function useChromeAi() {
@@ -46,14 +47,15 @@ export function useChromeAi() {
 
       if ((await window.ai.canCreateTextSession()) === 'readily') {
         setAiAvailable(true);
-        const [summarizer, proofreader, writer, rewriter, translator] = await Promise.all([
+        const [summarizer, proofreader, writer, rewriter, translator, promptImprover] = await Promise.all([
             window.ai.createTextSession({ topK: 3, temperature: 0.3 }),
             window.ai.createTextSession({ topK: 3, temperature: 0.3 }),
             window.ai.createTextSession({ topK: 5, temperature: 1.0 }),
             window.ai.createTextSession({ topK: 5, temperature: 0.8 }),
-            window.ai.createTextSession({ topK: 3, temperature: 0.3 })
+            window.ai.createTextSession({ topK: 3, temperature: 0.3 }),
+            window.ai.createTextSession({ topK: 3, temperature: 0.7 })
         ]);
-        setSessions({ summarizer, proofreader, writer, rewriter, translator });
+        setSessions({ summarizer, proofreader, writer, rewriter, translator, promptImprover });
       } else {
         setAiAvailable(false);
       }
@@ -109,6 +111,15 @@ export function useChromeAi() {
     return callAi('rewriter', prompt, onStream);
   }, [callAi]);
 
+  const improvePrompt = useCallback((text: string, onStream?: (chunk: string) => void) => {
+    const prompt = `You are an expert prompt engineer. The user wants to generate a learning plan. Take their simple input and expand it into a detailed, effective prompt. For example, if the user provides "learn python", you could return "Create a comprehensive learning plan for a beginner to learn Python for data analysis, including key concepts and a step-by-step roadmap."
+    
+    User input: "${text}"
+    
+    Improved prompt:`;
+    return callAi('promptImprover', prompt, onStream);
+  }, [callAi]);
+
   const translate = useCallback((text: string, targetLanguage: string, onStream?: (chunk: string) => void) => {
     const prompt = `Translate this text into ${targetLanguage} while keeping the original meaning, clarity, and educational tone intact:\n\n${text}`;
     return callAi('translator', prompt, onStream);
@@ -121,6 +132,7 @@ export function useChromeAi() {
     write,
     rewrite,
     translate,
+    improvePrompt,
   };
 }
 
