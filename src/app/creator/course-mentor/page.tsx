@@ -366,30 +366,71 @@ export default function CourseMentorPage() {
             </div>
             
             <div>
-              <h2 className="text-3xl font-bold font-headline mb-8 text-center">Your Learning Roadmap</h2>
-              <div className="relative pl-6">
-                {/* The vertical timeline bar */}
-                <div className="absolute left-[34px] top-0 h-full w-0.5 bg-border -translate-x-1/2"></div>
-                
-                <div className="space-y-12">
-                  {learningPlan.roadmap.map((step, index) => (
-                    <div key={index} className="relative">
-                      <div className="absolute left-[34px] top-1 h-8 w-8 bg-primary rounded-full -translate-x-1/2 flex items-center justify-center">
-                        <span className="text-lg font-bold text-primary-foreground">{step.step}</span>
-                      </div>
-                      <div className="ml-12 pl-4">
+                <h2 className="text-3xl font-bold font-headline mb-8 text-center">Your Learning Roadmap</h2>
+                <div className="space-y-8">
+                {learningPlan.roadmap.map((step, index) => (
+                    <div key={index} className="flex gap-6">
+                    <div className="flex flex-col items-center">
+                        <div className="flex items-center justify-center w-12 h-12 bg-primary rounded-full text-primary-foreground font-bold text-xl">
+                        {step.step}
+                        </div>
+                        {index < learningPlan.roadmap.length - 1 && (
+                        <div className="w-0.5 flex-1 bg-border my-2"></div>
+                        )}
+                    </div>
+                    <div className="flex-1 pb-8">
                         <Card className="shadow-lg">
-                          <CardHeader>
+                        <CardHeader>
                             <CardTitle className="font-headline text-xl">{step.title}</CardTitle>
                             <CardDescription>{step.description}</CardDescription>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <h4 className="font-semibold">Suggested Videos for this step:</h4>
-                            <div className="space-y-4">
-                                {step.suggestedVideos.map((video) => (
-                                    <SuggestionCard key={video.videoId} video={video} stepIndex={index} />
-                                ))}
-                            </div>
+                            
+                            <Carousel className="w-full">
+                                <CarouselContent className="-ml-2">
+                                    {step.suggestedVideos.map((video) => (
+                                        <CarouselItem key={video.videoId} className="pl-2 md:basis-1/2 lg:basis-1/3">
+                                             <div className="p-1">
+                                                <Card className='relative'>
+                                                    <div className="absolute top-2 right-2 bg-background/50 rounded-full">
+                                                        <Checkbox
+                                                            id={`compare-${index}-${video.videoId}`}
+                                                            onCheckedChange={() => toggleVideoForComparison(index, video.videoId)}
+                                                            checked={(videosToCompare[index] || []).includes(video.videoId)}
+                                                        />
+                                                    </div>
+                                                    <CardContent className="flex flex-col items-center justify-center p-4 gap-4">
+                                                        <Image
+                                                            src={video.thumbnailUrl}
+                                                            alt={video.title}
+                                                            width={200}
+                                                            height={112}
+                                                            className="rounded-md w-full aspect-video object-cover"
+                                                            />
+                                                        <div className='w-full h-16'>
+                                                            <p className="font-semibold text-sm line-clamp-2">{video.title}</p>
+                                                            <p className="text-xs text-muted-foreground">{video.channelTitle}</p>
+                                                        </div>
+                                                        <Button
+                                                            size="sm"
+                                                            className='w-full'
+                                                            onClick={() => handleImportCourse(video.videoId)}
+                                                            disabled={isImporting}
+                                                        >
+                                                            {isImporting ? <Loader2 className="animate-spin" /> : <Youtube className="mr-2" />}
+                                                            Add
+                                                        </Button>
+                                                    </CardContent>
+                                                </Card>
+                                            </div>
+                                        </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                                <CarouselPrevious className='-left-4' />
+                                <CarouselNext className='-right-4'/>
+                            </Carousel>
+                            
                             <div className="mt-6">
                                 <Button 
                                     onClick={() => handleCompare(index)} 
@@ -400,7 +441,7 @@ export default function CourseMentorPage() {
                                 </Button>
                             </div>
                             {isComparing && comparisonResults[index] === undefined && (
-                                  <div className="text-center mt-6">
+                                    <div className="text-center mt-6">
                                     <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
                                     <p className="mt-2 text-muted-foreground">Comparing videos...</p>
                                 </div>
@@ -414,13 +455,12 @@ export default function CourseMentorPage() {
                                     </AlertDescription>
                                 </Alert>
                             )}
-                          </CardContent>
+                        </CardContent>
                         </Card>
-                      </div>
                     </div>
-                  ))}
+                    </div>
+                ))}
                 </div>
-              </div>
             </div>
           </div>
         )}
@@ -428,5 +468,3 @@ export default function CourseMentorPage() {
     </>
   );
 }
-
-    
