@@ -55,8 +55,11 @@ The application integrates with several external APIs to power its features:
 | API Provider | Library Used | Core Features Powered |
 | :--- | :--- | :--- |
 | **Google (YouTube)** | `googleapis`, `youtube-transcript` | **Video & Transcript Import:** Fetches video titles, descriptions, and full transcripts. This is the foundation for all content analysis. |
+| **Google (Gemini API via Genkit)** | `genkit`, `@genkit-ai/google-genai`| **Server-Side AI:** Powers all advanced AI features, including learning plans, quizzes, code explanations, and serves as a fallback for on-device AI. |
+| **Google (Chrome Built-in AI)** | `window.ai` | **On-Device AI:** Handles instant text generation for summaries, proofreading, and rewriting directly in supported browsers for enhanced performance. |
 | **GitHub** | `@octokit/rest` | **Export to GitHub:** Creates a new repository, generates Markdown files for the course, and pushes the content to the user's GitHub account. |
 | **Judge0** | `axios` (within a Genkit flow) | **Interactive Code Execution:** Allows users to run code snippets directly within a chapter and see the output. |
+
 
 #### In-App AI Features (Hybrid Client/Server Model)
 
