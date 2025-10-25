@@ -139,7 +139,7 @@ const CompareVideosInputSchema = z.object({
 export type CompareVideosInput = z.infer<typeof CompareVideosInputSchema>;
 
 const CompareVideosOutputSchema = z.object({
-    comparison: z.string().describe("A comparison of the videos in Markdown format, ending with a clear recommendation."),
+    comparison: z.string().describe("A comparison of the videos in Markdown format, ending with a clear recommendation of the best one."),
 });
 export type CompareVideosOutput = z.infer<typeof CompareVideosOutputSchema>;
 
@@ -160,18 +160,22 @@ const compareVideosFlow = ai.defineFlow(
             
 ${videoList}
 
-Analyze the video titles and channel names to provide a comparison. Consider:
-- Which video seems best for a complete beginner?
-- Which one seems more project-oriented or hands-on?
-- Which might be a quick-and-to-the-point overview?
+Analyze the video titles and channel names to provide a comparison and a clear recommendation.
 
-Structure your response in Markdown with a final recommendation. For example:
+1.  **Comparison**: Briefly analyze each video. Consider factors like:
+    *   Is it likely for a complete beginner or someone more advanced?
+    *   Does it seem like a project-based tutorial or a conceptual overview?
+    *   Is the channel known for high-quality, in-depth content?
+
+2.  **Recommendation**: After the comparison, add a "Recommendation" section. Explicitly state which video is the best one to start with and why. Be decisive.
+
+Your output must be in Markdown format. For example:
 ### Comparison
-- **Video A** seems like a comprehensive, deep-dive tutorial.
-- **Video B** from a well-known conference speaker, is likely a high-level overview.
+- **Video A** seems like a comprehensive, deep-dive tutorial ideal for building a full project.
+- **Video B**, from a well-known conference speaker, is likely a high-level overview of the concepts.
 
 ### Recommendation
-For a beginner, start with **Video A**. If you're short on time, watch **Video B**.`,
+For a beginner who wants to get a solid foundation, start with **Video A**. It appears more thorough and project-oriented.`,
         });
 
         const { output } = await comparisonPrompt();
