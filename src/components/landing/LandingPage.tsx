@@ -158,39 +158,6 @@ const apiUsage = [
     }
 ];
 
-const testimonials = [
-    {
-    quote:
-      "The 'Practice Your Pitch' feature is a game-changer. I recorded my answer and the AI feedback on my explanation was better than most human coaches. Invaluable for interview prep.",
-    name: 'Michael B.',
-    title: 'Junior Backend Developer',
-  },
-  {
-    quote:
-      'As a student, being able to take a quiz right after watching a chapter is amazing. It tells me immediately if I actually understood the concept. So much better than just passive watching.',
-    name: 'Samantha Lee',
-    title: 'Computer Science Student',
-  },
-  {
-    quote:
-      'CodeTube transformed the way I follow along with coding tutorials. The automatic chapter detection and AI notes save me so much time.',
-    name: 'Alex Johnson',
-    title: 'Frontend Developer',
-  },
-  {
-    quote:
-      'I use this to review tutorials before job interviews. The AI-generated interview questions are spot-on and help me prepare for what to expect.',
-    name: 'Chris Patel',
-    title: 'Self-Taught Programmer',
-  },
-  {
-    quote:
-      'The ability to export my notes and code to GitHub is an incredible feature for building my portfolio and showing my work to employers.',
-    name: 'Jessica Rodriguez',
-    title: 'Aspiring Full-Stack Developer',
-  },
-];
-
 const faqs = [
   {
     question: "Who is CodeTube for?",
