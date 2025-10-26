@@ -43,13 +43,13 @@ export default function CreatorPage() {
     setActiveCourseId(id);
   };
 
-  const handleNewCourse = async () => {
+  const handleNewCourse = () => {
     if (!user || !firestore) return;
     // Pass the userId directly when creating the course
     const newCourseData = {
       userId: user.uid,
     };
-    const newCourseId = await addCourse(firestore, user.uid, newCourseData);
+    const newCourseId = addCourse(firestore, user.uid, newCourseData);
     if(newCourseId) {
         setActiveCourseId(newCourseId);
     }

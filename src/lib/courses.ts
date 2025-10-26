@@ -3,10 +3,6 @@
 import { 
     collection, 
     doc,
-    addDoc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
     serverTimestamp,
     Firestore
 } from 'firebase/firestore';
@@ -14,42 +10,49 @@ import { Course } from './types';
 import { 
     setDocumentNonBlocking,
     updateDocumentNonBlocking,
-    deleteDocumentNonBlocking
+    deleteDocumentNonBlocking,
+    addDocumentNonBlocking
 } from '@/firebase/non-blocking-updates';
 
 /**
- * Adds a new course to Firestore for a specific user.
+ * Adds a new course to Firestore for a specific user in a non-blocking manner.
  *
  * @param firestore - The Firestore instance.
  * @param userId - The ID of the user creating the course.
- * @param courseData - The partial course data (title is required).
- * @returns The ID of the newly created course document.
+ * @param courseData - The partial course data.
+ * @returns The ID of the newly created course document, generated client-side.
  */
-export async function addCourse(firestore: Firestore, userId: string, courseData: Partial<Omit<Course, 'id'>>) {
+export function addCourse(firestore: Firestore, userId: string, courseData: Partial<Omit<Course, 'id'>>): string {
     const coursesColRef = collection(firestore, 'users', userId, 'courses');
     
-    const newDocData = {
-      userId: userId, // Ensure userId is always present
+    // Generate a new document reference with an auto-generated ID client-side
+    const newCourseRef = doc(coursesColRef);
+    const newCourseId = newCourseRef.id;
+
+    const newDocData: Omit<Course, 'id'> = {
+      userId: userId,
       title: 'New Untitled Course',
       videoId: null,
       chapters: [],
       category: 'General',
-      ...courseData, // Apply any provided data, overwriting defaults
+      ...courseData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
 
-    const docRef = await addDoc(coursesColRef, newDocData);
-    
-    // Also create the initial public copy so it can be shared immediately
-    const publicCourseDocRef = doc(firestore, 'courses', docRef.id);
+    // Use non-blocking set to create the private course document
+    setDocumentNonBlocking(newCourseRef, newDocData);
+
+    // Also create the initial public copy non-blockingly
+    const publicCourseDocRef = doc(firestore, 'courses', newCourseId);
     setDocumentNonBlocking(publicCourseDocRef, newDocData, { merge: true });
 
-    return docRef.id;
+    return newCourseId;
 }
 
+
 /**
- * Updates an existing course in Firestore.
+ * Updates an existing course in Firestore in a non-blocking manner.
  * This function also handles creating/updating a public-facing copy.
  *
  * @param firestore - The Firestore instance.
@@ -79,7 +82,7 @@ export function updateCourse(firestore: Firestore, userId: string, courseId: str
 }
 
 /**
- * Deletes a course from Firestore.
+ * Deletes a course from Firestore in a non-blocking manner.
  *
  * @param firestore - The Firestore instance.
  * @param userId - The ID of the user who owns the course.
