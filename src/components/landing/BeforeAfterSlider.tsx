@@ -3,79 +3,73 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Grip, Sparkles, Code, Play, Search, Youtube as YoutubeIcon, Clapperboard, Bell } from 'lucide-react';
+import { Grip, Sparkles, Code, Play, Search, Youtube as YoutubeIcon, Clapperboard, Bell, ThumbsUp, ThumbsDown, Share2, Download, MoreHorizontal } from 'lucide-react';
+import { Button } from '../ui/button';
 
 const BeforeView = () => (
-  <div className="w-full h-full bg-white dark:bg-[#f9f9f9] rounded-lg flex flex-col text-black overflow-hidden font-sans">
-    {/* Header */}
-    <header className="flex items-center justify-between py-2 px-4 shrink-0">
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1">
-          <YoutubeIcon className="w-8 h-8 text-red-600" />
-          <span className="text-xl font-semibold tracking-tighter">YouTube</span>
-        </div>
-      </div>
-      <div className="flex-1 max-w-lg flex items-center">
-        <input
-          type="text"
-          placeholder="Search"
-          className="w-full h-10 px-4 border border-gray-300 rounded-l-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-        <button className="h-10 px-6 bg-gray-100 border-y border-r border-gray-300 rounded-r-full flex items-center justify-center">
-          <Search className="w-5 h-5 text-gray-600" />
-        </button>
-      </div>
-      <div>
-        {/* Placeholder for user icons */}
-      </div>
-    </header>
+    <div className="w-full h-full bg-[#0f0f0f] rounded-lg flex flex-col text-white overflow-hidden font-sans">
+        {/* Main Content */}
+        <div className="flex-grow flex p-6 gap-6 overflow-hidden">
+            {/* Left Column */}
+            <div className="w-2/3 flex flex-col gap-4">
+                {/* Video Player */}
+                <div className="w-full aspect-video bg-black rounded-xl flex items-center justify-center relative">
+                    <YoutubeIcon className="w-20 h-20 text-red-600/80" />
+                </div>
 
-    {/* Main Content */}
-    <div className="flex-grow flex p-6 gap-6 overflow-hidden">
-      {/* Left Column */}
-      <div className="w-2/3 flex flex-col gap-4">
-        {/* Video Player */}
-        <div className="w-full aspect-video bg-red-600 rounded-xl flex items-center justify-center relative">
-            <Clapperboard className="w-16 h-16 text-white/80" />
-            <div className="absolute bottom-4 right-4 bg-black/50 text-white text-sm px-3 py-1.5 rounded-md">
-                Skip Ad
-            </div>
-        </div>
-        {/* Title */}
-        <div className="h-6 bg-gray-300 rounded w-3/4"></div>
-        {/* Channel Info */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-300 rounded-full shrink-0"></div>
-            <div>
-              <div className="h-5 bg-gray-300 rounded w-24 mb-1"></div>
-              <div className="h-3 bg-gray-200 rounded w-16"></div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-24 h-9 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
-              Subscribe
-            </div>
-          </div>
-        </div>
-      </div>
+                {/* Title */}
+                <h1 className="text-xl font-bold">My Awesome Tutorial</h1>
 
-      {/* Right Column */}
-      <div className="w-1/3 flex flex-col gap-4">
-        {/* Recommended Videos */}
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex gap-2">
-            <div className="w-2/5 aspect-video bg-gray-300 rounded-lg shrink-0"></div>
-            <div className="w-3/5 space-y-2">
-              <div className="h-4 bg-gray-300 rounded w-full"></div>
-              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                {/* Channel & Actions */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-zinc-700 rounded-full shrink-0"></div>
+                        <div>
+                            <p className="font-semibold">Awesome Dev</p>
+                            <p className="text-xs text-zinc-400">1.2M subscribers</p>
+                        </div>
+                        <Button variant="secondary" className="bg-white text-black hover:bg-zinc-200 ml-4 rounded-full">Subscribe</Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center rounded-full bg-zinc-800 hover:bg-zinc-700">
+                            <Button variant="ghost" className="rounded-r-none rounded-l-full"><ThumbsUp className="w-5 h-5 mr-2" /> 15K</Button>
+                            <div className="w-px h-6 bg-zinc-600"></div>
+                            <Button variant="ghost" className="rounded-l-none rounded-r-full"><ThumbsDown className="w-5 h-5" /></Button>
+                        </div>
+                        <Button variant="ghost" className="bg-zinc-800 hover:bg-zinc-700 rounded-full"><Share2 className="w-5 h-5 mr-2" /> Share</Button>
+                        <Button variant="ghost" className="bg-zinc-800 hover:bg-zinc-700 rounded-full"><Download className="w-5 h-5 mr-2" /> Download</Button>
+                        <Button variant="ghost" size="icon" className="bg-zinc-800 hover:bg-zinc-700 rounded-full"><MoreHorizontal className="w-5 h-5" /></Button>
+                    </div>
+                </div>
+
+                {/* Description */}
+                <div className="bg-zinc-800 rounded-lg p-3 text-sm space-y-2">
+                    <p className="font-bold">32K views  2 months ago</p>
+                    <p>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
+                    <div className="text-blue-400 space-y-1 pt-2">
+                        <p>0:00 - Introduction</p>
+                        <p>2:15 - Setup Project</p>
+                        <p>5:45 - Building the UI</p>
+                        <p>11:30 - State Management</p>
+                    </div>
+                </div>
             </div>
-          </div>
-        ))}
-      </div>
+
+            {/* Right Column (Recommended Videos) */}
+            <div className="w-1/3 flex flex-col gap-3">
+                {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex gap-3">
+                        <div className="w-2/5 aspect-video bg-zinc-700 rounded-lg shrink-0"></div>
+                        <div className="w-3/5 space-y-1">
+                            <div className="h-4 bg-zinc-700 rounded w-full"></div>
+                            <div className="h-4 bg-zinc-700 rounded w-3/4"></div>
+                            <div className="h-3 bg-zinc-800 rounded w-1/2 mt-2"></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     </div>
-  </div>
 );
 
 
