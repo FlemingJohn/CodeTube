@@ -7,14 +7,19 @@ import { Grip, Play, Sparkles, Code, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const BeforeView = () => (
-  <div className="w-full h-full bg-slate-800 rounded-lg flex flex-col p-4">
-    <div className="flex-grow flex items-center justify-center">
-      <div className="w-24 h-24 bg-black/30 rounded-full flex items-center justify-center">
+  <div className="w-full h-full bg-slate-800 rounded-lg flex flex-col p-4 text-white">
+    <div className="w-full aspect-video bg-black/30 rounded-md flex items-center justify-center mb-4">
         <Play className="w-12 h-12 text-white" fill="white" />
-      </div>
     </div>
-    <div className="h-4 bg-slate-700 rounded w-full">
-      <div className="h-4 bg-primary rounded w-1/3"></div>
+    <div className='space-y-2'>
+        <h3 className="text-lg font-bold">My Awesome Tutorial</h3>
+        <p className='text-sm text-slate-300'>In this video, we will build an amazing app from scratch...</p>
+        <div className="text-sm text-slate-300 pt-2 border-t border-slate-600">
+            <p>0:00 - Introduction</p>
+            <p>2:15 - Setup Project</p>
+            <p>5:45 - Building the UI</p>
+            <p>11:30 - State Management</p>
+        </div>
     </div>
   </div>
 );
@@ -129,5 +134,3 @@ export default function BeforeAfterSlider() {
     </Card>
   );
 }
-
-    
