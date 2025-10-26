@@ -17,10 +17,12 @@ This leads to lower engagement, reduced knowledge retention, and a missed opport
 
 CodeTube addresses these challenges by providing a suite of tools for creators to enrich video content:
 
+- **AI Course Mentor:** Generate a comprehensive, step-by-step learning plan for any topic, complete with prerequisite videos, key concepts, and a full roadmap of video suggestions from multiple creators.
 - **YouTube Video Import:** Instantly import any YouTube video by pasting a link.
 - **Automatic Chapter Detection:** The app automatically parses the video description to find and import time-stamped chapters.
-- **AI-Powered Summaries:** For each chapter, creators can generate concise, AI-powered summaries of the content, making it easier for students to review.
-- **Interactive Code Snippets:** Add relevant code blocks to each chapter, allowing for easy copying or review.
+- **AI-Powered Summaries & Quizzes:** For each chapter, creators can generate concise, AI-powered summaries and multiple-choice quizzes to reinforce learning.
+- **Interactive Code & Interview Prep:** Add relevant code blocks to each chapter, get AI-powered explanations, and generate technical interview questions based on the content.
+- **Focus Mode:** Customize your workspace by toggling UI elements like the video player, chapter list, or AI tools to eliminate distractions.
 - **GitHub Export:** Creators can export the entire course, including notes and code snippets, to a new GitHub repository with a single click.
 
 This turns a simple video into a structured, interactive course that promotes active learning.
@@ -67,7 +69,7 @@ Our core AI capabilities are delivered through a hybrid approach for the best pe
 
 - **Client-Side First (Chrome Built-in AI)**: For users on supported browsers, the following features run directly on-device for instant results:
     - **"Generate Summary"**: Creates initial notes for a chapter based on the transcript.
-    - **"AI Edit" (Proofreader, Rewriter, Translator)**: Corrects grammar, refines existing notes, or translates them into different languages.
+    - **"Writing Tools" (Proofreader, Rewriter, Translator)**: Corrects grammar, refines existing notes, or translates them into different languages.
 
 - **Server-Side Fallback & Advanced Features (Gemini API via Genkit)**: If the browser's built-in AI is unavailable, the above features seamlessly fall back to our server-side Genkit flows. The following more complex features always run on the server:
     - **Course Mentor & Learning Plan Generator**:
@@ -98,8 +100,10 @@ The following is a typical user journey through the CodeTube application.
 
 5.  **Edit Chapters:** The detected chapters are displayed in a list. The user can:
     - Select a chapter to edit its title, timestamp, and add a code snippet.
-    - Click **"Generate Summary"** to trigger an AI flow. This will use the browser's built-in AI if available, or fall back to a server call to generate a concise summary.
+    - Use the **"Writing Tools"** to generate AI summaries, proofread text, or rewrite notes for clarity.
+    - Use the **"Focus Mode"** to toggle different UI elements and create a distraction-free workspace.
     - Click **"Explain Code"** to get an AI-powered explanation of the code snippet they provided.
+    - Click **"Generate Quiz"** or **"Generate Interview Prep"** to create interactive learning materials.
 
 6.  **Export to GitHub:** Once the course is complete, the user can open the "Export to GitHub" dialog.
     - They provide their GitHub username and a name for the new repository.
