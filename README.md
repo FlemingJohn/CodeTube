@@ -87,20 +87,24 @@ Our core AI capabilities are delivered through a hybrid approach for the best pe
 
 ### Network Resilient UX & Offline Functionality
 
-CodeTube is designed with an "offline-first" mentality to provide a consistent and fast user experience, even on unstable connections. This is achieved through Firebase's powerful client-side capabilities.
+CodeTube is designed with an "offline-first" mentality to provide a consistent and fast user experience, even on unstable connections. This is achieved through a combination of technologies:
+
+- **PWA for Offline Access:** The app is a Progressive Web App (PWA) that caches all necessary pages and assets, allowing you to open and browse the application even without an internet connection.
+- **Firestore Offline Persistence:** All your course and chapter data is automatically saved to a local database (IndexedDB) in your browser. This allows for instant read and write operations, regardless of your network status.
+- **Background Sync:** Changes made while offline are queued and automatically synchronized with the cloud once you reconnect, ensuring data consistency without blocking the UI.
+- **On-Device AI:** For users with supported browsers (like Chrome), many AI writing tools run directly on your device, providing instant feedback without needing to call a server.
 
 #### Available Offline
 You can perform the following actions without an active internet connection after your data has been loaded at least once:
 - **View Courses and Chapters**: All your previously loaded courses and their content are available for browsing.
-- **Edit Content**: You can edit chapter titles, notes, and code snippets.
+- **Edit Content**: You can edit chapter titles, notes, and code snippets. The UI updates instantly.
 - **Manage Courses & Chapters**: You can create new courses, add new chapters, or delete existing ones.
-
-All changes made offline are saved to a local cache and the UI updates **instantly**, without waiting for a server response. The application then automatically synchronizes these changes with the cloud once you reconnect to the internet. This non-blocking approach ensures the app always feels responsive, regardless of network quality.
+- **Use On-Device AI Tools**: In supported browsers, you can use writing tools like proofreading and rewriting completely offline.
 
 #### Requires Internet Connection
 The following features require an active internet connection as they rely on external, real-time APIs:
 - Importing new videos from YouTube.
-- All AI-powered features (generating summaries, quizzes, interview prep, writing tools, etc.).
+- AI features that run on the server (generating quizzes, interview prep, speech-to-text, and fallback for on-device AI).
 - Exporting your course to GitHub.
 - Running code snippets using the interactive code execution feature.
 
