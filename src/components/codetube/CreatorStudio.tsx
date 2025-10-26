@@ -224,6 +224,9 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   const handleCategoryChange = (category: CourseCategory) => {
     onCourseUpdate({ ...course, category });
   }
+  
+  const showEditorPanel = settings.showNotes || settings.showCodeEditor || settings.showQuiz;
+
 
   return (
     <div className="h-screen bg-background">
@@ -386,7 +389,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                 <ResizableHandle withHandle />
                 </>
               )}
-              {settings.showEditor && (
+              {showEditorPanel && (
                 <ResizablePanel defaultSize={50} minSize={30}>
                     <div className="h-full overflow-y-auto">
                     {selectedChapter ? (

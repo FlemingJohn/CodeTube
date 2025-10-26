@@ -13,6 +13,7 @@ export interface FocusModeSettings {
   showCodeEditor: boolean;
   showInterviewPrep: boolean;
   showQuiz: boolean;
+  showNotes: boolean;
 }
 
 // Define the context state
@@ -30,6 +31,7 @@ const defaultSettings: FocusModeSettings = {
   showCodeEditor: true,
   showInterviewPrep: true,
   showQuiz: true,
+  showNotes: true,
 };
 
 // Create the context

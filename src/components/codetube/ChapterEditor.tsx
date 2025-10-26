@@ -451,6 +451,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
           </div>
         </div>
 
+        {settings.showNotes && (
         <Tabs defaultValue="edit" className="w-full">
             <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
                 <Label htmlFor="summary">Chapter Notes</Label>
@@ -548,6 +549,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 </Card>
             </TabsContent>
         </Tabs>
+        )}
 
         {settings.showCodeEditor && (
         <div className="space-y-2">
@@ -727,6 +729,3 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
-
-    
-    
