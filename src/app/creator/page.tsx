@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { collection } from 'firebase/firestore';
 import { addCourse, deleteCourse, updateCourse } from '@/lib/courses';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 export default function CreatorPage() {
   const { user, isUserLoading } = useUser();
@@ -23,13 +24,20 @@ export default function CreatorPage() {
   
   const { data: courses, isLoading: areCoursesLoading } = useCollection<Course>(coursesQuery);
   
-  const [activeCourseId, setActiveCourseId] = useState<string | null>(null);
+  const [activeCourseId, setActiveCourseId] = useLocalStorage<string | null>('activeCourseId', null);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+
+  // When courses load, if there's an active ID but it's not in the course list (e.g., deleted), reset it.
+  useEffect(() => {
+    if (!areCoursesLoading && courses && activeCourseId && !courses.some(c => c.id === activeCourseId)) {
+        setActiveCourseId(null);
+    }
+  }, [areCoursesLoading, courses, activeCourseId, setActiveCourseId]);
 
   if (isUserLoading || !user || areCoursesLoading) {
     return (
@@ -43,13 +51,12 @@ export default function CreatorPage() {
     setActiveCourseId(id);
   };
 
-  const handleNewCourse = () => {
+  const handleNewCourse = async () => {
     if (!user || !firestore) return;
-    // Pass the userId directly when creating the course
     const newCourseData = {
       userId: user.uid,
     };
-    const newCourseId = addCourse(firestore, user.uid, newCourseData);
+    const newCourseId = await addCourse(firestore, user.uid, newCourseData);
     if(newCourseId) {
         setActiveCourseId(newCourseId);
     }
@@ -68,20 +75,6 @@ export default function CreatorPage() {
   };
   
   const activeCourse = courses?.find(c => c.id === activeCourseId);
-
-  // If there's an active course ID but the course isn't found (e.g., after deletion),
-  // go back to the dashboard.
-  if (activeCourseId && !activeCourse && !areCoursesLoading) {
-    setActiveCourseId(null);
-    return (
-      <CourseList 
-        courses={courses || []}
-        onSelectCourse={handleSelectCourse}
-        onNewCourse={handleNewCourse}
-        onDeleteCourse={handleDeleteCourse}
-      />
-    );
-  }
   
   if (!activeCourse) {
     return (
