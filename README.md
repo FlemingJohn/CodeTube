@@ -85,20 +85,20 @@ Our core AI capabilities are delivered through a hybrid approach for the best pe
     - **Code Explainer**: Generates a step-by-step explanation for a given code snippet.
     - **Code Error Fixer**: Analyzes incorrect code and an error message to provide a corrected version.
 
-### Offline Functionality
+### Network Resilient UX & Offline Functionality
 
-CodeTube supports offline functionality for core content management features, thanks to Firebase's persistent client-side cache.
+CodeTube is designed with an "offline-first" mentality to provide a consistent and fast user experience, even on unstable connections. This is achieved through Firebase's powerful client-side capabilities.
 
 #### Available Offline
-You can perform the following actions without an active internet connection after your data has been loaded once:
-- **View Courses and Chapters**: All your previously loaded courses and their content are available for viewing.
+You can perform the following actions without an active internet connection after your data has been loaded at least once:
+- **View Courses and Chapters**: All your previously loaded courses and their content are available for browsing.
 - **Edit Content**: You can edit chapter titles, notes, and code snippets.
-- **Manage Chapters**: Add new chapters or delete existing ones.
+- **Manage Courses & Chapters**: You can create new courses, add new chapters, or delete existing ones.
 
-All changes made offline are saved locally and will automatically sync to the cloud once you reconnect to the internet.
+All changes made offline are saved to a local cache and the UI updates **instantly**, without waiting for a server response. The application then automatically synchronizes these changes with the cloud once you reconnect to the internet. This non-blocking approach ensures the app always feels responsive, regardless of network quality.
 
 #### Requires Internet Connection
-The following features require an active internet connection as they rely on external APIs:
+The following features require an active internet connection as they rely on external, real-time APIs:
 - Importing new videos from YouTube.
 - All AI-powered features (generating summaries, quizzes, interview prep, writing tools, etc.).
 - Exporting your course to GitHub.
