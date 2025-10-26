@@ -468,9 +468,9 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                         <>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <AiEditButton size="sm" variant="ghost" disabled={isAiEditing}>
+                                <Button size="sm" variant="ghost" disabled={isAiEditing}>
                                     <Wand2 className="mr-2" /> Writing Tools
-                                </AiEditButton>
+                                </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-56 p-2">
                                 <div className="grid gap-1">
@@ -552,136 +552,138 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
         )}
 
         {settings.showCodeEditor && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="code">Code Snippet</Label>
-              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                <SelectTrigger className="h-8 w-fit">
-                  <SelectValue placeholder="Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {languageOptions.map(lang => (
-                    <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-                <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={onRunCode}
-                    disabled={isRunCodePending || !localChapter.code}
-                >
-                    {isRunCodePending ? (
+          <>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="code">Code Snippet</Label>
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                    <SelectTrigger className="h-8 w-fit">
+                      <SelectValue placeholder="Language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languageOptions.map(lang => (
+                        <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={onRunCode}
+                        disabled={isRunCodePending || !localChapter.code}
+                    >
+                        {isRunCodePending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Play className="mr-2 h-4 w-4" />
+                        )}
+                        Run Code
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onExplainCode}
+                        disabled={isCodeExplanationPending || !localChapter.code}
+                    >
+                        {isCodeExplanationPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Play className="mr-2 h-4 w-4" />
-                    )}
-                    Run Code
-                </Button>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={onExplainCode}
-                    disabled={isCodeExplanationPending || !localChapter.code}
-                >
-                    {isCodeExplanationPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                    <Wand2 className="mr-2 h-4 w-4" />
-                    )}
-                    Explain Code
-                </Button>
+                        ) : (
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        )}
+                        Explain Code
+                    </Button>
+                </div>
+              </div>
+              <Textarea
+                id="code"
+                name="code"
+                value={localChapter.code}
+                onChange={handleChange}
+                placeholder="Click 'Find Code' to get a snippet from the transcript, or paste your own."
+                rows={8}
+                className="font-code text-sm"
+              />
             </div>
-          </div>
-          <Textarea
-            id="code"
-            name="code"
-            value={localChapter.code}
-            onChange={handleChange}
-            placeholder="Click 'Find Code' to get a snippet from the transcript, or paste your own."
-            rows={8}
-            className="font-code text-sm"
-          />
-        </div>
-        )}
 
-        {isRunCodePending && (
-            <div className="space-y-2">
-                <Label>Code Output</Label>
-                <Card className="bg-muted/40">
-                    <CardContent className="p-4 font-code text-sm flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin"/>
-                        <span>Running code...</span>
-                    </CardContent>
-                </Card>
-            </div>
-        )}
+            {isRunCodePending && (
+                <div className="space-y-2">
+                    <Label>Code Output</Label>
+                    <Card className="bg-muted/40">
+                        <CardContent className="p-4 font-code text-sm flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin"/>
+                            <span>Running code...</span>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
-        {codeOutput && (
-            <div className="space-y-2">
-                <Label>Code Output</Label>
-                <Card className={cn("font-code text-sm", hasError ? "bg-destructive/10 border-destructive/50" : "bg-muted/40")}>
-                    <CardHeader className="p-4 flex flex-row items-center justify-between">
-                      <CardTitle className={cn("text-base flex items-center gap-2", hasError ? "text-destructive" : "")}>
-                        {hasError && <ShieldAlert className="h-5 w-5" />}
-                        Status: {codeOutput.status.description}
-                      </CardTitle>
-                      {hasError && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={onFixCode}
-                            disabled={isFixCodePending}
-                          >
-                            {isFixCodePending ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                              <Wand2 className="mr-2 h-4 w-4" />
-                            )}
-                            Fix Error with AI
-                          </Button>
-                      )}
-                    </CardHeader>
-                    {(codeOutput.stdout || codeOutput.stderr || codeOutput.compile_output) && (
-                      <CardContent className="p-4 pt-0">
-                          <pre className="bg-background/50 p-3 rounded-md whitespace-pre-wrap">
-                              {codeOutput.stdout || codeOutput.stderr || codeOutput.compile_output}
-                          </pre>
-                      </CardContent>
-                    )}
-                </Card>
-            </div>
-        )}
-        
-        {fixExplanation && (
-             <div className="space-y-2">
+            {codeOutput && (
+                <div className="space-y-2">
+                    <Label>Code Output</Label>
+                    <Card className={cn("font-code text-sm", hasError ? "bg-destructive/10 border-destructive/50" : "bg-muted/40")}>
+                        <CardHeader className="p-4 flex flex-row items-center justify-between">
+                          <CardTitle className={cn("text-base flex items-center gap-2", hasError ? "text-destructive" : "")}>
+                            {hasError && <ShieldAlert className="h-5 w-5" />}
+                            Status: {codeOutput.status.description}
+                          </CardTitle>
+                          {hasError && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={onFixCode}
+                                disabled={isFixCodePending}
+                              >
+                                {isFixCodePending ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Wand2 className="mr-2 h-4 w-4" />
+                                )}
+                                Fix Error with AI
+                              </Button>
+                          )}
+                        </CardHeader>
+                        {(codeOutput.stdout || codeOutput.stderr || codeOutput.compile_output) && (
+                          <CardContent className="p-4 pt-0">
+                              <pre className="bg-background/50 p-3 rounded-md whitespace-pre-wrap">
+                                  {codeOutput.stdout || codeOutput.stderr || codeOutput.compile_output}
+                              </pre>
+                          </CardContent>
+                        )}
+                    </Card>
+                </div>
+            )}
+            
+            {fixExplanation && (
+                 <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                    <Bot className="h-4 w-4" />
+                    AI Fix Explanation
+                    </Label>
+                    <Card className="bg-blue-500/10 border-blue-500/30">
+                        <CardContent className="p-4">
+                            <FormattedText text={fixExplanation} />
+                        </CardContent>
+                    </Card>
+                 </div>
+            )}
+
+            {localChapter.codeExplanation && (
+               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
-                <Bot className="h-4 w-4" />
-                AI Fix Explanation
+                  <Bot className="h-4 w-4" />
+                  AI-Powered Code Explanation
                 </Label>
-                <Card className="bg-blue-500/10 border-blue-500/30">
-                    <CardContent className="p-4">
-                        <FormattedText text={fixExplanation} />
-                    </CardContent>
-                </Card>
-             </div>
-        )}
-
-        {localChapter.codeExplanation && (
-           <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Bot className="h-4 w-4" />
-              AI-Powered Code Explanation
-            </Label>
-             <Card className="bg-muted/40">
-               <CardContent className="p-4">
-                 <FormattedText text={localChapter.codeExplanation} />
-               </CardContent>
-             </Card>
-           </div>
+                 <Card className="bg-muted/40">
+                   <CardContent className="p-4">
+                     <FormattedText text={localChapter.codeExplanation} />
+                   </CardContent>
+                 </Card>
+               </div>
+            )}
+          </>
         )}
 
         {settings.showQuiz && (
