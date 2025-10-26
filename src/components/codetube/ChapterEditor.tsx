@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useState, useTransition, useEffect, useRef } from 'react';
@@ -9,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, FileText } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, FileText, Mic, Square } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary, handleSpeechToText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -22,7 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useChromeAi } from '@/hooks/useChromeAi';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { useFocusMode } from '@/hooks/use-focus-mode';
+import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
 
 
 interface ChapterEditorProps {
@@ -33,6 +32,13 @@ interface ChapterEditorProps {
 
 const TONES = ['Explanatory', 'Concise', 'Beginner-Friendly', 'Technical', 'Formal'];
 const LANGUAGES = ['Spanish', 'French', 'German', 'Japanese', 'Mandarin'];
+
+enum RecordingState {
+    Idle,
+    RequestingPermission,
+    Recording,
+    Transcribing,
+}
 
 const FormattedText = ({ text }: { text: string }) => {
     const markdownToHtml = (markdown: string) => {
@@ -136,12 +142,15 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
   const [isRunCodePending, startRunCodeTransition] = useTransition();
   const [isFixCodePending, startFixCodeTransition] = useTransition();
+  const [recordingState, setRecordingState] = useState<RecordingState>(RecordingState.Idle);
   const [codeOutput, setCodeOutput] = useState<RunCodeOutput | null>(null);
   const [fixExplanation, setFixExplanation] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
   const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
   const { aiAvailable, proofread, rewrite, write, summarize, translate } = useChromeAi();
 
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     setLocalChapter(chapter);
@@ -397,6 +406,52 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     });
   };
 
+  const startRecording = async () => {
+    setRecordingState(RecordingState.RequestingPermission);
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        audioChunksRef.current = [];
+
+        mediaRecorderRef.current.ondataavailable = (event) => {
+            audioChunksRef.current.push(event.data);
+        };
+
+        mediaRecorderRef.current.onstop = async () => {
+            setRecordingState(RecordingState.Transcribing);
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+                const base64Audio = reader.result as string;
+                const result = await handleSpeechToText({ audioDataUri: base64Audio });
+                if (result.error) {
+                    toast({ variant: 'destructive', title: 'Transcription Error', description: result.error });
+                } else {
+                    const currentSummary = localChapter.summary;
+                    const newText = result.text || '';
+                    const updatedSummary = currentSummary ? `${currentSummary}\n${newText}` : newText;
+                    handleSummaryChange(updatedSummary);
+                    toast({ title: 'Transcription Added', description: 'Your recorded notes have been added.' });
+                }
+                setRecordingState(RecordingState.Idle);
+            };
+        };
+
+        mediaRecorderRef.current.start();
+        setRecordingState(RecordingState.Recording);
+    } catch (err) {
+        toast({ variant: 'destructive', title: 'Microphone Access Denied', description: 'Please allow microphone access in your browser settings.' });
+        setRecordingState(RecordingState.Idle);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+    }
+  };
+
   const AiEditButton = ({children, ...props}: React.ComponentProps<typeof Button>) => {
     return (
         <TooltipProvider>
@@ -463,14 +518,27 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                     <TabsTrigger value="preview" className='h-6'>Preview</TabsTrigger>
                 </TabsList>
                 {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter.transcript}>
+                    {recordingState === RecordingState.Recording ? (
+                        <Button size="sm" variant="destructive" onClick={stopRecording}>
+                            <Square className="mr-2"/> Stop Recording
+                        </Button>
+                    ) : (
+                         <Button size="sm" variant="outline" onClick={startRecording} disabled={recordingState !== RecordingState.Idle}>
+                            {recordingState === RecordingState.Transcribing || recordingState === RecordingState.RequestingPermission
+                                ? <Loader2 className="mr-2 animate-spin"/>
+                                : <Mic className="mr-2"/>
+                            }
+                            Record Note
+                        </Button>
+                    )}
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter.transcript || recordingState !== RecordingState.Idle}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
                     {localChapter.summary && (
                         <>
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button size="sm" variant="ghost" disabled={isAiEditing}>
+                                <Button size="sm" variant="ghost" disabled={isAiEditing || recordingState !== RecordingState.Idle}>
                                     <Wand2 className="mr-2" /> Writing Tools
                                 </Button>
                             </PopoverTrigger>
@@ -501,7 +569,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                         </Popover>
                          <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <AiEditButton size="sm" variant="ghost" disabled={isAiEditing}>
+                                <AiEditButton size="sm" variant="ghost" disabled={isAiEditing || recordingState !== RecordingState.Idle}>
                                     <Languages className="mr-2" /> Translate
                                 </AiEditButton>
                             </DropdownMenuTrigger>
@@ -733,3 +801,5 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
+
+    
