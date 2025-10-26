@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useRef } from 'react';
+import { useState, useTransition, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, ArrowLeft, Youtube, Sparkles, Lightbulb, BookCopy, GitBranch, ChevronsRight, Award, Wand2 } from 'lucide-react';
@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { handleGenerateLearningPlan, getYoutubeChapters, handleCompareVideos } from '@/app/actions';
 import Image from 'next/image';
 import { Course } from '@/lib/types';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser, useFirestore } from '@/firebase';
 import { addCourse } from '@/lib/courses';
 import { LearningPlan, VideoSuggestion } from '@/ai/flows/generate-learning-plan';
@@ -38,13 +38,15 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 export default function CourseMentorPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useUser();
   const firestore = useFirestore();
   const [isGenerating, startGenerationTransition] = useTransition();
   const [isImporting, startImportTransition] = useTransition();
 
-  const [topic, setTopic] = useLocalStorage('course-mentor-topic', '');
+  const [topic, setTopic] = useState('');
   const [learningPlan, setLearningPlan] = useState<LearningPlan | null>(null);
+  const [recentTopics, setRecentTopics] = useLocalStorage<string[]>('course-mentor-history', []);
   
   const [videosToCompare, setVideosToCompare] = useState<{[step: number]: string[]}>({});
   const [comparisonResults, setComparisonResults] = useState<{[step: number]: string}>({});
@@ -53,6 +55,21 @@ export default function CourseMentorPage() {
   const { aiAvailable, improvePrompt } = useChromeAi();
   const [isImprovingPrompt, startImprovePromptTransition] = useTransition();
 
+  useEffect(() => {
+    const topicFromQuery = searchParams.get('topic');
+    if (topicFromQuery) {
+        setTopic(topicFromQuery);
+    }
+  }, [searchParams]);
+
+  const addTopicToHistory = (newTopic: string) => {
+    setRecentTopics(prev => {
+        const lowerCaseTopic = newTopic.toLowerCase();
+        const filtered = prev.filter(t => t.toLowerCase() !== lowerCaseTopic);
+        const newHistory = [newTopic, ...filtered];
+        return newHistory.slice(0, 5); // Keep only the last 5 searches
+    });
+  }
 
   const handleGenerate = () => {
     if (!topic) {
@@ -62,6 +79,9 @@ export default function CourseMentorPage() {
       });
       return;
     }
+
+    addTopicToHistory(topic);
+
     startGenerationTransition(async () => {
       setLearningPlan(null);
       setComparisonResults({});

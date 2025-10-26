@@ -15,7 +15,7 @@ import {
   SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, BookUser, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, BookUser, RefreshCw, History } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
@@ -40,6 +40,7 @@ import { updateCourse } from '@/lib/courses';
 import Link from 'next/link';
 import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
 import FocusModeToggle from './FocusModeToggle';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface CreatorStudioProps {
     course: Course;
@@ -95,6 +96,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   const firestore = useFirestore();
   const router = useRouter();
   const { settings } = useFocusMode();
+  const [recentTopics] = useLocalStorage<string[]>('course-mentor-history', []);
 
 
   const [course, setCourse] = useState(initialCourse);
@@ -274,6 +276,28 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                 playingChapterId={playingChapterId}
                 onChapterSelect={handleChapterSelect}
               />
+
+              {recentTopics.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-1 text-sm font-medium text-muted-foreground">
+                      <History className="w-5 h-5"/>
+                      <span>Recent Searches</span>
+                  </div>
+                  <ScrollArea className="h-24">
+                      <div className="space-y-1 pr-2">
+                          {recentTopics.map((topic, index) => (
+                              <Link 
+                                  key={index}
+                                  href={`/creator/course-mentor?topic=${encodeURIComponent(topic)}`}
+                                  className="block text-sm p-2 rounded-md hover:bg-accent truncate"
+                              >
+                                  {topic}
+                              </Link>
+                          ))}
+                      </div>
+                  </ScrollArea>
+                </div>
+              )}
 
               <div className="mt-auto">
                 <SidebarMenu>
