@@ -1,12 +1,12 @@
 
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Grip, Play, Sparkles, Code, ThumbsUp, ThumbsDown, Share2, Download } from 'lucide-react';
+import { Grip, Play, Sparkles, Code, ThumbsUp, ThumbsDown, Share2 } from 'lucide-react';
 
 const BeforeView = () => (
-  <div className="w-full h-full bg-gray-100 dark:bg-zinc-900 rounded-lg flex flex-col text-gray-800 dark:text-gray-200 overflow-hidden">
+  <div className="w-full h-full bg-gray-100 dark:bg-zinc-950 rounded-lg flex flex-col text-gray-800 dark:text-gray-200 overflow-hidden">
     {/* Mock Video Player */}
     <div className="w-full aspect-video bg-black flex items-center justify-center shrink-0">
       <Play className="w-16 h-16 text-white/60 hover:text-white/80 transition-colors" />
@@ -33,7 +33,7 @@ const BeforeView = () => (
           </div>
       </div>
 
-      <div className="bg-gray-200/70 dark:bg-zinc-800/70 p-3 rounded-lg text-sm space-y-2">
+      <div className="bg-gray-200/70 dark:bg-zinc-900 p-3 rounded-lg text-sm space-y-2">
           <p className='font-semibold'>3M views  1 year ago</p>
           <p>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
           <div className="font-mono text-xs space-y-1">
@@ -98,11 +98,8 @@ export default function BeforeAfterSlider() {
     }
   };
   
-  const handleMouseDown = () => setIsDragging(true);
-  
-  const handleMouseUp = () => {
-    if (isDragging) setIsDragging(false);
-  };
+  const handleInteractionStart = () => setIsDragging(true);
+  const handleInteractionEnd = () => setIsDragging(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging) return;
@@ -114,17 +111,23 @@ export default function BeforeAfterSlider() {
     handleMove(e.touches[0].clientX);
   };
 
+  useEffect(() => {
+    const handleMouseUp = () => {
+      if (isDragging) handleInteractionEnd();
+    };
+
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => window.removeEventListener('mouseup', handleMouseUp);
+  }, [isDragging]);
+
+
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-2xl">
       <CardContent className="p-2">
         <div
           ref={containerRef}
           className="relative w-full aspect-video select-none overflow-hidden rounded-md"
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
           onMouseMove={handleMouseMove}
-          onTouchEnd={handleMouseUp}
-          onTouchCancel={handleMouseUp}
           onTouchMove={handleTouchMove}
         >
           <div className="absolute inset-0">
@@ -139,14 +142,14 @@ export default function BeforeAfterSlider() {
           <div
             className="absolute top-0 bottom-0 w-1 bg-white mix-blend-difference cursor-ew-resize"
             style={{ left: `calc(${sliderPosition}% - 2px)` }}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleMouseDown}
+            onMouseDown={handleInteractionStart}
+            onTouchStart={handleInteractionStart}
           ></div>
           <div
             className="absolute top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg cursor-ew-resize flex items-center justify-center"
             style={{ left: `calc(${sliderPosition}% - 20px)` }}
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleMouseDown}
+            onMouseDown={handleInteractionStart}
+            onTouchStart={handleInteractionStart}
           >
              <Grip className="w-5 h-5 text-slate-600" />
           </div>
