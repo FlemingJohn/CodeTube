@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect, useTransition } from 'react';
@@ -327,7 +328,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                             </div>
                         </div>
                         )}
-                        {settings.showAiTools && selectedChapter && (
+                        {settings.showInterviewPrep && selectedChapter && (
                         <>
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between">

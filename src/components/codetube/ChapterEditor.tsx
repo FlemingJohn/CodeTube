@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useTransition, useEffect, useRef } from 'react';
@@ -681,44 +682,46 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
            </div>
         )}
 
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-2 text-lg font-headline">
-                    <HelpCircle className="h-5 w-5" />
-                    Knowledge Check
-                </Label>
-                <div className="flex items-center gap-4">
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={onGenerateQuiz}
-                        disabled={isQuizGenerationPending || !localChapter.transcript}
-                    >
-                        {isQuizGenerationPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Wand2 className="mr-2 h-4 w-4" />
-                        )}
-                        Generate Quiz
-                    </Button>
-                </div>
-            </div>
-
-            {localChapter.quiz && localChapter.quiz.length > 0 ? (
-                <ScrollArea className="h-96 pr-4">
-                    <div className="space-y-4">
-                        {localChapter.quiz.map((q, index) => (
-                            <QuizCard key={index} quiz={q} index={index} />
-                        ))}
+        {settings.showQuiz && (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2 text-lg font-headline">
+                        <HelpCircle className="h-5 w-5" />
+                        Knowledge Check
+                    </Label>
+                    <div className="flex items-center gap-4">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={onGenerateQuiz}
+                            disabled={isQuizGenerationPending || !localChapter.transcript}
+                        >
+                            {isQuizGenerationPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Wand2 className="mr-2 h-4 w-4" />
+                            )}
+                            Generate Quiz
+                        </Button>
                     </div>
-                </ScrollArea>
-            ) : (
-                <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
-                    <p>No quiz for this chapter yet.</p>
-                    <p>Click "Generate Quiz" to create one.</p>
                 </div>
-            )}
-        </div>
+
+                {localChapter.quiz && localChapter.quiz.length > 0 ? (
+                    <ScrollArea className="h-96 pr-4">
+                        <div className="space-y-4">
+                            {localChapter.quiz.map((q, index) => (
+                                <QuizCard key={index} quiz={q} index={index} />
+                            ))}
+                        </div>
+                    </ScrollArea>
+                ) : (
+                    <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                        <p>No quiz for this chapter yet.</p>
+                        <p>Click "Generate Quiz" to create one.</p>
+                    </div>
+                )}
+            </div>
+        )}
 
       </CardContent>
     </Card>

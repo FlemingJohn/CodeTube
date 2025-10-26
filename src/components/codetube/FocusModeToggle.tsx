@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { Eye, Video, Edit, PanelLeft, Bot, Code } from 'lucide-react';
+import { Eye, Video, Edit, PanelLeft, Bot, Code, HelpCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Label } from '../ui/label';
@@ -14,9 +15,10 @@ export default function FocusModeToggle() {
   const focusOptions = [
     { id: 'showSidebar', label: 'Chapter List', icon: <PanelLeft className="w-4 h-4" /> },
     { id: 'showVideo', label: 'Video Player', icon: <Video className="w-4 h-4" /> },
-    { id: 'showAiTools', label: 'AI Tools', icon: <Bot className="w-4 h-4" /> },
     { id: 'showEditor', label: 'Chapter Editor', icon: <Edit className="w-4 h-4" /> },
     { id: 'showCodeEditor', label: 'Code Editor', icon: <Code className="w-4 h-4" /> },
+    { id: 'showInterviewPrep', label: 'Interview Prep', icon: <Bot className="w-4 h-4" /> },
+    { id: 'showQuiz', label: 'Quiz', icon: <HelpCircle className="w-4 h-4" /> },
   ] as const;
 
   return (
