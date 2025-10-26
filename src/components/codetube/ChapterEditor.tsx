@@ -465,7 +465,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                         <Popover>
                             <PopoverTrigger asChild>
                                 <AiEditButton size="sm" variant="ghost" disabled={isAiEditing}>
-                                    <Wand2 className="mr-2" /> AI Edit
+                                    <Wand2 className="mr-2" /> Writing Tools
                                 </AiEditButton>
                             </PopoverTrigger>
                             <PopoverContent className="w-56 p-2">
@@ -722,4 +722,5 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
   );
 }
 
+    
     
