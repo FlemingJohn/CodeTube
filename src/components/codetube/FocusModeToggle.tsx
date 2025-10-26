@@ -21,9 +21,9 @@ export default function FocusModeToggle() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Eye className="h-5 w-5" />
-          <span className="sr-only">Focus Mode</span>
+        <Button variant="ghost" size="sm">
+          <Eye className="mr-2 h-4 w-4" />
+          Focus Mode
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64" align="end">
