@@ -12,13 +12,12 @@ const BeforeView = () => (
     </div>
     <div className='space-y-2 overflow-y-auto pr-2'>
         <h3 className="text-lg font-bold">My Awesome Tutorial</h3>
-        <p className='text-sm text-slate-300'>In this video, we will build an amazing app from scratch...</p>
+        <p className='text-sm text-slate-300'>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
         <div className="text-sm text-slate-400 pt-3 border-t border-slate-600/50">
-            <p className="font-semibold mb-1">Chapters:</p>
-            <p>0:00 - Introduction</p>
-            <p>2:15 - Setup Project</p>
-            <p>5:45 - Building the UI</p>
-            <p>11:30 - State Management</p>
+            <p className="text-sky-300">0:00 - Introduction</p>
+            <p className="text-sky-300">2:15 - Setup Project</p>
+            <p className="text-sky-300">5:45 - Building the UI</p>
+            <p className="text-sky-300">11:30 - State Management</p>
         </div>
     </div>
   </div>
