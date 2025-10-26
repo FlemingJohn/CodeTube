@@ -4,7 +4,7 @@
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -33,11 +33,24 @@ export function initializeFirebase() {
   return getSdks(getApp());
 }
 
+let persistenceEnabled = false;
 export function getSdks(firebaseApp: FirebaseApp) {
+  const firestore = getFirestore(firebaseApp);
+  if (!persistenceEnabled) {
+      enableIndexedDbPersistence(firestore).catch((err) => {
+          if (err.code == 'failed-precondition') {
+              console.warn("Firestore persistence failed. Multiple tabs open?");
+          } else if (err.code == 'unimplemented') {
+              console.warn("Firestore persistence not available in this browser.");
+          }
+      });
+      persistenceEnabled = true;
+  }
+
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+    firestore: firestore
   };
 }
 

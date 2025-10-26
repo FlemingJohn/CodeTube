@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
-import { FocusModeProvider } from '@/hooks/use-focus-mode';
+import { FocusModeProvider } from '@/hooks/use-focus-mode.tsx';
+import NetworkStatusIndicator from '@/components/codetube/NetworkStatusIndicator';
 
 export const metadata: Metadata = {
   title: {
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
   },
   description: 'Turn any YouTube video into an interactive course in minutes. Effortlessly create engaging learning experiences with AI-powered summaries and code snippets.',
   keywords: ['YouTube to course', 'interactive tutorial', 'coding education', 'AI course creation', 'learn to code'],
+  manifest: '/manifest.json',
   openGraph: {
     title: 'CodeTube | Turn YouTube Videos into Interactive Courses',
     description: 'Transform passive YouTube tutorials into active learning experiences with AI-powered notes, code snippets, and GitHub integration.',
@@ -117,7 +119,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <link rel="icon" href="data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='red' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z'/%3e%3cpath d='m6.2 5.3 3.1 3.9'/%3e%3cpath d='m12.4 3.6 3.1 3.9'/%3e%3cpath d='M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z'/%3e%3c/svg%3e" />
+        <link rel="icon" href="/favicon.ico" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -126,6 +128,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <FocusModeProvider>
+            <NetworkStatusIndicator />
             {children}
           </FocusModeProvider>
           <Toaster />
