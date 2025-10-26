@@ -21,6 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useChromeAi } from '@/hooks/useChromeAi';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { useFocusMode } from '@/hooks/use-focus-mode';
 
 
 interface ChapterEditorProps {
@@ -128,6 +129,7 @@ const languageOptions = [
 export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
+  const { settings } = useFocusMode();
   const [isAiEditing, startAiEditTransition] = useTransition();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
@@ -546,7 +548,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
             </TabsContent>
         </Tabs>
 
-
+        {settings.showCodeEditor && (
         <div className="space-y-2">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
@@ -601,6 +603,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
             className="font-code text-sm"
           />
         </div>
+        )}
 
         {isRunCodePending && (
             <div className="space-y-2">

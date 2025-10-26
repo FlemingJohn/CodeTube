@@ -10,6 +10,7 @@ export interface FocusModeSettings {
   showVideo: boolean;
   showAiTools: boolean;
   showEditor: boolean;
+  showCodeEditor: boolean;
 }
 
 // Define the context state
@@ -25,6 +26,7 @@ const defaultSettings: FocusModeSettings = {
   showVideo: true,
   showAiTools: true,
   showEditor: true,
+  showCodeEditor: true,
 };
 
 // Create the context
