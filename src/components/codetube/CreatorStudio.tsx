@@ -37,6 +37,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { ScrollArea } from '../ui/scroll-area';
 import { updateCourse } from '@/lib/courses';
 import Link from 'next/link';
+import { useFocusMode } from '@/hooks/use-focus-mode';
+import FocusModeToggle from './FocusModeToggle';
 
 interface CreatorStudioProps {
     course: Course;
@@ -91,6 +93,8 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
+  const { settings } = useFocusMode();
+
 
   const [course, setCourse] = useState(initialCourse);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
@@ -223,7 +227,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   return (
     <div className="h-screen bg-background">
       <SidebarProvider
-        defaultOpen={true}
+        defaultOpen={settings.showSidebar}
         collapsible="icon"
       >
         <Sidebar>
@@ -287,6 +291,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
             <header className="flex items-center justify-between p-2 border-b">
                 <SidebarTrigger />
                 <div className="flex items-center gap-2">
+                    <FocusModeToggle />
                     <Button variant="ghost" size="sm" onClick={onBackToDashboard}>
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       My Courses
@@ -307,94 +312,100 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
             </header>
           <main className="flex-1 bg-muted/20 overflow-auto">
             <ResizablePanelGroup direction="horizontal" className="h-full">
-              <ResizablePanel defaultSize={50}>
-                <ScrollArea className="h-full">
-                  <div className="flex flex-col gap-6 p-4 md:p-6">
-                    {course.videoId ? (
-                      <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
-                    ) : (
-                      <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
-                        <div className="text-center text-muted-foreground">
-                          <h2 className="text-xl font-semibold">No Video Imported</h2>
-                          <p>Click the "Search" button to find a video.</p>
+              {settings.showVideo && (
+                <>
+                <ResizablePanel defaultSize={50} minSize={30}>
+                    <ScrollArea className="h-full">
+                    <div className="flex flex-col gap-6 p-4 md:p-6">
+                        {course.videoId ? (
+                        <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
+                        ) : (
+                        <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
+                            <div className="text-center text-muted-foreground">
+                            <h2 className="text-xl font-semibold">No Video Imported</h2>
+                            <p>Click the "Search" button to find a video.</p>
+                            </div>
                         </div>
-                      </div>
-                    )}
-                    {selectedChapter && (
-                      <>
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                    <Bot className="w-6 h-6 text-primary" />
-                                    Interview Prep
-                                </CardTitle>
-                                <div className="flex items-center gap-2">
-                                  {selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 && (
-                                    <Button size="sm" variant="outline" onClick={() => onGenerateInterviewQuestions(true)} disabled={isInterviewPending}>
-                                      <RefreshCw className="mr-2"/> Regenerate
+                        )}
+                        {settings.showAiTools && selectedChapter && (
+                        <>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between">
+                                    <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                                        <Bot className="w-6 h-6 text-primary" />
+                                        Interview Prep
+                                    </CardTitle>
+                                    <div className="flex items-center gap-2">
+                                    {selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 && (
+                                        <Button size="sm" variant="outline" onClick={() => onGenerateInterviewQuestions(true)} disabled={isInterviewPending}>
+                                        <RefreshCw className="mr-2"/> Regenerate
+                                        </Button>
+                                    )}
+                                    <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending}>
+                                        {isInterviewPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
+                                        Generate
                                     </Button>
-                                  )}
-                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending}>
-                                    {isInterviewPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
-                                    Generate
-                                  </Button>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                {isInterviewPending && (!selectedChapter.interviewQuestions || selectedChapter.interviewQuestions.length === 0) ? (
-                                    <div className="text-center text-sm text-muted-foreground py-8">
-                                        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2"/>
-                                        <p>Generating interview questions...</p>
                                     </div>
-                                ) : selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 ? (
-                                    <Accordion type="single" collapsible className="w-full space-y-2">
-                                        {selectedChapter.interviewQuestions.map((item, index) => (
-                                            <AccordionItem key={index} value={`item-${index}`} className="bg-background/50 rounded-md border px-4">
-                                                <AccordionTrigger className="text-left hover:no-underline">
-                                                    <div className="flex items-start gap-4">
-                                                        <span className="text-lg font-bold text-primary mt-1">{index + 1}.</span>
-                                                        <span className="flex-1">{item.question}</span>
-                                                    </div>
-                                                </AccordionTrigger>
-                                                <AccordionContent className="text-base prose prose-sm dark:prose-invert max-w-none pt-2">
-                                                    <FormattedAnswer text={item.answer} />
-                                                </AccordionContent>
-                                            </AccordionItem>
-                                        ))}
-                                    </Accordion>
-                                ) : (
-                                <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
-                                    <p>No interview questions for this chapter yet.</p>
-                                    <p>Click "Generate" to create some.</p>
-                                </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                      </>
-                    )}
-                  </div>
-                </ScrollArea>
-              </ResizablePanel>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={50}>
-                <div className="h-full overflow-y-auto">
-                  {selectedChapter ? (
-                    <ChapterEditor
-                      key={selectedChapter.id}
-                      chapter={selectedChapter}
-                      onUpdateChapter={handleUpdateChapter}
-                      courseTitle={course.title}
-                    />
-                  ) : (
-                    <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background m-4">
-                      <div className="text-center text-muted-foreground">
-                        <h2 className="text-xl font-semibold">No Chapter Selected</h2>
-                        <p>Select a chapter from the list to edit its details.</p>
-                      </div>
+                                </CardHeader>
+                                <CardContent>
+                                    {isInterviewPending && (!selectedChapter.interviewQuestions || selectedChapter.interviewQuestions.length === 0) ? (
+                                        <div className="text-center text-sm text-muted-foreground py-8">
+                                            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2"/>
+                                            <p>Generating interview questions...</p>
+                                        </div>
+                                    ) : selectedChapter.interviewQuestions && selectedChapter.interviewQuestions.length > 0 ? (
+                                        <Accordion type="single" collapsible className="w-full space-y-2">
+                                            {selectedChapter.interviewQuestions.map((item, index) => (
+                                                <AccordionItem key={index} value={`item-${index}`} className="bg-background/50 rounded-md border px-4">
+                                                    <AccordionTrigger className="text-left hover:no-underline">
+                                                        <div className="flex items-start gap-4">
+                                                            <span className="text-lg font-bold text-primary mt-1">{index + 1}.</span>
+                                                            <span className="flex-1">{item.question}</span>
+                                                        </div>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="text-base prose prose-sm dark:prose-invert max-w-none pt-2">
+                                                        <FormattedAnswer text={item.answer} />
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            ))}
+                                        </Accordion>
+                                    ) : (
+                                    <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
+                                        <p>No interview questions for this chapter yet.</p>
+                                        <p>Click "Generate" to create some.</p>
+                                    </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </>
+                        )}
                     </div>
-                  )}
-                </div>
-              </ResizablePanel>
+                    </ScrollArea>
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                </>
+              )}
+              {settings.showEditor && (
+                <ResizablePanel defaultSize={50} minSize={30}>
+                    <div className="h-full overflow-y-auto">
+                    {selectedChapter ? (
+                        <ChapterEditor
+                        key={selectedChapter.id}
+                        chapter={selectedChapter}
+                        onUpdateChapter={handleUpdateChapter}
+                        courseTitle={course.title}
+                        />
+                    ) : (
+                        <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background m-4">
+                        <div className="text-center text-muted-foreground">
+                            <h2 className="text-xl font-semibold">No Chapter Selected</h2>
+                            <p>Select a chapter from the list to edit its details.</p>
+                        </div>
+                        </div>
+                    )}
+                    </div>
+                </ResizablePanel>
+              )}
             </ResizablePanelGroup>
           </main>
         </div>
