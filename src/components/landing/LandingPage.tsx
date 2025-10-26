@@ -23,6 +23,7 @@ import {
   Github,
   Terminal,
   BookUser,
+  Eye,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -64,17 +65,17 @@ const features = [
     description:
       'Generate concise, AI-powered summaries and notes for each chapter to enhance learning.',
   },
-   {
+  {
     icon: <HelpCircle className="h-10 w-10 text-primary" />,
     title: 'AI-Generated Quizzes',
     description:
       'Automatically generate multi-question quizzes for each chapter to test understanding and reinforce concepts.',
   },
   {
-    icon: <Briefcase className="h-10 w-10 text-primary" />,
-    title: 'Interview Prep',
+    icon: <Eye className="h-10 w-10 text-primary" />,
+    title: 'Focus Mode',
     description:
-      'Get AI-generated interview questions based on the course content to prepare for technical screenings.',
+      'Customize your workspace by toggling UI elements like the code editor, quiz, and notes to eliminate distractions.',
   },
   {
     icon: <Mic className="h-10 w-10 text-primary" />,
