@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
@@ -7,13 +6,10 @@ import { useLocalStorage } from './use-local-storage';
 
 // Define the shape of the settings
 export interface FocusModeSettings {
-  showSidebar: boolean;
-  showVideo: boolean;
-  showEditor: boolean;
-  showCodeEditor: boolean;
   showInterviewPrep: boolean;
   showQuiz: boolean;
   showNotes: boolean;
+  showCodeEditor: boolean;
 }
 
 // Define the context state
@@ -25,13 +21,10 @@ interface FocusModeContextState {
 
 // Default values for the settings
 const defaultSettings: FocusModeSettings = {
-  showSidebar: true,
-  showVideo: true,
-  showEditor: true,
-  showCodeEditor: true,
   showInterviewPrep: true,
   showQuiz: true,
   showNotes: true,
+  showCodeEditor: true,
 };
 
 // Create the context
