@@ -6,21 +6,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Grip, Play, Sparkles, Code } from 'lucide-react';
 
 const BeforeView = () => (
-  <div className="w-full h-full bg-gray-100 dark:bg-slate-900 rounded-lg flex flex-col p-4 text-gray-800 dark:text-white overflow-hidden">
+  <div className="w-full h-full bg-gray-100 dark:bg-gray-900 rounded-lg flex flex-col p-4 text-gray-800 dark:text-white overflow-hidden">
     {/* Mock Video Player */}
     <div className="w-full aspect-video bg-black rounded-md flex items-center justify-center mb-4 shrink-0 shadow-lg">
-        <Play className="w-16 h-16 text-white/70 hover:text-white/90 transition-colors" />
+        <Play className="w-16 h-16 text-white/70" />
     </div>
     {/* Mock Video Description */}
     <div className='space-y-3 overflow-y-auto pr-2 text-sm flex-grow'>
         <h3 className="text-lg font-bold text-gray-900 dark:text-white">My Awesome Tutorial</h3>
-        <div className="bg-gray-200/70 dark:bg-slate-800 p-3 rounded-md">
-            <p className='text-gray-700 dark:text-slate-300'>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
-            <div className="mt-3 pt-3 border-t border-gray-300 dark:border-slate-700">
-                <p className="text-blue-600 dark:text-sky-400 font-mono">0:00 - Introduction</p>
-                <p className="text-blue-600 dark:text-sky-400 font-mono">2:15 - Setup Project</p>
-                <p className="text-blue-600 dark:text-sky-400 font-mono">5:45 - Building the UI</p>
-                <p className="text-blue-600 dark:text-sky-400 font-mono">11:30 - State Management</p>
+        <div className="bg-gray-200/70 dark:bg-gray-800 p-3 rounded-md">
+            <p className='text-gray-700 dark:text-gray-300'>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
+            <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-700">
+                <p className="text-blue-600 dark:text-blue-400 font-mono">0:00 - Introduction</p>
+                <p className="text-blue-600 dark:text-blue-400 font-mono">2:15 - Setup Project</p>
+                <p className="text-blue-600 dark:text-blue-400 font-mono">5:45 - Building the UI</p>
+                <p className="text-blue-600 dark:text-blue-400 font-mono">11:30 - State Management</p>
             </div>
         </div>
     </div>
@@ -111,7 +111,7 @@ export default function BeforeAfterSlider() {
           </div>
           <div
             className="absolute inset-0"
-            style={{ clipPath: `inset(0 ${'100' - sliderPosition}% 0 0)` }}
+            style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
           >
             <AfterView />
           </div>
