@@ -24,6 +24,7 @@ import {
   Terminal,
   BookUser,
   Eye,
+  Chrome,
 } from 'lucide-react';
 import Header from '@/components/codetube/Header';
 import AuthHeader from '@/components/auth/AuthHeader';
@@ -137,6 +138,16 @@ const targetAudience = [
   ];
 
 const apiUsage = [
+    {
+        icon: <SiFirebase size={24} className="text-yellow-500" />,
+        name: "Firebase Studio",
+        description: "The AI-powered IDE used to build and iterate on this application."
+    },
+    {
+        icon: <Chrome size={24} className="text-green-500" />,
+        name: "Chrome Built-in AI",
+        description: "Provides instant, on-device AI for summaries and writing tools in supported browsers."
+    },
     {
         icon: <SiGoogle size={24} className="text-red-500" />,
         name: "Google (YouTube)",
@@ -449,7 +460,7 @@ export default function LandingPage() {
               </p>
             </div>
             <AnimateOnScroll className="max-w-4xl mx-auto">
-                <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {apiUsage.map((api) => (
                         <Card key={api.name} className="flex flex-col">
                             <CardHeader className="flex flex-row items-center gap-4">
