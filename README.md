@@ -85,6 +85,25 @@ Our core AI capabilities are delivered through a hybrid approach for the best pe
     - **Code Explainer**: Generates a step-by-step explanation for a given code snippet.
     - **Code Error Fixer**: Analyzes incorrect code and an error message to provide a corrected version.
 
+### Offline Functionality
+
+CodeTube supports offline functionality for core content management features, thanks to Firebase's persistent client-side cache.
+
+#### Available Offline
+You can perform the following actions without an active internet connection after your data has been loaded once:
+- **View Courses and Chapters**: All your previously loaded courses and their content are available for viewing.
+- **Edit Content**: You can edit chapter titles, notes, and code snippets.
+- **Manage Chapters**: Add new chapters or delete existing ones.
+
+All changes made offline are saved locally and will automatically sync to the cloud once you reconnect to the internet.
+
+#### Requires Internet Connection
+The following features require an active internet connection as they rely on external APIs:
+- Importing new videos from YouTube.
+- All AI-powered features (generating summaries, quizzes, interview prep, writing tools, etc.).
+- Exporting your course to GitHub.
+- Running code snippets using the interactive code execution feature.
+
 ### User Flow
 
 The following is a typical user journey through the CodeTube application.
