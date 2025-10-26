@@ -3,29 +3,50 @@
 
 import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Grip, Play, Sparkles, Code } from 'lucide-react';
+import { Grip, Play, Sparkles, Code, ThumbsUp, ThumbsDown, Share2, Download } from 'lucide-react';
 
 const BeforeView = () => (
-  <div className="w-full h-full bg-gray-100 dark:bg-gray-900 rounded-lg flex flex-col p-4 text-gray-800 dark:text-white overflow-hidden">
+  <div className="w-full h-full bg-gray-100 dark:bg-zinc-900 rounded-lg flex flex-col text-gray-800 dark:text-gray-200 overflow-hidden">
     {/* Mock Video Player */}
-    <div className="w-full aspect-video bg-black rounded-md flex items-center justify-center mb-4 shrink-0 shadow-lg">
-        <Play className="w-16 h-16 text-white/70" />
+    <div className="w-full aspect-video bg-black rounded-t-lg flex items-center justify-center shrink-0 shadow-lg">
+      <Play className="w-20 h-20 text-white/60 hover:text-white/80 transition-colors" />
     </div>
-    {/* Mock Video Description */}
-    <div className='space-y-3 overflow-y-auto pr-2 text-sm flex-grow'>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">My Awesome Tutorial</h3>
-        <div className="bg-gray-200/70 dark:bg-gray-800 p-3 rounded-md">
-            <p className='text-gray-700 dark:text-gray-300'>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
-            <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-700">
-                <p className="text-blue-600 dark:text-blue-400 font-mono">0:00 - Introduction</p>
-                <p className="text-blue-600 dark:text-blue-400 font-mono">2:15 - Setup Project</p>
-                <p className="text-blue-600 dark:text-blue-400 font-mono">5:45 - Building the UI</p>
-                <p className="text-blue-600 dark:text-blue-400 font-mono">11:30 - State Management</p>
-            </div>
-        </div>
+    {/* Mock Video Details & Description */}
+    <div className='p-4 space-y-4 overflow-y-auto flex-grow'>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white">My Awesome Tutorial: Build an App From Scratch</h1>
+      
+      <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-rose-500 rounded-full"></div>
+              <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">CodeMaster</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">1.2M subscribers</p>
+              </div>
+          </div>
+          <div className="flex items-center gap-2">
+              <div className="flex items-center bg-gray-200 dark:bg-zinc-800 rounded-full">
+                  <button className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 hover:bg-gray-300 dark:hover:bg-zinc-700 rounded-l-full"><ThumbsUp size={16} /> 25K</button>
+                  <div className="w-px h-4 bg-gray-400 dark:bg-zinc-600"></div>
+                  <button className="p-1.5 pr-3 hover:bg-gray-300 dark:hover:bg-zinc-700 rounded-r-full"><ThumbsDown size={16} /></button>
+              </div>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 rounded-full"><Share2 size={16}/> Share</button>
+          </div>
+      </div>
+
+      <div className="bg-gray-200/70 dark:bg-zinc-800/70 p-3 rounded-lg text-sm">
+          <p className='font-semibold'>3M views  1 year ago</p>
+          <p className="mt-2">In this video, we will build an amazing app from scratch. Find the chapters below!</p>
+          <div className="mt-3">
+              <p className="text-blue-600 dark:text-blue-400">0:00 - Introduction</p>
+              <p className="text-blue-600 dark:text-blue-400">2:15 - Setup Project</p>
+              <p className="text-blue-600 dark:text-blue-400">5:45 - Building the UI</p>
+              <p className="text-blue-600 dark:text-blue-400">11:30 - State Management</p>
+          </div>
+      </div>
     </div>
   </div>
 );
+
 
 const AfterView = () => (
   <div className="w-full h-full bg-background rounded-lg flex overflow-hidden">
