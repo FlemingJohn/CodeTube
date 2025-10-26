@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/carousel"
 import Autoplay from "embla-carousel-autoplay"
 import { useChromeAi } from '@/hooks/useChromeAi';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 
 export default function CourseMentorPage() {
@@ -42,7 +43,7 @@ export default function CourseMentorPage() {
   const [isGenerating, startGenerationTransition] = useTransition();
   const [isImporting, startImportTransition] = useTransition();
 
-  const [topic, setTopic] = useState('');
+  const [topic, setTopic] = useLocalStorage('course-mentor-topic', '');
   const [learningPlan, setLearningPlan] = useState<LearningPlan | null>(null);
   
   const [videosToCompare, setVideosToCompare] = useState<{[step: number]: string[]}>({});
@@ -468,3 +469,5 @@ export default function CourseMentorPage() {
     </>
   );
 }
+
+    
