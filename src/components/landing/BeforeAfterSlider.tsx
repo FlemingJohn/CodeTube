@@ -7,9 +7,11 @@ import { Grip, Play, Sparkles, Code } from 'lucide-react';
 
 const BeforeView = () => (
   <div className="w-full h-full bg-slate-800 rounded-lg flex flex-col p-4 text-white overflow-hidden">
+    {/* Mock Video Player */}
     <div className="w-full aspect-video bg-black/30 rounded-md flex items-center justify-center mb-4 shrink-0">
         <Play className="w-12 h-12 text-white/80" fill="white" />
     </div>
+    {/* Mock Video Description */}
     <div className='space-y-2 overflow-y-auto pr-2'>
         <h3 className="text-lg font-bold">My Awesome Tutorial</h3>
         <p className='text-sm text-slate-300'>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
