@@ -3,71 +3,79 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Grip, Play, Sparkles, Code, ThumbsUp, ThumbsDown, Share2, Download, Bookmark, Bell, ChevronDown } from 'lucide-react';
-import Image from 'next/image';
+import { Grip, Sparkles, Code, Play, Search, Youtube as YoutubeIcon, Clapperboard, Bell } from 'lucide-react';
 
 const BeforeView = () => (
-  <div className="w-full h-full bg-gray-100 dark:bg-[#0f0f0f] rounded-lg flex flex-col text-white overflow-hidden">
-    {/* Mock Video Player */}
-    <div className="w-full aspect-video bg-black flex items-center justify-center shrink-0 relative">
-      {/* A simple placeholder to represent a video is playing */}
-      <div className="w-1/2 h-1/2 bg-gray-900 rounded-lg flex items-center justify-center text-gray-600">
-        Video Player
+  <div className="w-full h-full bg-white dark:bg-[#f9f9f9] rounded-lg flex flex-col text-black overflow-hidden font-sans">
+    {/* Header */}
+    <header className="flex items-center justify-between py-2 px-4 shrink-0">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1">
+          <YoutubeIcon className="w-8 h-8 text-red-600" />
+          <span className="text-xl font-semibold tracking-tighter">YouTube</span>
+        </div>
       </div>
-    </div>
-    
-    {/* Mock Video Details & Description */}
-    <div className="p-4 space-y-4 overflow-y-auto flex-grow text-sm">
-      <h1 className="text-xl font-bold">Java Full Course for free ☕ (2025)</h1>
-      
-      <div className="flex items-center justify-between flex-wrap gap-y-3">
+      <div className="flex-1 max-w-lg flex items-center">
+        <input
+          type="text"
+          placeholder="Search"
+          className="w-full h-10 px-4 border border-gray-300 rounded-l-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <button className="h-10 px-6 bg-gray-100 border-y border-r border-gray-300 rounded-r-full flex items-center justify-center">
+          <Search className="w-5 h-5 text-gray-600" />
+        </button>
+      </div>
+      <div>
+        {/* Placeholder for user icons */}
+      </div>
+    </header>
+
+    {/* Main Content */}
+    <div className="flex-grow flex p-6 gap-6 overflow-hidden">
+      {/* Left Column */}
+      <div className="w-2/3 flex flex-col gap-4">
+        {/* Video Player */}
+        <div className="w-full aspect-video bg-red-600 rounded-xl flex items-center justify-center relative">
+            <Clapperboard className="w-16 h-16 text-white/80" />
+            <div className="absolute bottom-4 right-4 bg-black/50 text-white text-sm px-3 py-1.5 rounded-md">
+                Skip Ad
+            </div>
+        </div>
+        {/* Title */}
+        <div className="h-6 bg-gray-300 rounded w-3/4"></div>
+        {/* Channel Info */}
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-500 rounded-full shrink-0 flex items-center justify-center font-bold">
-                BC
-              </div>
-              <div>
-                  <p className="font-semibold text-white flex items-center gap-1">Bro Code <CheckCircleIcon className="w-3.5 h-3.5" /></p>
-                  <p className="text-xs text-gray-400">2.94M subscribers</p>
-              </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-gray-800 hover:bg-gray-700 rounded-full px-4 py-2 cursor-pointer">
-              <Bell className="w-5 h-5"/>
-              <span className="ml-2 hidden sm:inline">Subscribed</span>
-              <ChevronDown className="w-5 h-5 ml-1"/>
+            <div className="w-10 h-10 bg-gray-300 rounded-full shrink-0"></div>
+            <div>
+              <div className="h-5 bg-gray-300 rounded w-24 mb-1"></div>
+              <div className="h-3 bg-gray-200 rounded w-16"></div>
             </div>
           </div>
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center bg-gray-800 rounded-full">
-            <button className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 hover:bg-gray-700 rounded-l-full text-sm"><ThumbsUp size={18} /> 45K</button>
-            <div className="w-px h-5 bg-gray-600"></div>
-            <button className="p-1.5 pr-3 hover:bg-gray-700 rounded-r-full"><ThumbsDown size={18} /></button>
-        </div>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm"><Share2 size={18}/> Share</button>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm"><Download size={18}/> Download</button>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-full text-sm"><Bookmark size={18}/> Save</button>
-      </div>
-
-      <div className="bg-gray-800 p-3 rounded-lg text-sm space-y-2">
-          <p className='font-semibold'>2,343,226 views  2 Jan 2025 <span className="text-blue-400">#java #javatutorial #javacourse</span></p>
-          <p className="text-gray-300">Java tutorial for beginners full course 2025</p>
-          <div className="font-sans text-sm space-y-1 pt-2">
-              <p className="text-blue-400 hover:underline cursor-pointer">#1 00:00:00 introduction to java 👋</p>
-              <p className="text-blue-400 hover:underline cursor-pointer">#2 00:10:58 variables ❎</p>
-              <p className="text-blue-400 hover:underline cursor-pointer">#3 00:31:30 user input ⌨️</p>
-              <p className="text-blue-400 hover:underline cursor-pointer">#4 00:47:25 mad libs game 📕</p>
+          <div className="flex items-center gap-2">
+            <div className="w-24 h-9 bg-red-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+              Subscribe
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* Right Column */}
+      <div className="w-1/3 flex flex-col gap-4">
+        {/* Recommended Videos */}
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex gap-2">
+            <div className="w-2/5 aspect-video bg-gray-300 rounded-lg shrink-0"></div>
+            <div className="w-3/5 space-y-2">
+              <div className="h-4 bg-gray-300 rounded w-full"></div>
+              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   </div>
-);
-
-const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.06-1.06l-3.25 3.25-1.5-1.5a.75.75 0 00-1.06 1.06l2 2a.75.75 0 001.06 0l3.75-3.75z" clipRule="evenodd" />
-  </svg>
 );
 
 
