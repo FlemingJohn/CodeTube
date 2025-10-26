@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, FileText } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -428,28 +428,30 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
         <CardDescription>Edit the details for the selected chapter.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <div className="space-y-2 col-span-1">
-            <Label htmlFor="timestamp">Timestamp</Label>
-            <Input
-              id="timestamp"
-              name="timestamp"
-              value={localChapter.timestamp}
-              onChange={handleChange}
-              placeholder="e.g., 01:23"
-            />
-          </div>
-          <div className="space-y-2 col-span-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              name="title"
-              value={localChapter.title}
-              onChange={handleChange}
-              placeholder="e.g., Setting up the project"
-            />
-          </div>
-        </div>
+        {settings.showChapterTitle && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div className="space-y-2 col-span-1">
+                    <Label htmlFor="timestamp">Timestamp</Label>
+                    <Input
+                    id="timestamp"
+                    name="timestamp"
+                    value={localChapter.timestamp}
+                    onChange={handleChange}
+                    placeholder="e.g., 01:23"
+                    />
+                </div>
+                <div className="space-y-2 col-span-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                    id="title"
+                    name="title"
+                    value={localChapter.title}
+                    onChange={handleChange}
+                    placeholder="e.g., Setting up the project"
+                    />
+                </div>
+            </div>
+        )}
 
         {settings.showNotes && (
         <Tabs defaultValue="edit" className="w-full">

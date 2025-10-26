@@ -13,9 +13,10 @@ export default function FocusModeToggle() {
   const { settings, setSetting } = useFocusMode();
 
   const focusOptions = [
-    { id: 'showInterviewPrep', label: 'Interview Prep', icon: <Bot className="w-4 h-4" /> },
+    { id: 'showChapterTitle', label: 'Chapter Title', icon: <FileText className="w-4 h-4" /> },
     { id: 'showNotes', label: 'Chapter Notes', icon: <FileText className="w-4 h-4" /> },
     { id: 'showCodeEditor', label: 'Code Editor', icon: <Code className="w-4 h-4" /> },
+    { id: 'showInterviewPrep', label: 'Interview Prep', icon: <Bot className="w-4 h-4" /> },
     { id: 'showQuiz', label: 'Quiz', icon: <HelpCircle className="w-4 h-4" /> },
   ] as const;
 

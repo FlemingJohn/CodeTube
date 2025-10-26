@@ -6,6 +6,7 @@ import { useLocalStorage } from './use-local-storage';
 
 // Define the shape of the settings
 export interface FocusModeSettings {
+  showChapterTitle: boolean;
   showInterviewPrep: boolean;
   showQuiz: boolean;
   showNotes: boolean;
@@ -21,6 +22,7 @@ interface FocusModeContextState {
 
 // Default values for the settings
 const defaultSettings: FocusModeSettings = {
+  showChapterTitle: true,
   showInterviewPrep: true,
   showQuiz: true,
   showNotes: true,
