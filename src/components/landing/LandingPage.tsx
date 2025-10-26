@@ -234,9 +234,6 @@ export default function LandingPage() {
                 <Button size="lg" asChild className="transition-transform hover:scale-105">
                   <Link href="/creator">Start Your Free Course</Link>
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  No credit card required, get started for free.
-                </p>
               </div>
             </div>
             <AnimateOnScroll className="w-full max-w-4xl" delay={200}>

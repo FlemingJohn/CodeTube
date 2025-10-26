@@ -1,154 +1,146 @@
-# CodeTube
+# CodeTube 🚀
 
-CodeTube is a web application that transforms passive YouTube coding tutorials into interactive, hands-on learning courses. It leverages AI to streamline course creation and provides tools for both creators and students to engage with educational content more effectively.
+**Transform Passive YouTube Coding Tutorials into Interactive Courses**
 
-## Problem
+CodeTube is a web application that converts passive YouTube coding tutorials into interactive, hands-on learning courses. Leveraging client-side and server-side AI, it provides tools for creators and students to actively engage with educational content.
 
-Watching long-form video tutorials on platforms like YouTube is often a passive experience. Viewers can find it difficult to:
-- Navigate to specific topics within a long video.
-- Take organized, time-stamped notes.
-- Extract and save important code snippets shown in the video.
-- Showcase their completed tutorial as a project in their portfolio.
-- Verify their understanding of the material.
+---
 
-This leads to lower engagement, reduced knowledge retention, and a missed opportunity to turn learning into a tangible skill.
+## Problem Statement ❌
 
-## Solution
+Watching long-form YouTube tutorials is often passive and unstructured:
 
-CodeTube addresses these challenges by providing a suite of tools for creators to enrich video content:
+- Difficult to navigate to specific topics
+- Hard to take organized, time-stamped notes
+- Challenging to extract and save code snippets
+- No easy way to showcase learning as a portfolio project
+- Limited verification of understanding
 
-- **AI Course Mentor:** Generate a comprehensive, step-by-step learning plan for any topic, complete with prerequisite videos, key concepts, and a full roadmap of video suggestions from multiple creators.
-- **YouTube Video Import:** Instantly import any YouTube video by pasting a link or using the built-in search.
-- **Automatic Chapter Detection:** The app automatically parses the video description to find and import time-stamped chapters.
-- **AI-Powered Notes & Summaries:** For each chapter, creators can generate concise, AI-powered summaries or use **speech-to-text** to dictate notes directly.
-- **Interactive Quizzes & Interview Prep:** Add AI-generated multiple-choice quizzes and technical interview questions to reinforce learning and prepare for job interviews.
-- **Focus Mode:** Customize your workspace by toggling UI elements like the **Chapter Title, Notes, Code Editor, Quiz, and Interview Prep** sections to eliminate distractions.
-- **AI-Powered Writing Tools:** Instantly proofread, rewrite, or translate your notes into different languages.
-- **GitHub Export:** Export the entire course, including notes and code snippets, to a new GitHub repository with a single click.
+This leads to lower engagement, reduced knowledge retention, and missed opportunities to convert learning into real skills.
 
-This turns a simple video into a structured, interactive course that promotes active learning.
+---
 
-## CodeTube Architecture
+## Solution 🌟
 
-This document provides a high-level overview of the CodeTube application's architecture, including its frontend, backend, AI components, and user flow.
+CodeTube transforms a simple video into a structured, interactive learning experience:
 
-### Architecture
+- **AI Course Mentor 🧭**: Generates step-by-step learning plans, prerequisites, key concepts, and recommended videos.
+- **YouTube Video Import 🎥**: Quickly import any YouTube tutorial.
+- **Automatic Chapter Detection ⏱️**: Detect time-stamped chapters from video descriptions.
+- **AI-Powered Notes & Summaries 📝**: Generate editable summaries or dictate notes via speech-to-text.
+- **Interactive Quizzes & Interview Prep ❓💼**: Reinforce learning and practice job interview questions.
+- **Focus Mode 🎯**: Toggle workspace sections for distraction-free learning.
+- **AI Writing Tools ✍️**: Proofread, rewrite, and translate notes.
+- **Code Snippet Execution 💻**: Run code directly in chapters.
+- **Export to GitHub 📂**: Push full course content to a repository with one click.
 
-CodeTube is built on a modern, serverless architecture designed for scalability and rapid development.
-
-- **Frontend:** A responsive web application built with **Next.js**, **React**, and **TypeScript**. Styling is handled by **Tailwind CSS** and **ShadCN UI** for a polished, component-based design.
-- **Backend & Authentication:** **Firebase** is used for user authentication (Email/Password) and as a **Firestore** database to save user-created courses and chapters.
-- **Generative AI:** A hybrid AI model is used. For browsers that support it (like Chrome 127+), AI features run **on-device** for instant feedback. For other browsers, the app seamlessly falls back to server-side AI powered by the **Google Gemini API**, orchestrated through the open-source **Genkit** framework.
-- **Hosting:** The application is deployed on **Vercel**, providing a scalable, secure, and globally distributed environment.
-
-### Technology Roles
-
-It's important to understand the role of each major component in the stack:
-
-- **Firebase Studio**: This is the integrated development environment (IDE) where we write, edit, and manage the application's code.
-- **Chrome's Built-in AI**: For supported browsers, this provides fast, on-device AI for tasks like summarizing and editing text, offering a better user experience without needing a server call.
-- **Genkit**: This is the open-source TypeScript framework we use to structure and orchestrate our server-side AI logic, which serves as a reliable fallback for all users. It helps us define `flows` that can call AI models.
-- **Gemini API**: This is the actual generative model from Google that performs the AI tasks when server-side processing is needed. Genkit calls the Gemini API to generate text, summarize content, and more.
-- **Firebase**: This is the suite of backend services providing the application's database (Firestore) and user login system (Authentication).
-
-### API Usage
-
-The application integrates with several external APIs to power its features:
-
-| API Provider | Library Used | Core Features Powered |
-| :--- | :--- | :--- |
-| **Google (YouTube)** | `googleapis`, `youtube-transcript` | **Video & Transcript Import:** Fetches video titles, descriptions, and full transcripts. This is the foundation for all content analysis. |
-| **Google (Gemini API via Genkit)** | `genkit`, `@genkit-ai/google-genai`| **Server-Side AI:** Powers all advanced AI features, including learning plans, quizzes, code explanations, speech-to-text, and serves as a fallback for on-device AI. |
-| **Google (Chrome Built-in AI)** | `window.ai` | **On-Device AI:** Handles instant text generation for summaries, proofreading, and rewriting directly in supported browsers for enhanced performance. |
-| **GitHub** | `@octokit/rest` | **Export to GitHub:** Creates a new repository, generates Markdown files for the course, and pushes the content to the user's GitHub account. |
-| **Judge0** | `axios` (within a Genkit flow) | **Interactive Code Execution:** Allows users to run code snippets directly within a chapter and see the output. |
+---
 
 
-#### In-App AI Features (Hybrid Client/Server Model)
+## Tech Stack 🛠️
 
-Our core AI capabilities are delivered through a hybrid approach for the best performance and reliability.
+- **Frontend:** Next.js, React, TypeScript, Tailwind CSS, ShadCN UI
+- **Backend:** Firebase Authentication, Firestore
+- **AI:** Hybrid AI with Chrome Built-in AI (client-side) & Gemini Nano via Genkit (server-side)
+- **APIs:** YouTube API, Gemini Nano API, GitHub API, Judge0 API
+- **Hosting:** Vercel
 
-- **Client-Side First (Chrome Built-in AI)**: For users on supported browsers, the following features run directly on-device for instant results:
-    - **"Generate Summary"**: Creates initial notes for a chapter based on the transcript.
-    - **"Writing Tools" (Proofreader, Rewriter, Translator)**: Corrects grammar, refines existing notes, or translates them into different languages.
+---
 
-- **Server-Side Fallback & Advanced Features (Gemini API via Genkit)**: If the browser's built-in AI is unavailable, the above features seamlessly fall back to our server-side Genkit flows. The following more complex features always run on the server:
-    - **Course Mentor & Learning Plan Generator**:
-        - **Generate Learning Roadmap**: For any given topic, the AI generates a step-by-step learning plan.
-        - **Prerequisite Identification**: Automatically identifies and suggests videos for prerequisite knowledge.
-        - **Key Concept Summary**: Provides a list of key concepts and jargon for the topic.
-        - **AI-Powered Video Suggestions**: Finds relevant YouTube videos for each step of the roadmap.
-    - **Quiz Generator**: Analyzes chapter transcripts to create multiple-choice questions.
-    - **Interview Prep Generator**: Creates relevant technical interview questions based on chapter content.
-    - **Speech-to-Text**: Transcribes spoken audio into text for note-taking or answering interview questions.
-    - **Pitch Feedback System**: Analyzes a user's answer to an interview question and provides constructive feedback.
-    - **Code Explainer**: Generates a step-by-step explanation for a given code snippet.
-    - **Code Error Fixer**: Analyzes incorrect code and an error message to provide a corrected version.
+## Features vs APIs ✅
 
-### Network Resilient UX & Offline Functionality
+| Feature | Client-Side APIs 🌐 | Server-Side APIs ☁️ | Notes |
+|---------|-------------------|-------------------|------|
+| Import YouTube Video 🎥 | ❌ | ✅ YouTube API | Fetch video title, description, transcript |
+| Automatic Chapter Detection ⏱️ | ❌ | ✅ YouTube API + Gemini Nano | Detect timestamps from description |
+| AI-Powered Notes & Summaries 📝 | ✅ Prompt, Writer, Summarizer, Proofreader, Translator, Rewriter, Built-in AI | ✅ Gemini Nano | Editable notes |
+| Course Mentor / Learning Plan Generator 🧭 | ❌ | ✅ Gemini Nano | Generates roadmap, prerequisites, key concepts, video suggestions |
+| Interactive Quizzes ❓ | ✅ Prompt, Writer, Rewriter, Built-in AI | ✅ Gemini Nano | Generate multiple-choice questions |
+| Interview Prep Generator 💼 | ✅ Prompt, Writer, Rewriter, Built-in AI | ✅ Gemini Nano | Technical interview questions |
+| Speech-to-Text Notes 🎤 | ❌ | ✅ Gemini Nano | Convert spoken notes into text |
+| Focus Mode 🎯 | ✅ Built-in AI | ❌ | Customize workspace UI |
+| Code Snippet Execution 💻 | ❌ | ✅ Judge0 API | Run code directly |
+| Export to GitHub 📂 | ❌ | ✅ GitHub API | Push course content |
+| Proofreading / Rewriting Notes ✍️ | ✅ Proofreader, Rewriter, Writer, Built-in AI | ✅ Gemini Nano | Grammar correction, content rewriting |
+| Notes Translation 🌐 | ✅ Translator API, Built-in AI | ✅ Gemini Nano | Translate notes |
 
-CodeTube is designed with an "offline-first" mentality to provide a consistent and fast user experience, even on unstable connections. This is achieved through a combination of technologies:
+---
 
-- **PWA for Offline Access:** The app is a Progressive Web App (PWA) that caches all necessary pages and assets, allowing you to open and browse the application even without an internet connection.
-- **Firestore Offline Persistence:** All your course and chapter data is automatically saved to a local database (IndexedDB) in your browser. This allows for instant read and write operations, regardless of your network status.
-- **Background Sync:** Changes made while offline are queued and automatically synchronized with the cloud once you reconnect, ensuring data consistency without blocking the UI.
-- **On-Device AI:** For users with supported browsers (like Chrome), many AI writing tools run directly on your device, providing instant feedback without needing to call a server.
+## Hybrid AI Strategy 🤖: 
+  - **Client-side AI (Chrome Built-in AI)**: Provides instant text generation for summaries, proofreading, rewriting, and translations directly in the browser. Works offline on supported devices.  
+  - **Server-side AI (Gemini Nano via Genkit / Firebase AI Logic)**: Handles advanced features like the Course Mentor roadmap, AI-generated quizzes, interview prep, and speech-to-text. Ensures full functionality for users on any device, including mobile, even if their browser doesn't support client-side AI.  
+  - **Benefit**: Expands reach to more users, maintains consistent performance, and provides offline-first capabilities.
 
-#### Available Offline
-You can perform the following actions without an active internet connection after your data has been loaded at least once:
-- **View Courses and Chapters**: All your previously loaded courses and their content are available for browsing.
-- **Edit Content**: You can edit chapter titles, notes, and code snippets. The UI updates instantly.
-- **Manage Courses & Chapters**: You can create new courses, add new chapters, or delete existing ones.
-- **Use On-Device AI Tools**: In supported browsers, you can use writing tools like proofreading and rewriting completely offline.
+---
 
-#### Requires Internet Connection
-The following features require an active internet connection as they rely on external, real-time APIs:
-- Importing new videos from YouTube.
-- AI features that run on the server (generating quizzes, interview prep, speech-to-text, and fallback for on-device AI).
-- Exporting your course to GitHub.
-- Running code snippets using the interactive code execution feature.
+## How CodeTube Differs from Existing Projects 🔍
 
-### User Flow
+| Existing Solutions | CodeTube |
+|-------------------|----------|
+| Passive video tutorials only | Interactive, chaptered courses |
+| No automated summaries or quizzes | AI-generated summaries, quizzes, and interview prep |
+| Limited or no offline support | Offline-first PWA with local caching and on-device AI |
+| Manual note-taking | AI-powered notes, speech-to-text, proofreading, rewriting, translation |
+| No project portfolio integration | Export course + notes + code to GitHub directly |
+| No learning roadmap | AI Course Mentor creates a guided learning plan |
 
-The following is a typical user journey through the CodeTube application.
+---
 
-1.  **Landing Page:** New users arrive at a landing page that explains the product's features and benefits.
+## Network-Resilient UX & Offline Functionality 🌐⚡
 
-2.  **Authentication:** Users can **Sign Up** for a new account or **Sign In** to an existing one using their email and password.
+- **Offline-first PWA**: Browse courses and chapters even without internet.
+- **Firestore Offline Persistence**: Read/write course data locally.
+- **Background Sync**: Offline changes auto-sync when back online.
+- **On-Device AI Tools**: Instant text generation, proofreading, rewriting in supported browsers.
 
-3.  **Creator Studio:** After logging in, users are redirected to the main dashboard where they can see their existing courses or create a new one.
+**Available Offline:**
 
-4.  **Import Video:** The user pastes a public YouTube video URL or uses the search function to find a video.
-    - A server action is called, which uses the YouTube Data API to fetch the video's title and description.
-    - The description is parsed to automatically detect any time-stamped chapters.
+- View previously loaded courses and chapters
+- Edit titles, notes, and code snippets
+- Create/delete courses and chapters
+- Use on-device AI writing tools
 
-5.  **Edit Chapters:** The detected chapters are displayed in a list. The user can:
-    - Select a chapter to edit its title, timestamp, and add a code snippet.
-    - Use the **"Writing Tools"** to generate AI summaries, proofread text, or rewrite notes.
-    - Use the **"Record Note"** feature to dictate notes via speech-to-text.
-    - Use the **"Focus Mode"** to toggle different UI elements and create a distraction-free workspace.
-    - Click **"Explain Code"**, **"Generate Quiz"**, or **"Generate Interview Prep"** to create interactive learning materials.
+**Requires Internet:**
 
-6.  **Export to GitHub:** Once the course is complete, the user can open the "Export to GitHub" dialog to create a new public repository containing their course content.
+- Importing new YouTube videos
+- Server-side AI features (advanced quizzes, interview prep, speech-to-text)
+- Export to GitHub
+- Code snippet execution via Judge0 API
 
-## MIT License
+---
 
-Copyright (c) 2024 Google LLC
+## Judging Criteria 🏆
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+- **Functionality ⚙️**: Scalability, API usage, cross-region or cross-device applicability.
+- **Purpose 🎯**: Meaningful improvement of user tasks; new capabilities unlocked.
+- **Content 🎨**: Creativity, originality, and visual quality.
+- **User Experience 🖱️**: Ease of use, intuitiveness, and accessibility.
+- **Technological Execution 💻**: Effective demonstration of Chrome’s built-in AI APIs (Prompt, Summarizer, Writer, Rewriter, Translator, Proofreader) and hybrid AI usage.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+---
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## 🏆 Tracks Applied
+
+This project is submitted under the **Web Application track** of the Google Chrome Built-in AI Challenge 2025.  
+
+### 1. Most Helpful - Web Application 💡
+- Provides a fully functional learning platform for coding tutorials.  
+- Users can import videos, take AI-powered notes, and generate quizzes.  
+- Enhances productivity and knowledge retention, making it genuinely helpful for learners.
+
+### 2. Best Multimodal AI Application - Web Application 🖼️
+- Supports multimodal content: YouTube videos, text notes, and interactive code snippets.  
+- Uses AI APIs like **Prompt, Summarizer, Writer, Rewriter, Translator, Proofreader** to process multiple input types.  
+- Delivers rich, interactive learning experiences beyond just text or video.
+
+### 3. Best Hybrid AI Application - Web Application ⚡
+- Combines **client-side AI** (Chrome Built-in AI APIs) with **server-side AI** (Gemini API via Genkit/Firebase AI Logic).  
+- Ensures offline capability, fast responses, and consistent AI performance across browsers.  
+- Demonstrates a hybrid AI strategy optimized for web applications.
+
+---
+
+
+## License 📄
+
+MIT License. See [LICENSE](LICENSE) for details.
