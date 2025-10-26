@@ -1,25 +1,27 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Grip, Play, Sparkles, Code } from 'lucide-react';
 
 const BeforeView = () => (
-  <div className="w-full h-full bg-slate-800 rounded-lg flex flex-col p-4 text-white overflow-hidden">
+  <div className="w-full h-full bg-gray-100 dark:bg-slate-800 rounded-lg flex flex-col p-4 text-gray-800 dark:text-white overflow-hidden">
     {/* Mock Video Player */}
-    <div className="w-full aspect-video bg-black/30 rounded-md flex items-center justify-center mb-4 shrink-0">
-        <Play className="w-12 h-12 text-white/80" fill="white" />
+    <div className="w-full aspect-video bg-black rounded-md flex items-center justify-center mb-4 shrink-0 shadow-lg">
+        <Play className="w-16 h-16 text-white/70 hover:text-white/90 transition-colors" />
     </div>
     {/* Mock Video Description */}
-    <div className='space-y-2 overflow-y-auto pr-2'>
-        <h3 className="text-lg font-bold">My Awesome Tutorial</h3>
-        <p className='text-sm text-slate-300'>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
-        <div className="text-sm text-slate-400 pt-3 border-t border-slate-600/50">
-            <p className="text-sky-300">0:00 - Introduction</p>
-            <p className="text-sky-300">2:15 - Setup Project</p>
-            <p className="text-sky-300">5:45 - Building the UI</p>
-            <p className="text-sky-300">11:30 - State Management</p>
+    <div className='space-y-3 overflow-y-auto pr-2 text-sm'>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">My Awesome Tutorial</h3>
+        <div className="bg-gray-200/70 dark:bg-slate-700/50 p-3 rounded-md">
+            <p className='text-gray-700 dark:text-slate-300'>In this video, we will build an amazing app from scratch. Find the chapters below!</p>
+            <div className="mt-3 pt-3 border-t border-gray-300 dark:border-slate-600/50">
+                <p className="text-blue-600 dark:text-sky-400 font-mono">0:00 - Introduction</p>
+                <p className="text-blue-600 dark:text-sky-400 font-mono">2:15 - Setup Project</p>
+                <p className="text-blue-600 dark:text-sky-400 font-mono">5:45 - Building the UI</p>
+                <p className="text-blue-600 dark:text-sky-400 font-mono">11:30 - State Management</p>
+            </div>
         </div>
     </div>
   </div>
@@ -64,8 +66,11 @@ const AfterView = () => (
 export default function BeforeAfterSlider() {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleMove = (clientX: number, rect: DOMRect) => {
+  const handleMove = (clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
     const newPosition = ((clientX - rect.left) / rect.width) * 100;
     if (newPosition >= 0 && newPosition <= 100) {
       setSliderPosition(newPosition);
@@ -73,24 +78,26 @@ export default function BeforeAfterSlider() {
   };
   
   const handleMouseDown = () => setIsDragging(true);
-  const handleMouseUp = () => setIsDragging(false);
   
+  const handleMouseUp = () => {
+    if (isDragging) setIsDragging(false);
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    handleMove(e.clientX, rect);
+    handleMove(e.clientX);
   };
   
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    handleMove(e.touches[0].clientX, rect);
+    handleMove(e.touches[0].clientX);
   };
 
   return (
     <Card className="w-full max-w-4xl mx-auto shadow-2xl">
       <CardContent className="p-2">
         <div
+          ref={containerRef}
           className="relative w-full aspect-video select-none overflow-hidden rounded-md"
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
@@ -111,6 +118,8 @@ export default function BeforeAfterSlider() {
           <div
             className="absolute top-0 bottom-0 w-1 bg-white mix-blend-difference cursor-ew-resize"
             style={{ left: `calc(${sliderPosition}% - 2px)` }}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleMouseDown}
           ></div>
           <div
             className="absolute top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg cursor-ew-resize flex items-center justify-center"
@@ -121,11 +130,11 @@ export default function BeforeAfterSlider() {
              <Grip className="w-5 h-5 text-slate-600" />
           </div>
 
-          <div className="absolute top-2 left-2 bg-black/50 text-white text-xs font-semibold py-1 px-2 rounded-full">
+          <div className="absolute top-2 left-2 bg-black/50 text-white text-xs font-semibold py-1 px-2 rounded-full pointer-events-none">
             BEFORE
           </div>
           <div 
-            className="absolute top-2 right-2 bg-black/50 text-white text-xs font-semibold py-1 px-2 rounded-full"
+            className="absolute top-2 right-2 bg-black/50 text-white text-xs font-semibold py-1 px-2 rounded-full pointer-events-none"
             style={{ opacity: sliderPosition > 60 ? 1 : 0, transition: 'opacity 0.2s' }}
           >
             AFTER
