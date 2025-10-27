@@ -178,13 +178,15 @@ async function parseChaptersFromDescription(
     for (let i = 0; i < chapterData.length; i++) {
         const currentChapter = chapterData[i];
         const nextChapter = chapterData[i + 1];
-        const startTime = currentChapter.startTime;
-        const endTime = nextChapter ? nextChapter.startTime : Infinity;
+        
+        // Convert chapter start times to milliseconds for accurate comparison
+        const startTimeMs = currentChapter.startTime * 1000;
+        const endTimeMs = nextChapter ? nextChapter.startTime * 1000 : Infinity;
 
         // Filter transcript entries that fall within the chapter's time range
         const chapterTranscriptItems = fullTranscriptItems.filter(item => {
-            const itemStart = item.offset / 1000;
-            return itemStart >= startTime && itemStart < endTime;
+            // The 'offset' property from youtube-transcript is in milliseconds
+            return item.offset >= startTimeMs && item.offset < endTimeMs;
         });
 
         const chapterTranscriptText = chapterTranscriptItems.map(item => item.text).join(' ');
@@ -619,7 +621,3 @@ export async function handleCompareVideos(values: z.infer<typeof compareVideosSc
         return { error: e.message || 'Failed to compare videos.' };
     }
 }
-
-    
-
-    
