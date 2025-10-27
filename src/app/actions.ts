@@ -106,7 +106,7 @@ async function parseChaptersFromDescription(
 ): Promise<Chapter[]> {
     const lines = (description || '').split('\n');
     const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
-    const chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
+    let chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
     const fullTranscriptText = fullTranscriptItems.map(item => item.text).join(' ');
 
     const timestampToSeconds = (ts: string) => {
@@ -133,6 +133,15 @@ async function parseChaptersFromDescription(
             }
         }
     });
+
+    if (chapterData.length > 0 && chapterData[0].startTime !== 0) {
+        chapterData.unshift({
+            id: `${Date.now()}-intro`,
+            title: "Introduction",
+            startTime: 0,
+            timestamp: "00:00",
+        });
+    }
 
     chapterData.sort((a, b) => a.startTime - b.startTime);
 
@@ -166,7 +175,20 @@ async function parseChaptersFromDescription(
         }
     }
     
-    for (const currentChapter of chapterData) {
+    for (let i = 0; i < chapterData.length; i++) {
+        const currentChapter = chapterData[i];
+        const nextChapter = chapterData[i + 1];
+        const startTime = currentChapter.startTime;
+        const endTime = nextChapter ? nextChapter.startTime : Infinity;
+
+        // Filter transcript entries that fall within the chapter's time range
+        const chapterTranscriptItems = fullTranscriptItems.filter(item => {
+            const itemStart = item.offset / 1000;
+            return itemStart >= startTime && itemStart < endTime;
+        });
+
+        const chapterTranscriptText = chapterTranscriptItems.map(item => item.text).join(' ');
+
         finalChapters.push({
             id: currentChapter.id,
             timestamp: currentChapter.timestamp,
@@ -174,7 +196,7 @@ async function parseChaptersFromDescription(
             summary: '',
             code: codeMap.get(currentChapter.id) || '',
             codeExplanation: '',
-            transcript: fullTranscriptText, 
+            transcript: chapterTranscriptText, 
         });
     }
     
@@ -597,5 +619,7 @@ export async function handleCompareVideos(values: z.infer<typeof compareVideosSc
         return { error: e.message || 'Failed to compare videos.' };
     }
 }
+
+    
 
     
