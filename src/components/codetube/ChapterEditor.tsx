@@ -561,7 +561,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         player.playVideo();
     }
   };
-  
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
