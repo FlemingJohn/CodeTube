@@ -855,7 +855,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             size="sm"
                             variant="outline"
                             onClick={onGenerateQuiz}
-                            disabled={isQuizGenerationPending || !localChapter?.transcript}
+                            disabled={isQuizGenerationPending || !localChapter.transcript}
                         >
                             {isQuizGenerationPending ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -888,3 +888,5 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     </Card>
   );
 }
+
+    

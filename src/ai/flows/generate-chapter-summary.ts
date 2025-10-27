@@ -36,31 +36,35 @@ export async function generateChapterSummary(
 }
 
 
+const prompt = ai.definePrompt({
+    name: 'generateChapterSummaryPrompt',
+    input: {schema: GenerateChapterSummaryInputSchema},
+    output: { schema: GenerateChapterSummaryOutputSchema },
+    prompt: `You are an expert educator who can create concise chapter notes in bullet points.
+
+    Based on the chapter title and the provided transcript, generate a summary as a list of bullet points.
+    Focus only on the key points relevant to the chapter title.
+    
+    Chapter Title: "{{chapterTitle}}"
+    
+    Transcript:
+    \`\`\`
+    {{{transcript}}}
+    \`\`\`
+    `
+});
+
+
 const generateChapterSummaryFlow = ai.defineFlow(
   {
     name: 'generateChapterSummaryFlow',
     inputSchema: GenerateChapterSummaryInputSchema,
     outputSchema: GenerateChapterSummaryOutputSchema,
   },
-  async ({ transcript, chapterTitle }) => {
-    const prompt = ai.definePrompt({
-        name: 'generateChapterSummaryPrompt',
-        output: { schema: GenerateChapterSummaryOutputSchema },
-        prompt: `You are an expert educator who can create concise chapter notes in bullet points.
-
-        Based on the chapter title and the provided transcript, generate a summary as a list of bullet points.
-        Focus only on the key points relevant to the chapter title.
-        
-        Chapter Title: "${chapterTitle}"
-        
-        Transcript:
-        \`\`\`
-        ${transcript}
-        \`\`\`
-        `
-    });
-
-    const { output } = await prompt();
+  async (input) => {
+    const { output } = await prompt(input);
     return output!;
   }
 );
+
+    
