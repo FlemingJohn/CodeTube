@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useTransition } from 'react';
+import { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
 import { Course } from '@/lib/types';
 import CourseList from '@/components/codetube/CourseList';
 import CreatorStudio from '@/components/codetube/CreatorStudio';
@@ -74,10 +74,10 @@ export default function CreatorPage() {
     }
   };
   
-  const handleDebouncedCourseUpdate = (courseId: string, courseData: Partial<Course>) => {
+  const handleDebouncedCourseUpdate = useCallback((courseId: string, courseData: Partial<Course>) => {
     if (!user || !firestore) return;
     updateCourse(firestore, user.uid, courseId, courseData);
-  }
+  }, [user, firestore]);
 
   const activeCourse = courses?.find(c => c.id === activeCourseId);
   
