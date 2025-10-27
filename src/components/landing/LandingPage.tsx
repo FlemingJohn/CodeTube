@@ -171,29 +171,34 @@ const apiUsage = [
 ];
 
 const faqs = [
-  {
-    question: "Who is CodeTube for?",
-    answer: "CodeTube is designed for self-directed learners, including students, junior developers, and working professionals. If you use YouTube to learn new technical skills, CodeTube helps you do it more effectively and turn that learning into career opportunities."
-  },
-  {
-    question: "How does the 'Practice Your Pitch' feature work?",
-    answer: "This feature uses multiple AI models. First, it analyzes your course content to create a relevant interview scenario. Then, you record your answer with your microphone. The audio is transcribed to text, and then another AI analyzes your answer to provide feedback on your clarity, confidence, and technical explanation."
-  },
-  {
-    question: 'How do the AI quizzes and interview questions work?',
-    answer:
-      "Our AI, powered by Google's Gemini models, processes the transcript of your video chapter to generate relevant multiple-choice questions or technical interview questions. It's designed to test key concepts from the material to help you prepare.",
-  },
-  {
-    question: 'Can I use any YouTube video?',
-    answer:
-      'Yes, you can import any public YouTube video. For the best results with automatic chapter detection and transcripts, choose videos where the creator has enabled captions and listed timestamps in the description.',
-  },
-  {
-    question: 'Is my data secure?',
-    answer:
-      'Absolutely. We use Firebase for authentication and database management, which provides industry-standard security for all user data. Your courses are private to your account until you choose to export them.',
-  },
+    {
+        question: 'What is CodeTube?',
+        answer: 'CodeTube is a web application that transforms passive YouTube coding tutorials into structured, interactive learning experiences. It uses AI to generate notes, quizzes, and code snippets, helping you learn more effectively and build a portfolio-ready project from any video.',
+    },
+    {
+        question: 'Who is CodeTube for?',
+        answer: 'CodeTube is for anyone who uses YouTube to learn technical skills. This includes students, junior developers trying to bridge the gap between tutorials and job-readiness, and working professionals who need to upskill quickly on new technologies.',
+    },
+    {
+        question: 'How does the AI Course Mentor work?',
+        answer: 'The Course Mentor is your personal AI learning guide. You give it a topic you want to learn, and it generates a comprehensive learning plan. This includes necessary prerequisites, key concepts to know, and a step-by-step roadmap with suggested YouTube videos for each stage.',
+    },
+    {
+        question: 'What happens when I import a YouTube video?',
+        answer: 'When you import a video, CodeTube fetches its title, description, and transcript. It then analyzes the description to automatically detect time-stamped chapters. For each chapter, you can then use AI to generate summaries, find relevant code snippets, create quizzes, and generate interview questions.',
+    },
+    {
+        question: "What is the 'Practice Your Pitch' feature?",
+        answer: 'This feature helps you prepare for job interviews. The AI analyzes your course content and generates a realistic behavioral interview question related to your project. You can then record your answer using your microphone. The app transcribes your speech and provides AI-powered feedback on your clarity, confidence, and the structure of your response.',
+    },
+    {
+        question: 'What is "Hybrid AI" and why does CodeTube use it?',
+        answer: "Hybrid AI means we use both client-side (in your browser) and server-side AI. For tasks like proofreading or quick translations, we use Chrome's built-in AI for instant, offline-capable results. For more complex tasks like generating a learning plan or analyzing audio, we use powerful server-side models like Google's Gemini. This gives you the best of both worlds: speed and privacy for simple tasks, and power for complex ones.",
+    },
+    {
+        question: 'Is my data secure?',
+        answer: 'Yes. We use Firebase Authentication and Firestore for secure user management and data storage. Your courses and personal information are private to your account. The "Export to GitHub" feature only runs when you explicitly use it, creating a public repository on your own GitHub account.',
+    },
 ];
 
 export default function LandingPage() {
