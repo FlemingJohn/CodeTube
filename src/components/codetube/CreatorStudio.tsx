@@ -179,7 +179,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   };
 
   const onGenerateInterviewQuestions = (replace: boolean = false) => {
-    if (!selectedChapter || !selectedChapter.transcript) {
+    if (!selectedChapter || !selectedChapter.transcript || selectedChapter.transcript.trim() === '') {
         toast({ variant: 'destructive', title: 'Missing context', description: 'This chapter needs a transcript to generate questions.' });
         return;
     }
@@ -375,7 +375,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                                       <RefreshCw className="mr-2"/> Regenerate
                                       </Button>
                                   )}
-                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending || !selectedChapter?.transcript}>
+                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending || !selectedChapter?.transcript || selectedChapter.transcript.trim() === ''}>
                                       {isInterviewPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
                                       Generate
                                   </Button>
@@ -472,3 +472,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
     
 
   
+
+
+    
