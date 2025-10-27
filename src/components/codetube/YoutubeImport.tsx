@@ -25,7 +25,7 @@ export default function YoutubeImport({ onCourseUpdate, setSearchDialogOpen }: Y
   const [isPending, startTransition] = useTransition();
   const [youtubeUrl, setYoutubeUrl] = useState('');
   
-  const handleAutoDetect = () => {
+  const handleAutoDetect = async () => {
     const videoId = getYouTubeVideoId(youtubeUrl);
     if (!videoId) {
       toast({

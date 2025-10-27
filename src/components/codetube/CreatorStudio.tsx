@@ -90,13 +90,14 @@ const FormattedAnswer = ({ text }: { text: string }) => {
     );
 };
 
-export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdate }: CreatorStudioProps) {
+export default function CreatorStudio({ course: initialCourse, onBackToDashboard, onCourseUpdate }: CreatorStudioProps) {
   const { toast } = useToast();
   const auth = useAuth();
   const router = useRouter();
   const { settings } = useFocusMode();
   const [recentTopics] = useLocalStorage<string[]>('course-mentor-history', []);
-
+  
+  const [course, setCourse] = useState(initialCourse);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [playingChapterId, setPlayingChapterId] = useState<string | null>(null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
@@ -105,6 +106,10 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
   const [isInterviewPending, startInterviewTransition] = useTransition();
   const [player, setPlayer] = useState<any>(null);
   const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setCourse(initialCourse);
+  }, [initialCourse]);
 
   useEffect(() => {
     setHasMounted(true);
@@ -166,12 +171,22 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
 
   const handleUpdateChapter = (updatedChapter: Chapter) => {
     const newChapters = course.chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
-    onCourseUpdate({ ...course, chapters: newChapters });
+    const updatedCourse = { ...course, chapters: newChapters };
+    setCourse(updatedCourse);
+    onCourseUpdate(updatedCourse);
   };
 
   const handleChaptersUpdate = (newChapters: Chapter[]) => {
-    onCourseUpdate({ ...course, chapters: newChapters });
+    const updatedCourse = { ...course, chapters: newChapters };
+    setCourse(updatedCourse);
+    onCourseUpdate(updatedCourse);
   };
+  
+  const handleFullCourseUpdate = (courseUpdate: Partial<Course>) => {
+    const updatedCourse = { ...course, ...courseUpdate };
+    setCourse(updatedCourse);
+    onCourseUpdate(updatedCourse);
+  }
 
   const onGenerateInterviewQuestions = (replace: boolean = false) => {
     if (!selectedChapter || !selectedChapter.transcript) {
@@ -225,7 +240,7 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
   }
 
   const handleCategoryChange = (category: CourseCategory) => {
-    onCourseUpdate({ category });
+    handleFullCourseUpdate({ category });
   }
   
   const showEditorPanel = settings.showNotes || settings.showCodeEditor || settings.showQuiz;
@@ -245,7 +260,7 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
           <SidebarContent className="flex-1 flex flex-col">
             <div className="flex flex-col gap-4 p-2 h-full">
               <YoutubeImport 
-                onCourseUpdate={onCourseUpdate}
+                onCourseUpdate={handleFullCourseUpdate}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <div className="space-y-2">
@@ -447,7 +462,7 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
         <VideoSearchDialog
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
-          onCourseUpdate={onCourseUpdate}
+          onCourseUpdate={handleFullCourseUpdate}
         />
 
         <ShareDialog
