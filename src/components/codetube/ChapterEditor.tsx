@@ -258,6 +258,13 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     }, 0);
   };
 
+  const handleTimestampClick = (time: number) => {
+    if (player && typeof player.seekTo === 'function') {
+        player.seekTo(time);
+        player.playVideo();
+    }
+  };
+  
   const onAddSnapshot = () => {
     if (!player || typeof player.getCurrentTime !== 'function' || !videoId) {
         toast({ variant: 'destructive', title: 'Video player not ready', description: 'Please wait for the video to load before taking a snapshot.' });
@@ -555,13 +562,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     );
   }
   
-  const handleTimestampClick = (time: number) => {
-    if (player && typeof player.seekTo === 'function') {
-        player.seekTo(time);
-        player.playVideo();
-    }
-  };
-
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -617,7 +617,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter.transcript || recordingState !== RecordingState.Idle}>
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter?.transcript || recordingState !== RecordingState.Idle}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
                     {localChapter.summary && (
@@ -855,7 +855,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             size="sm"
                             variant="outline"
                             onClick={onGenerateQuiz}
-                            disabled={isQuizGenerationPending || !localChapter.transcript}
+                            disabled={isQuizGenerationPending || !localChapter?.transcript}
                         >
                             {isQuizGenerationPending ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -888,5 +888,3 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     </Card>
   );
 }
-
-  
