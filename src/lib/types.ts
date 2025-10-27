@@ -32,6 +32,8 @@ export type Course = {
   chapters: Chapter[];
   category?: CourseCategory;
   interviewQuestions?: InterviewQuestion[];
+  createdAt: any;
+  updatedAt: any;
 };
 
 export const COURSE_CATEGORIES = [

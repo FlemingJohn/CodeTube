@@ -26,6 +26,8 @@ export default function YoutubeImport({ setSearchDialogOpen }: YoutubeImportProp
   const [youtubeUrl, setYoutubeUrl] = useState('');
   
   const handleAutoDetect = async () => {
+    if (!course) return;
+
     const videoId = getYouTubeVideoId(youtubeUrl);
     if (!videoId) {
       toast({
@@ -38,7 +40,7 @@ export default function YoutubeImport({ setSearchDialogOpen }: YoutubeImportProp
     
     startTransition(async () => {
       try {
-        const result = await getYoutubeChapters(videoId);
+        const result = await getYoutubeChapters(course, videoId);
       
         if (result.error) {
           toast({
@@ -46,26 +48,18 @@ export default function YoutubeImport({ setSearchDialogOpen }: YoutubeImportProp
             title: 'Error Importing Video',
             description: result.error,
           });
-        } else if (result.chapters && result.videoTitle) {
-          // **CRITICAL FIX**: Pass the entire new course object to setCourse
-          // instead of using a functional update with a stale `prev` state.
-          const updatedCourse = {
-            ...course!,
-            videoId: videoId,
-            chapters: result.chapters,
-            title: result.videoTitle,
-          };
-          setCourse(updatedCourse);
+        } else if (result.course) {
+          setCourse(result.course);
           
-          if (result.chapters.length > 0) {
+          if (result.course.chapters.length > 0) {
             toast({
               title: 'Video Imported!',
-              description: `"${result.videoTitle}" has been loaded.`,
+              description: `"${result.course.title}" has been loaded.`,
             });
           } else {
             toast({
               title: 'Video Imported',
-              description: `"${result.videoTitle}" has been loaded. We couldn't find chapters in the description.`,
+              description: `"${result.course.title}" has been loaded. We couldn't find chapters in the description.`,
             });
           }
           

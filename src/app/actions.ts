@@ -21,7 +21,7 @@ import { rewriteText } from '@/ai/flows/rewrite-text';
 import { writeText } from '@/ai/flows/write-text';
 import { generateLearningPlan, compareVideos } from '@/ai/flows/generate-learning-plan';
 
-import { Chapter } from '@/lib/types';
+import { Chapter, Course } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { google } from 'googleapis';
@@ -174,7 +174,6 @@ async function parseChaptersFromDescription(
             summary: '',
             code: codeMap.get(currentChapter.id) || '',
             codeExplanation: '',
-            // CRITICAL FIX: Assign the full transcript text to every chapter.
             transcript: fullTranscriptText, 
         });
     }
@@ -183,7 +182,7 @@ async function parseChaptersFromDescription(
 }
 
 
-export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: Chapter[], videoTitle?: string, error?: string, warning?: string }> {
+export async function getYoutubeChapters(course: Course, videoId: string): Promise<{ course?: Course, error?: string, warning?: string }> {
   const apiKey = process.env.YOUTUBE_API_KEY;
 
   if (!apiKey) {
@@ -226,7 +225,14 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
         transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
     }
 
-    return { chapters, videoTitle, warning: transcriptWarning };
+    const updatedCourse: Course = {
+      ...course,
+      videoId,
+      title: videoTitle || course.title,
+      chapters,
+    };
+
+    return { course: updatedCourse, warning: transcriptWarning };
 
   } catch (error: any) {
     console.error('Error fetching from YouTube API:', error);

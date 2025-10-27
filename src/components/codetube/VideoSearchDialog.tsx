@@ -34,7 +34,7 @@ export default function VideoSearchDialog({
   isOpen,
   setIsOpen,
 }: VideoSearchDialogProps) {
-  const { setCourse } = useCreatorStudio();
+  const { course, setCourse } = useCreatorStudio();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<VideoSearchResult[]>([]);
@@ -59,8 +59,9 @@ export default function VideoSearchDialog({
   };
 
   const handleSelectVideo = (videoId: string) => {
+    if (!course) return;
     startImportTransition(async () => {
-      const result = await getYoutubeChapters(videoId);
+      const result = await getYoutubeChapters(course, videoId);
       
       if (result.error) {
         toast({
@@ -68,17 +69,12 @@ export default function VideoSearchDialog({
           title: 'Error Importing Video',
           description: result.error,
         });
-      } else if (result.chapters && result.videoTitle) {
-        setCourse(prev => ({
-          ...prev!,
-          videoId: videoId,
-          chapters: result.chapters,
-          title: result.videoTitle,
-        }));
+      } else if (result.course) {
+        setCourse(result.course);
         
         toast({
           title: 'Video Imported!',
-          description: `"${result.videoTitle}" has been loaded.`,
+          description: `"${result.course.title}" has been loaded.`,
         });
 
         if (result.warning) {
