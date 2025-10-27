@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Course } from '@/lib/types';
