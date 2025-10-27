@@ -325,7 +325,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     });
   };
   
-  const chapterTranscriptText = chapter.transcript.map(t => t.text).join(' ');
+  const chapterTranscriptText = Array.isArray(chapter.transcript) ? chapter.transcript.map(t => t.text).join(' ') : '';
 
   const handleAiGeneration = (action: 'summarize' | 'quiz') => {
     if (!chapterTranscriptText) {
@@ -880,3 +880,5 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     </Card>
   );
 }
+
+    
