@@ -106,7 +106,7 @@ async function parseChaptersFromDescription(
 ): Promise<Chapter[]> {
     const lines = (description || '').split('\n');
     const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
-    let chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
+    const chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
 
     const timestampToSeconds = (ts: string) => {
         const parts = ts.split(':').map(Number).reverse();
@@ -135,7 +135,9 @@ async function parseChaptersFromDescription(
 
     chapterData.sort((a, b) => a.startTime - b.startTime);
 
-    if (chapterData.length === 0 && fullTranscriptItems.length > 0) {
+    const fullTranscriptText = fullTranscriptItems.map(item => item.text).join(' ');
+
+    if (chapterData.length === 0) {
         // No chapters found in description, treat the whole video as one chapter
         chapterData.push({
             id: `${Date.now()}-0`,
@@ -145,36 +147,35 @@ async function parseChaptersFromDescription(
         });
     }
 
-    const fullTranscriptText = fullTranscriptItems.map(item => item.text).join(' ');
     const finalChapters: Chapter[] = [];
+    
+    // This is the combined text that the AI will use to find code snippets.
+    const fullContextForAi = `Video Description:\n${description || 'No description provided.'}\n\nFull Transcript:\n${fullTranscriptText || 'No transcript available.'}`;
 
-    if (chapterData.length > 0) {
-        const fullContextForAi = `Video Description:\n${description || 'No description provided.'}\n\nFull Transcript:\n${fullTranscriptText || 'No transcript available.'}`;
-
-        const chapterInfoForAi = chapterData.map(c => ({ id: c.id, title: c.title }));
-        
-        let codeMap = new Map<string, string>();
-        try {
-            const codeSnippetsResult = await findCodeInTranscript({
-                transcript: fullContextForAi,
-                chapters: chapterInfoForAi,
-            });
-            codeMap = new Map(codeSnippetsResult.chapterCodeSnippets.map(cs => [cs.chapterId, cs.code]));
-        } catch (e) {
-            console.error("AI code finding failed, proceeding without code snippets.", e);
-        }
-        
-        for (const currentChapter of chapterData) {
-            finalChapters.push({
-                id: currentChapter.id,
-                timestamp: currentChapter.timestamp,
-                title: currentChapter.title,
-                summary: '',
-                code: codeMap.get(currentChapter.id) || '',
-                codeExplanation: '',
-                transcript: fullTranscriptText, // Pass the full transcript to every chapter
-            });
-        }
+    const chapterInfoForAi = chapterData.map(c => ({ id: c.id, title: c.title }));
+    
+    let codeMap = new Map<string, string>();
+    try {
+        const codeSnippetsResult = await findCodeInTranscript({
+            transcript: fullContextForAi,
+            chapters: chapterInfoForAi,
+        });
+        codeMap = new Map(codeSnippetsResult.chapterCodeSnippets.map(cs => [cs.chapterId, cs.code]));
+    } catch (e) {
+        console.error("AI code finding failed, proceeding without code snippets.", e);
+    }
+    
+    for (const currentChapter of chapterData) {
+        finalChapters.push({
+            id: currentChapter.id,
+            timestamp: currentChapter.timestamp,
+            title: currentChapter.title,
+            summary: '',
+            code: codeMap.get(currentChapter.id) || '',
+            codeExplanation: '',
+            // CRITICAL FIX: Assign the full transcript text to every chapter.
+            transcript: fullTranscriptText, 
+        });
     }
     
     return finalChapters;
