@@ -883,7 +883,3 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     </Card>
   );
 }
-
-    
-
-    

@@ -28,6 +28,7 @@ CodeTube transforms a simple video into a structured, interactive learning exper
 - **YouTube Video Import 🎥**: Quickly import any YouTube tutorial.
 - **Automatic Chapter Detection ⏱️**: Detect time-stamped chapters from video descriptions.
 - **AI-Powered Notes & Summaries 📝**: Generate editable summaries or dictate notes via speech-to-text.
+- **Timestamped Video Snapshots 📸**: Insert clickable snapshots of the video into your notes, creating visual bookmarks.
 - **Interactive Quizzes & Interview Prep ❓💼**: Reinforce learning and practice job interview questions.
 - **Focus Mode 🎯**: Toggle workspace sections for distraction-free learning.
 - **AI Writing Tools ✍️**: Proofread, rewrite, and translate notes.
