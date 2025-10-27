@@ -42,12 +42,12 @@ enum RecordingState {
     Transcribing,
 }
 
-const FormattedText = ({ text }: { text: string }) => {
+const FormattedText = ({ text, onTimestampClick }: { text: string, onTimestampClick: (time: number) => void }) => {
     const markdownToHtml = (markdown: string) => {
         let html = markdown
             // Handle timestamped images: [![<timestamp>](<thumbnail_url>)](<video_url_with_time>)
-            .replace(/\[!\[(.*?)\]\((.*?)\)\]\((.*?)\)/g, (match, timestamp, thumbnailUrl, videoUrl) => {
-                return `<a href="${videoUrl}" target="_blank" rel="noopener noreferrer" class="block relative no-underline my-4 group">
+            .replace(/\[!\[(.*?)\]\((.*?)\)\]\(https?:\/\/www\.youtube\.com\/watch\?v=.*?&t=(\d+)s\)/g, (match, timestamp, thumbnailUrl, timeInSeconds) => {
+                return `<a href="#" data-timestamp="${timeInSeconds}" class="block relative no-underline my-4 group timestamp-link">
                             <img src="${thumbnailUrl}" alt="Video snapshot at ${timestamp}" class="rounded-md border w-full object-cover aspect-video" />
                             <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-circle"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
@@ -75,9 +75,33 @@ const FormattedText = ({ text }: { text: string }) => {
     };
 
     const paragraphs = text.split(/\n\n+/);
+    
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const currentRef = contentRef.current;
+        if (currentRef) {
+            const handleClick = (e: MouseEvent) => {
+                const target = e.target as HTMLElement;
+                const link = target.closest('.timestamp-link') as HTMLAnchorElement;
+                if (link) {
+                    e.preventDefault();
+                    const timestamp = link.dataset.timestamp;
+                    if (timestamp) {
+                        onTimestampClick(Number(timestamp));
+                    }
+                }
+            };
+            currentRef.addEventListener('click', handleClick);
+            return () => {
+                currentRef.removeEventListener('click', handleClick);
+            };
+        }
+    }, [onTimestampClick]);
+
 
     return (
-        <div className="space-y-4 prose prose-sm dark:prose-invert max-w-none">
+        <div ref={contentRef} className="space-y-4 prose prose-sm dark:prose-invert max-w-none">
             {paragraphs.map((paragraph, pIndex) => (
                  <div key={pIndex} dangerouslySetInnerHTML={{ __html: markdownToHtml(paragraph) }} />
             ))}
@@ -525,6 +549,13 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     );
   }
 
+  const handleTimestampClick = (time: number) => {
+    if (player && typeof player.seekTo === 'function') {
+        player.seekTo(time);
+        player.playVideo();
+    }
+  };
+
 
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
@@ -662,7 +693,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                 <Card className="min-h-[158px]">
                     <CardContent className="p-4">
                         {localChapter.summary ? (
-                            <FormattedText text={localChapter.summary} />
+                            <FormattedText text={localChapter.summary} onTimestampClick={handleTimestampClick} />
                         ) : (
                             <p className="text-muted-foreground text-sm">Nothing to preview. Add some notes in the edit tab.</p>
                         )}
@@ -785,7 +816,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                     </Label>
                     <Card className="bg-blue-500/10 border-blue-500/30">
                         <CardContent className="p-4">
-                            <FormattedText text={fixExplanation} />
+                            <FormattedText text={fixExplanation} onTimestampClick={handleTimestampClick} />
                         </CardContent>
                     </Card>
                  </div>
@@ -799,7 +830,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                 </Label>
                  <Card className="bg-muted/40">
                    <CardContent className="p-4">
-                     <FormattedText text={localChapter.codeExplanation} />
+                     <FormattedText text={localChapter.codeExplanation} onTimestampClick={handleTimestampClick} />
                    </CardContent>
                  </Card>
                </div>
