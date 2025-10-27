@@ -179,15 +179,13 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   };
 
   const onGenerateInterviewQuestions = (replace: boolean = false) => {
-    if (!selectedChapter || !selectedChapter.transcript || selectedChapter.transcript.trim() === '') {
+    if (!selectedChapter || !selectedChapter.transcript) {
         toast({ variant: 'destructive', title: 'Missing context', description: 'This chapter needs a transcript to generate questions.' });
         return;
     }
     startInterviewTransition(async () => {
-        const fullContext = `Course Title: ${course.title}\nChapter Title: ${selectedChapter.title}\nChapter Transcript:\n${selectedChapter.transcript}`
-        
         const result = await handleGenerateInterviewQuestions({
-            transcript: fullContext,
+            transcript: selectedChapter.transcript,
             chapterTitle: selectedChapter.title,
         });
 
@@ -467,13 +465,3 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
     </div>
   );
 }
-
-
-    
-
-  
-
-
-    
-
-    

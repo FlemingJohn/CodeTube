@@ -101,13 +101,13 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
 
 async function parseChaptersFromDescription(
     description: string, 
-    fullTranscript: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>,
+    fullTranscriptItems: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>,
     videoTitle: string
 ): Promise<Chapter[]> {
     const lines = (description || '').split('\n');
     const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
-    const chapters: Chapter[] = [];
-    
+    let chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
+
     const timestampToSeconds = (ts: string) => {
         const parts = ts.split(':').map(Number).reverse();
         let seconds = 0;
@@ -116,8 +116,6 @@ async function parseChaptersFromDescription(
         if (parts.length > 2) seconds += parts[2] * 3600;
         return seconds;
     };
-
-    let chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
 
     lines.forEach((line, index) => {
         const match = line.match(timestampRegex);
@@ -137,7 +135,7 @@ async function parseChaptersFromDescription(
 
     chapterData.sort((a, b) => a.startTime - b.startTime);
 
-    if (chapterData.length === 0 && fullTranscript.length > 0) {
+    if (chapterData.length === 0 && fullTranscriptItems.length > 0) {
         // No chapters found in description, treat the whole video as one chapter
         chapterData.push({
             id: `${Date.now()}-0`,
@@ -147,8 +145,10 @@ async function parseChaptersFromDescription(
         });
     }
 
+    const fullTranscriptText = fullTranscriptItems.map(item => item.text).join(' ');
+    const finalChapters: Chapter[] = [];
+
     if (chapterData.length > 0) {
-        const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
         const fullContextForAi = `Video Description:\n${description || 'No description provided.'}\n\nFull Transcript:\n${fullTranscriptText || 'No transcript available.'}`;
 
         const chapterInfoForAi = chapterData.map(c => ({ id: c.id, title: c.title }));
@@ -164,35 +164,20 @@ async function parseChaptersFromDescription(
             console.error("AI code finding failed, proceeding without code snippets.", e);
         }
         
-        const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + (fullTranscript[fullTranscript.length - 1].duration || 0)) / 1000 : 0;
-
-        for (const [index, currentChapter] of chapterData.entries()) {
-            const nextChapter = chapterData[index + 1];
-            const endTime = nextChapter ? nextChapter.startTime : videoDuration;
-            
-            const chapterTranscript = fullTranscript
-                .filter(item => {
-                    const itemTime = item.offset / 1000; // item.offset is in milliseconds
-                    // Include transcript parts that start at or after the chapter's start time,
-                    // and before the next chapter's start time (or end of video).
-                    return itemTime >= currentChapter.startTime && (endTime === 0 || itemTime < endTime);
-                })
-                .map(item => item.text)
-                .join(' ');
-            
-            chapters.push({
+        for (const currentChapter of chapterData) {
+            finalChapters.push({
                 id: currentChapter.id,
                 timestamp: currentChapter.timestamp,
                 title: currentChapter.title,
                 summary: '',
                 code: codeMap.get(currentChapter.id) || '',
                 codeExplanation: '',
-                transcript: chapterTranscript,
+                transcript: fullTranscriptText, // Pass the full transcript to every chapter
             });
         }
     }
     
-    return chapters;
+    return finalChapters;
 }
 
 
@@ -604,5 +589,3 @@ export async function handleCompareVideos(values: z.infer<typeof compareVideosSc
         return { error: e.message || 'Failed to compare videos.' };
     }
 }
-
-    
