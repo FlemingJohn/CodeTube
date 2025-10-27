@@ -334,7 +334,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
   };
 
   const onGenerateQuiz = () => {
-    if (!localChapter.transcript || localChapter.transcript.trim() === '') {
+    if (!localChapter.transcript) {
         toast({
           variant: 'destructive',
           title: 'Missing Chapter Transcript',
@@ -442,7 +442,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         toast({ variant: 'destructive', title: 'Nothing to edit', description: 'Please write some notes first.' });
         return;
       }
-       if (action === 'summarize' && (!localChapter.transcript || localChapter.transcript.trim() === '')) {
+       if (action === 'summarize' && !localChapter.transcript) {
         toast({ variant: 'destructive', title: 'Missing Transcript', description: 'A chapter transcript is needed to generate a summary.' });
         return;
       }
@@ -617,7 +617,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter?.transcript || localChapter.transcript.trim() === '' || recordingState !== RecordingState.Idle}>
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter.transcript || recordingState !== RecordingState.Idle}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
                     {localChapter.summary && (
@@ -855,7 +855,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             size="sm"
                             variant="outline"
                             onClick={onGenerateQuiz}
-                            disabled={isQuizGenerationPending || !localChapter.transcript || localChapter.transcript.trim() === ''}
+                            disabled={isQuizGenerationPending || !localChapter.transcript}
                         >
                             {isQuizGenerationPending ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -888,6 +888,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     </Card>
   );
 }
+
+    
 
     
 
