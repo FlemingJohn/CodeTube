@@ -108,7 +108,6 @@ const FormattedText = ({ text, onTimestampClick }: { text: string, onTimestampCl
         </div>
     );
 };
-  
 
 const QuizCard = ({ quiz, index }: { quiz: Quiz; index: number }) => {
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -562,8 +561,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         player.playVideo();
     }
   };
-
-
+  
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -890,3 +888,5 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     </Card>
   );
 }
+
+    
