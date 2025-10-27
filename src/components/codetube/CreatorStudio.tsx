@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import React, { useState, useMemo, useEffect, useTransition, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useTransition } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -22,12 +21,12 @@ import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import GithubExportDialog from './GithubExportDialog';
 import ShareDialog from './ShareDialog';
-import type { Chapter, Course, CourseCategory, InterviewQuestion } from '@/lib/types';
+import type { Chapter, Course, CourseCategory } from '@/lib/types';
 import { COURSE_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth } from '@/firebase';
 import VideoPlayer from './VideoPlayer';
 import VideoSearchDialog from './VideoSearchDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -36,7 +35,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { ScrollArea } from '../ui/scroll-area';
-import { updateCourse } from '@/lib/courses';
 import Link from 'next/link';
 import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
 import FocusModeToggle from './FocusModeToggle';
@@ -95,7 +93,6 @@ const FormattedAnswer = ({ text }: { text: string }) => {
 export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdate }: CreatorStudioProps) {
   const { toast } = useToast();
   const auth = useAuth();
-  const firestore = useFirestore();
   const router = useRouter();
   const { settings } = useFocusMode();
   const [recentTopics] = useLocalStorage<string[]>('course-mentor-history', []);
