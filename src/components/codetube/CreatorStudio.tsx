@@ -184,8 +184,10 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
         return;
     }
     startInterviewTransition(async () => {
+        const fullContext = `Course Title: ${course.title}\nChapter Title: ${selectedChapter.title}\nChapter Transcript:\n${selectedChapter.transcript}`
+        
         const result = await handleGenerateInterviewQuestions({
-            transcript: selectedChapter.transcript,
+            transcript: fullContext,
             chapterTitle: selectedChapter.title,
         });
 

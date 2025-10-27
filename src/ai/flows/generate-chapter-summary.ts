@@ -11,7 +11,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { summarizeText } from './summarize-text';
 
 const GenerateChapterSummaryInputSchema = z.object({
   transcript: z
@@ -43,20 +42,25 @@ const generateChapterSummaryFlow = ai.defineFlow(
     inputSchema: GenerateChapterSummaryInputSchema,
     outputSchema: GenerateChapterSummaryOutputSchema,
   },
-  async input => {
-    const prompt = `You are an expert educator who can create concise chapter notes in bullet points.
+  async ({ transcript, chapterTitle }) => {
+    const prompt = ai.definePrompt({
+        name: 'generateChapterSummaryPrompt',
+        output: { schema: GenerateChapterSummaryOutputSchema },
+        prompt: `You are an expert educator who can create concise chapter notes in bullet points.
 
-    Based on the chapter title and the provided transcript, generate a summary as a list of bullet points.
-    Focus only on the key points relevant to the chapter title.
-    
-    Chapter Title: "${input.chapterTitle}"
-    
-    Transcript:
-    \`\`\`
-    ${input.transcript}
-    \`\`\`
-    `;
-    const { summary } = await summarizeText({text: prompt})
-    return { summary };
+        Based on the chapter title and the provided transcript, generate a summary as a list of bullet points.
+        Focus only on the key points relevant to the chapter title.
+        
+        Chapter Title: "${chapterTitle}"
+        
+        Transcript:
+        \`\`\`
+        ${transcript}
+        \`\`\`
+        `
+    });
+
+    const { output } = await prompt();
+    return output!;
   }
 );
