@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -74,9 +73,9 @@ export default function CreatorPage() {
     }
   };
   
-  const handleDebouncedCourseUpdate = (courseData: Partial<Course>) => {
-    if (!user || !firestore || !activeCourseId) return;
-    updateCourse(firestore, user.uid, activeCourseId, courseData);
+  const handleDebouncedCourseUpdate = (courseId: string, courseData: Partial<Course>) => {
+    if (!user || !firestore) return;
+    updateCourse(firestore, user.uid, courseId, courseData);
   }
 
   const activeCourse = courses?.find(c => c.id === activeCourseId);
@@ -97,7 +96,7 @@ export default function CreatorPage() {
         key={activeCourse.id}
         initialCourse={activeCourse}
         onBackToDashboard={handleBackToDashboard}
-        onCourseUpdate={handleDebouncedCourseUpdate}
+        onCourseUpdate={(courseData) => handleDebouncedCourseUpdate(activeCourse.id, courseData)}
     />
   );
 }

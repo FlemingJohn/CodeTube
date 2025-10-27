@@ -39,6 +39,7 @@ import Link from 'next/link';
 import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
 import FocusModeToggle from './FocusModeToggle';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { CreatorStudioProvider, useCreatorStudio } from '@/hooks/use-creator-studio';
 
 interface CreatorStudioProps {
     initialCourse: Course;
@@ -90,15 +91,13 @@ const FormattedAnswer = ({ text }: { text: string }) => {
     );
 };
 
-export default function CreatorStudio({ initialCourse, onBackToDashboard, onCourseUpdate }: CreatorStudioProps) {
+function CreatorStudioInner({ onBackToDashboard }: { onBackToDashboard: () => void }) {
+  const { course, setCourse, player } = useCreatorStudio();
   const { toast } = useToast();
   const auth = useAuth();
   const router = useRouter();
   const { settings } = useFocusMode();
   const [recentTopics] = useLocalStorage<string[]>('course-mentor-history', []);
-  
-  // The local state for the course is the single source of truth for the editor.
-  const [course, setCourse] = useState(initialCourse);
   
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [playingChapterId, setPlayingChapterId] = useState<string | null>(null);
@@ -106,13 +105,8 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
   const [isSearchDialogOpen, setSearchDialogOpen] = useState(false);
   const [isShareDialogOpen, setShareDialogOpen] = useState(false);
   const [isInterviewPending, startInterviewTransition] = useTransition();
-  const [player, setPlayer] = useState<any>(null);
   const [hasMounted, setHasMounted] = useState(false);
 
-  // When the initial course changes, update our local state.
-  useEffect(() => {
-    setCourse(initialCourse);
-  }, [initialCourse]);
 
   useEffect(() => {
     setHasMounted(true);
@@ -120,32 +114,33 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
 
   // Effect to manage chapter selection
   useEffect(() => {
-    if (course.chapters.length > 0) {
+    if (course && course.chapters.length > 0) {
       if (!selectedChapterId || !course.chapters.some(c => c.id === selectedChapterId)) {
         setSelectedChapterId(course.chapters[0].id);
       }
     } else {
       setSelectedChapterId(null);
     }
-  }, [course.chapters, selectedChapterId]);
+  }, [course?.chapters, selectedChapterId]);
 
   // Effect to prompt video search if none exists
   useEffect(() => {
-    if (hasMounted && !course.videoId) {
+    if (hasMounted && course && !course.videoId) {
       setSearchDialogOpen(true);
     }
-  }, [course.videoId, hasMounted]);
+  }, [course?.videoId, hasMounted]);
   
   const chapterStartTimes = useMemo(() => {
+    if (!course) return [];
     return course.chapters.map(chapter => ({
       id: chapter.id,
       startTime: timestampToSeconds(chapter.timestamp),
     })).sort((a, b) => a.startTime - b.startTime);
-  }, [course.chapters]);
+  }, [course?.chapters]);
 
   const selectedChapter = useMemo(
-    () => course.chapters.find(c => c.id === selectedChapterId),
-    [course.chapters, selectedChapterId]
+    () => course?.chapters.find(c => c.id === selectedChapterId),
+    [course?.chapters, selectedChapterId]
   );
   
   // Effect to track the currently playing chapter in the video
@@ -176,16 +171,6 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
   }, [player, chapterStartTimes]);
 
 
-  // This function now handles all updates to the course.
-  // It updates the local state immediately for a responsive UI
-  // and then sends the update to the database in the background.
-  const handleCourseUpdate = useCallback((courseUpdate: Partial<Course>) => {
-    const updatedCourse = { ...course, ...courseUpdate };
-    setCourse(updatedCourse); // Immediate local update
-    onCourseUpdate(courseUpdate); // Background persistence
-  }, [course, onCourseUpdate]);
-  
-
   const onGenerateInterviewQuestions = (replace: boolean = false) => {
     if (!selectedChapter || !selectedChapter.transcript) {
         toast({ variant: 'destructive', title: 'Missing context', description: 'This chapter needs a transcript to generate questions.' });
@@ -200,13 +185,15 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
         if (result.error) {
             toast({ variant: 'destructive', title: 'Error', description: result.error });
         } else if (result.questions) {
-            const existingQuestions = replace ? [] : (selectedChapter.interviewQuestions || []);
-            const updatedChapter = { 
-                ...selectedChapter, 
-                interviewQuestions: [...existingQuestions, ...result.questions] 
-            };
-            const newChapters = course.chapters.map(c => c.id === updatedChapter.id ? updatedChapter : c);
-            handleCourseUpdate({ chapters: newChapters });
+            setCourse(prev => {
+                if (!prev) return null;
+                const updatedChapter = { 
+                    ...selectedChapter, 
+                    interviewQuestions: [...(replace ? [] : (selectedChapter.interviewQuestions || [])), ...result.questions] 
+                };
+                const newChapters = prev.chapters.map(c => c.id === updatedChapter.id ? updatedChapter : c);
+                return { ...prev, chapters: newChapters };
+            });
             toast({ title: 'Interview questions generated!' });
         }
     });
@@ -219,10 +206,6 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
       description: "You have been successfully signed out.",
     });
     router.push('/');
-  };
-
-  const onPlayerReady = (event: any) => {
-    setPlayer(event.target);
   };
 
   const handleChapterSelect = (chapter: Chapter | null) => {
@@ -239,10 +222,15 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
   }
 
   const handleCategoryChange = (category: CourseCategory) => {
-    handleCourseUpdate({ category });
+    if (!course) return;
+    setCourse({ ...course, category });
   }
   
   const showEditorPanel = settings.showNotes || settings.showCodeEditor || settings.showQuiz;
+
+  if (!course) {
+    return <div className='flex h-screen w-full items-center justify-center'><Loader2 className="animate-spin h-12 w-12" /></div>
+  }
 
   return (
     <div className="h-screen bg-background">
@@ -259,7 +247,6 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
           <SidebarContent className="flex-1 flex flex-col">
             <div className="flex flex-col gap-4 p-2 h-full">
               <YoutubeImport 
-                onCourseUpdate={handleCourseUpdate}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <div className="space-y-2">
@@ -286,7 +273,6 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
                 key={course.videoId}
                 chapters={course.chapters}
                 videoId={course.videoId}
-                onChaptersUpdate={(chapters) => handleCourseUpdate({ chapters })}
                 selectedChapterId={selectedChapterId}
                 playingChapterId={playingChapterId}
                 onChapterSelect={handleChapterSelect}
@@ -359,7 +345,7 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
                   <ScrollArea className="h-full">
                   <div className="flex flex-col gap-6 p-4 md:p-6">
                       {course.videoId ? (
-                      <VideoPlayer videoId={course.videoId} onReady={onPlayerReady} />
+                      <VideoPlayer videoId={course.videoId} />
                       ) : (
                       <div className="flex-grow flex aspect-video h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background">
                           <div className="text-center text-muted-foreground">
@@ -431,13 +417,6 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
                         <ChapterEditor
                             key={selectedChapter.id}
                             chapter={selectedChapter}
-                            onCourseUpdate={(updatedChapter) => {
-                                const newChapters = course.chapters.map(c => c.id === updatedChapter.id ? updatedChapter : c);
-                                handleCourseUpdate({ chapters: newChapters });
-                            }}
-                            courseTitle={course.title}
-                            videoId={course.videoId}
-                            player={player}
                         />
                     ) : (
                         <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background m-4">
@@ -464,7 +443,6 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
         <VideoSearchDialog
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
-          onCourseUpdate={handleCourseUpdate}
         />
 
         <ShareDialog
@@ -476,4 +454,13 @@ export default function CreatorStudio({ initialCourse, onBackToDashboard, onCour
       </SidebarProvider>
     </div>
   );
+}
+
+
+export default function CreatorStudio(props: CreatorStudioProps) {
+  return (
+    <CreatorStudioProvider {...props}>
+        <CreatorStudioInner onBackToDashboard={props.onBackToDashboard} />
+    </CreatorStudioProvider>
+  )
 }

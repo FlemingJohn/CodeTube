@@ -7,11 +7,11 @@ import { Plus, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { useCreatorStudio } from '@/hooks/use-creator-studio';
 
 interface ChapterListProps {
   chapters: Chapter[];
   videoId: string | null;
-  onChaptersUpdate: (chapters: Chapter[]) => void;
   selectedChapterId: string | null;
   playingChapterId: string | null;
   onChapterSelect: (chapter: Chapter | null) => void;
@@ -20,11 +20,12 @@ interface ChapterListProps {
 export default function ChapterList({
   chapters,
   videoId,
-  onChaptersUpdate,
   selectedChapterId,
   playingChapterId,
   onChapterSelect,
 }: ChapterListProps) {
+  const { setCourse } = useCreatorStudio();
+
   const addChapter = () => {
     const newChapter: Chapter = {
       id: Date.now().toString(),
@@ -35,15 +36,14 @@ export default function ChapterList({
       codeExplanation: '',
       transcript: 'This is a new chapter. Please add a transcript.',
     };
-    onChaptersUpdate([...chapters, newChapter]);
+    setCourse(prev => prev ? ({ ...prev, chapters: [...prev.chapters, newChapter] }) : null);
     onChapterSelect(newChapter);
   };
 
   const deleteChapter = (idToDelete: string) => {
     const newChapters = chapters.filter(c => c.id !== idToDelete);
-    onChaptersUpdate(newChapters);
+    setCourse(prev => prev ? ({ ...prev, chapters: newChapters }) : null);
     if (selectedChapterId === idToDelete) {
-      // Select the first chapter if it exists, otherwise null
       onChapterSelect(newChapters.length > 0 ? newChapters[0] : null);
     }
   };

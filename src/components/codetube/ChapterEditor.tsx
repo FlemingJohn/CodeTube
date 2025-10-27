@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useChromeAi } from '@/hooks/useChromeAi';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
+import { useCreatorStudio } from '@/hooks/use-creator-studio';
 
 const TONES = ['Explanatory', 'Concise', 'Formal', 'Casual', 'Persuasive'];
 const LANGUAGES = ['Spanish', 'French', 'German', 'Japanese', 'Chinese', 'Russian', 'Arabic'];
@@ -162,14 +163,10 @@ const languageOptions = [
 
 interface ChapterEditorProps {
   chapter: Chapter;
-  onCourseUpdate: (updatedCourse: Partial<{ chapters: Chapter[] }>) => void;
-  courseTitle: string;
-  videoId: string | null;
-  player: any;
 }
 
-export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, videoId, player }: ChapterEditorProps) {
-  const [localChapter, setLocalChapter] = useState(chapter);
+export default function ChapterEditor({ chapter }: ChapterEditorProps) {
+  const { course, setCourse, player } = useCreatorStudio();
   const { toast } = useToast();
   const { settings } = useFocusMode();
   const [isAiEditing, startAiEditTransition] = useTransition();
@@ -187,28 +184,25 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  useEffect(() => {
-    setLocalChapter(chapter);
-  }, [chapter]);
-
+  const handleUpdateChapter = (updatedChapter: Chapter) => {
+    setCourse(prevCourse => {
+        if (!prevCourse) return null;
+        const newChapters = prevCourse.chapters.map(c => c.id === updatedChapter.id ? updatedChapter : c);
+        return { ...prevCourse, chapters: newChapters };
+    });
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const updatedChapter = { ...localChapter, [name]: value };
-    setLocalChapter(updatedChapter);
-    onCourseUpdate({ chapters: [updatedChapter] }); // Propagate change up
+    handleUpdateChapter({ ...chapter, [name]: value });
   };
   
   const handleSummaryChange = (newSummary: string) => {
-    const updatedChapter = { ...localChapter, summary: newSummary };
-    setLocalChapter(updatedChapter);
-    onCourseUpdate({ chapters: [updatedChapter] });
+    handleUpdateChapter({ ...chapter, summary: newSummary });
   }
 
   const handleCodeChange = (code: string) => {
-    const updatedChapter = { ...localChapter, code: code };
-    setLocalChapter(updatedChapter);
-    onCourseUpdate({ chapters: [updatedChapter] });
+    handleUpdateChapter({ ...chapter, code: code });
   }
 
   const applyMarkdown = (syntax: 'bold' | 'italic' | 'code' | 'list') => {
@@ -266,7 +260,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
   };
   
   const onAddSnapshot = () => {
-    if (!player || typeof player.getCurrentTime !== 'function' || !videoId) {
+    if (!player || typeof player.getCurrentTime !== 'function' || !course?.videoId) {
         toast({ variant: 'destructive', title: 'Video player not ready', description: 'Please wait for the video to load before taking a snapshot.' });
         return;
     }
@@ -278,8 +272,8 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
     const format = (n: number) => n.toString().padStart(2, '0');
     const timestamp = `${hours > 0 ? format(hours)+':' : ''}${format(minutes)}:${format(seconds)}`;
 
-    const videoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${currentTime}s`;
-    const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+    const videoUrl = `https://www.youtube.com/watch?v=${course.videoId}&t=${currentTime}s`;
+    const thumbnailUrl = `https://i.ytimg.com/vi/${course.videoId}/mqdefault.jpg`;
 
     const markdownImage = `\n\n[![${timestamp}](${thumbnailUrl})](${videoUrl})\n\n`;
     
@@ -296,7 +290,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
         }, 0);
     } else {
         // Fallback if ref isn't available for some reason
-        const currentSummary = localChapter.summary || '';
+        const currentSummary = chapter.summary || '';
         handleSummaryChange(currentSummary + markdownImage);
     }
 
@@ -305,7 +299,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
 
 
   const onExplainCode = () => {
-    if (!localChapter.code) {
+    if (!chapter.code) {
       toast({
         variant: 'destructive',
         title: 'No Code Found',
@@ -314,7 +308,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
       return;
     }
     startCodeExplanationTransition(async () => {
-      const result = await handleExplainCode({ code: localChapter.code });
+      const result = await handleExplainCode({ code: chapter.code });
       if (result.error) {
         toast({
           variant: 'destructive',
@@ -322,9 +316,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
           description: result.error,
         });
       } else if (result.explanation) {
-        const updatedChapter = { ...localChapter, codeExplanation: result.explanation };
-        setLocalChapter(updatedChapter);
-        onCourseUpdate({ chapters: [updatedChapter] });
+        handleUpdateChapter({ ...chapter, codeExplanation: result.explanation });
         toast({
           title: 'Code Explained',
           description: 'The AI-powered explanation has been generated.',
@@ -334,7 +326,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
   };
 
   const handleAiGeneration = (action: 'summarize' | 'quiz') => {
-    if (!localChapter.transcript) {
+    if (!chapter.transcript) {
       toast({ variant: 'destructive', title: 'Missing Transcript', description: 'A chapter transcript is needed for AI generation.' });
       return;
     }
@@ -343,9 +335,9 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
         if (action === 'summarize') {
           let summaryResult;
           if (aiAvailable) {
-            summaryResult = await summarize(localChapter.transcript, localChapter.title);
+            summaryResult = await summarize(chapter.transcript, chapter.title);
           } else {
-            const serverResult = await handleGenerateSummary({ transcript: localChapter.transcript, chapterTitle: localChapter.title });
+            const serverResult = await handleGenerateSummary({ transcript: chapter.transcript, chapterTitle: chapter.title });
             if (serverResult.error) throw new Error(serverResult.error);
             summaryResult = serverResult.summary;
           }
@@ -357,13 +349,11 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
           }
         } else if (action === 'quiz') {
           // Quiz generation always uses server-side AI for now due to complexity
-          const result = await handleGenerateQuiz({ transcript: localChapter.transcript, chapterTitle: localChapter.title });
+          const result = await handleGenerateQuiz({ transcript: chapter.transcript, chapterTitle: chapter.title });
           if (result.error) {
             throw new Error(result.error);
           } else if (result.questions) {
-            const updatedChapter = { ...localChapter, quiz: result.questions };
-            setLocalChapter(updatedChapter);
-            onCourseUpdate({ chapters: [updatedChapter] });
+            handleUpdateChapter({ ...chapter, quiz: result.questions });
             toast({ title: 'Quiz Generated!', description: 'A new 5-question quiz has been added.' });
           }
         }
@@ -374,7 +364,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
   };
 
   const onRunCode = () => {
-    if (!localChapter.code) {
+    if (!chapter.code) {
       toast({
         variant: 'destructive',
         title: 'No Code Found',
@@ -386,7 +376,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
       setCodeOutput(null); // Clear previous output
       setFixExplanation(null);
       const result = await handleRunCode({ 
-        source_code: localChapter.code, 
+        source_code: chapter.code, 
         language_id: parseInt(selectedLanguage) 
       });
       
@@ -408,7 +398,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
 
   const onFixCode = () => {
     const errorLog = codeOutput?.stderr || codeOutput?.compile_output;
-    if (!localChapter.code || !errorLog) {
+    if (!chapter.code || !errorLog) {
       toast({
         variant: 'destructive',
         title: 'Nothing to Fix',
@@ -418,7 +408,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
     }
     startFixCodeTransition(async () => {
       const result = await handleFixCodeError({
-        code: localChapter.code,
+        code: chapter.code,
         error: errorLog,
       });
 
@@ -445,7 +435,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
   const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone' | 'translate', context?: string) => {
     startAiEditTransition(async () => {
       let result;
-      const originalText = localChapter.summary;
+      const originalText = chapter.summary;
       if (!originalText && ['proofread', 'rewrite', 'tone', 'translate'].includes(action)) {
         toast({ variant: 'destructive', title: 'Nothing to edit', description: 'Please write some notes first.' });
         return;
@@ -456,7 +446,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
             // Use client-side AI
             if (action === 'proofread') result = await proofread(originalText);
             else if (action === 'rewrite' || action === 'tone') result = await rewrite(originalText, context);
-            else if (action === 'write') result = await write(`Write a brief summary for a video chapter titled: "${localChapter.title}"`);
+            else if (action === 'write') result = await write(`Write a brief summary for a video chapter titled: "${chapter.title}"`);
             else if (action === 'translate') result = await translate(originalText, context!);
         } else {
             // Fallback to server-side AI
@@ -469,7 +459,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.rewrittenText;
             } else if (action === 'write') {
-                const serverResult = await handleWriteText(`Write a brief summary for a video chapter titled: "${localChapter.title}"`);
+                const serverResult = await handleWriteText(`Write a brief summary for a video chapter titled: "${chapter.title}"`);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.writtenText;
             } else if (action === 'translate') {
@@ -513,7 +503,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                 if (result.error) {
                     toast({ variant: 'destructive', title: 'Transcription Error', description: result.error });
                 } else {
-                    const currentSummary = localChapter.summary;
+                    const currentSummary = chapter.summary;
                     const newText = result.text || '';
                     const updatedSummary = currentSummary ? `${currentSummary}\n${newText}` : newText;
                     handleSummaryChange(updatedSummary);
@@ -560,10 +550,12 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
     );
   }
   
+  if (!course) return null;
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
-        <CardTitle className="font-headline text-3xl">{courseTitle}</CardTitle>
+        <CardTitle className="font-headline text-3xl">{course.title}</CardTitle>
         <CardDescription>Edit the details for the selected chapter.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -574,7 +566,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                     <Input
                     id="timestamp"
                     name="timestamp"
-                    value={localChapter.timestamp}
+                    value={chapter.timestamp}
                     onChange={handleChange}
                     placeholder="e.g., 01:23"
                     />
@@ -584,7 +576,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                     <Input
                     id="title"
                     name="title"
-                    value={localChapter.title}
+                    value={chapter.title}
                     onChange={handleChange}
                     placeholder="e.g., Setting up the project"
                     />
@@ -615,10 +607,10 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !localChapter.transcript}>
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !chapter.transcript}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
-                    {localChapter.summary && (
+                    {chapter.summary && (
                         <>
                         <Popover>
                             <PopoverTrigger asChild>
@@ -677,14 +669,14 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                             <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('italic')}><Italic className="h-4 w-4"/></Button>
                             <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('code')}><CodeIcon className="h-4 w-4"/></Button>
                             <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('list')}><List className="h-4 w-4"/></Button>
-                            <Button variant="ghost" size="icon" className='h-8 w-8' onClick={onAddSnapshot} disabled={!videoId}><Camera className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8' onClick={onAddSnapshot} disabled={!course.videoId}><Camera className="h-4 w-4"/></Button>
                         </div>
                     </div>
                     <Textarea
                         id="summary"
                         name="summary"
                         ref={summaryTextareaRef}
-                        value={localChapter.summary}
+                        value={chapter.summary}
                         onChange={e => handleSummaryChange(e.target.value)}
                         placeholder="Write your notes here, or use the AI tools to generate them."
                         rows={6}
@@ -695,8 +687,8 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
              <TabsContent value="preview" className="mt-0">
                 <Card className="min-h-[158px]">
                     <CardContent className="p-4">
-                        {localChapter.summary ? (
-                            <FormattedText text={localChapter.summary} onTimestampClick={handleTimestampClick} />
+                        {chapter.summary ? (
+                            <FormattedText text={chapter.summary} onTimestampClick={handleTimestampClick} />
                         ) : (
                             <p className="text-muted-foreground text-sm">Nothing to preview. Add some notes in the edit tab.</p>
                         )}
@@ -728,7 +720,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                         size="sm"
                         variant="secondary"
                         onClick={onRunCode}
-                        disabled={isRunCodePending || !localChapter.code}
+                        disabled={isRunCodePending || !chapter.code}
                     >
                         {isRunCodePending ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -741,7 +733,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                         size="sm"
                         variant="outline"
                         onClick={onExplainCode}
-                        disabled={isCodeExplanationPending || !localChapter.code}
+                        disabled={isCodeExplanationPending || !chapter.code}
                     >
                         {isCodeExplanationPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -755,7 +747,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
               <Textarea
                 id="code"
                 name="code"
-                value={localChapter.code}
+                value={chapter.code}
                 onChange={handleChange}
                 placeholder="Click 'Find Code' to get a snippet from the transcript, or paste your own."
                 rows={8}
@@ -825,7 +817,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                  </div>
             )}
 
-            {localChapter.codeExplanation && (
+            {chapter.codeExplanation && (
                <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Bot className="h-4 w-4" />
@@ -833,7 +825,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                 </Label>
                  <Card className="bg-muted/40">
                    <CardContent className="p-4">
-                     <FormattedText text={localChapter.codeExplanation} onTimestampClick={handleTimestampClick} />
+                     <FormattedText text={chapter.codeExplanation} onTimestampClick={handleTimestampClick} />
                    </CardContent>
                  </Card>
                </div>
@@ -853,7 +845,7 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                             size="sm"
                             variant="outline"
                             onClick={() => handleAiGeneration('quiz')}
-                            disabled={isAiGenerating || !localChapter.transcript}
+                            disabled={isAiGenerating || !chapter.transcript}
                         >
                             {isAiGenerating ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -865,10 +857,10 @@ export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, vi
                     </div>
                 </div>
 
-                {localChapter.quiz && localChapter.quiz.length > 0 ? (
+                {chapter.quiz && chapter.quiz.length > 0 ? (
                     <ScrollArea className="h-96 pr-4">
                         <div className="space-y-4">
-                            {localChapter.quiz.map((q, index) => (
+                            {chapter.quiz.map((q, index) => (
                                 <QuizCard key={index} quiz={q} index={index} />
                             ))}
                         </div>

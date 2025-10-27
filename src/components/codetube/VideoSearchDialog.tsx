@@ -15,13 +15,12 @@ import { Loader2, Search, Youtube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { handleYoutubeSearch, getYoutubeChapters } from '@/app/actions';
 import Image from 'next/image';
-import type { Course } from '@/lib/types';
 import { ScrollArea } from '../ui/scroll-area';
+import { useCreatorStudio } from '@/hooks/use-creator-studio';
 
 interface VideoSearchDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onCourseUpdate: (courseUpdate: Partial<Course>) => void;
 }
 
 type VideoSearchResult = {
@@ -34,8 +33,8 @@ type VideoSearchResult = {
 export default function VideoSearchDialog({
   isOpen,
   setIsOpen,
-  onCourseUpdate,
 }: VideoSearchDialogProps) {
+  const { setCourse } = useCreatorStudio();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<VideoSearchResult[]>([]);
@@ -70,11 +69,12 @@ export default function VideoSearchDialog({
           description: result.error,
         });
       } else if (result.chapters && result.videoTitle) {
-        onCourseUpdate({
+        setCourse(prev => ({
+          ...prev!,
           videoId: videoId,
           chapters: result.chapters,
           title: result.videoTitle,
-        });
+        }));
         
         toast({
           title: 'Video Imported!',

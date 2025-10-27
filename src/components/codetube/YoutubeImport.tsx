@@ -5,12 +5,11 @@ import React, { useState, useTransition } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Youtube, Search } from 'lucide-react';
-import type { Chapter, Course } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { getYoutubeChapters } from '@/app/actions';
+import { useCreatorStudio } from '@/hooks/use-creator-studio';
 
 interface YoutubeImportProps {
-  onCourseUpdate: (courseUpdate: Partial<Course>) => void;
   setSearchDialogOpen: (isOpen: boolean) => void;
 }
 
@@ -20,7 +19,8 @@ function getYouTubeVideoId(url: string): string | null {
   return (match && match[2].length === 11) ? match[2] : null;
 }
 
-export default function YoutubeImport({ onCourseUpdate, setSearchDialogOpen }: YoutubeImportProps) {
+export default function YoutubeImport({ setSearchDialogOpen }: YoutubeImportProps) {
+  const { setCourse } = useCreatorStudio();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -47,11 +47,12 @@ export default function YoutubeImport({ onCourseUpdate, setSearchDialogOpen }: Y
             description: result.error,
           });
         } else if (result.chapters && result.videoTitle) {
-          onCourseUpdate({
+          setCourse(prev => ({
+            ...prev!,
             videoId: videoId,
             chapters: result.chapters,
             title: result.videoTitle,
-          });
+          }));
           
           if (result.chapters.length > 0) {
             toast({
