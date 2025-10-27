@@ -74,6 +74,11 @@ export default function CreatorPage() {
     }
   };
   
+  const handleCourseUpdate = (updatedCourse: Course) => {
+    if (!user || !firestore) return;
+    updateCourse(firestore, user.uid, updatedCourse.id, updatedCourse);
+  }
+
   const activeCourse = courses?.find(c => c.id === activeCourseId);
   
   if (!activeCourse) {
@@ -92,6 +97,7 @@ export default function CreatorPage() {
         key={activeCourse.id}
         course={activeCourse}
         onBackToDashboard={handleBackToDashboard}
+        onCourseUpdate={handleCourseUpdate}
     />
   );
 }

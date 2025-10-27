@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useEffect, useTransition } from 'react';
+import React, { useState, useMemo, useEffect, useTransition, useCallback } from 'react';
 import {
   SidebarProvider,
   Sidebar,
@@ -45,9 +45,11 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 interface CreatorStudioProps {
     course: Course;
     onBackToDashboard: () => void;
+    onCourseUpdate: (updatedCourse: Course) => void;
 }
 
 const timestampToSeconds = (ts: string) => {
+    if (!ts) return 0;
     const parts = ts.split(':').map(Number);
     if (parts.length === 3) { // hh:mm:ss
         return parts[0] * 3600 + parts[1] * 60 + parts[2];
@@ -90,7 +92,7 @@ const FormattedAnswer = ({ text }: { text: string }) => {
     );
 };
 
-export default function CreatorStudio({ course: initialCourse, onBackToDashboard }: CreatorStudioProps) {
+export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdate }: CreatorStudioProps) {
   const { toast } = useToast();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -98,8 +100,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   const { settings } = useFocusMode();
   const [recentTopics] = useLocalStorage<string[]>('course-mentor-history', []);
 
-
-  const [course, setCourse] = useState(initialCourse);
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [playingChapterId, setPlayingChapterId] = useState<string | null>(null);
   const [isGithubDialogOpen, setGithubDialogOpen] = useState(false);
@@ -114,10 +114,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   }, []);
 
   useEffect(() => {
-    setCourse(initialCourse);
-  }, [initialCourse]);
-
-  useEffect(() => {
     if (course.chapters.length > 0) {
       if (!selectedChapterId || !course.chapters.some(c => c.id === selectedChapterId)) {
         setSelectedChapterId(course.chapters[0].id);
@@ -128,16 +124,10 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   }, [course.chapters, selectedChapterId]);
 
   useEffect(() => {
-    // Only run this effect on the client after the component has mounted
-    if (hasMounted && !initialCourse.videoId) {
+    if (hasMounted && !course.videoId) {
       setSearchDialogOpen(true);
     }
-  }, [initialCourse.videoId, hasMounted]);
-
-  const onCourseUpdate = (updatedCourse: Course) => {
-    setCourse(updatedCourse);
-    updateCourse(firestore, updatedCourse.userId, updatedCourse.id, updatedCourse);
-  };
+  }, [course.videoId, hasMounted]);
 
   const chapterStartTimes = useMemo(() => {
     return course.chapters.map(chapter => ({
@@ -179,6 +169,10 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
 
   const handleUpdateChapter = (updatedChapter: Chapter) => {
     const newChapters = course.chapters.map(c => (c.id === updatedChapter.id ? updatedChapter : c));
+    onCourseUpdate({ ...course, chapters: newChapters });
+  };
+
+  const handleChaptersUpdate = (newChapters: Chapter[]) => {
     onCourseUpdate({ ...course, chapters: newChapters });
   };
 
@@ -236,9 +230,12 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   const handleCategoryChange = (category: CourseCategory) => {
     onCourseUpdate({ ...course, category });
   }
+
+  const handleImport = (update: Partial<Course>) => {
+    onCourseUpdate({ ...course, ...update });
+  }
   
   const showEditorPanel = settings.showNotes || settings.showCodeEditor || settings.showQuiz;
-
 
   return (
     <div className="h-screen bg-background">
@@ -255,7 +252,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
           <SidebarContent className="flex-1 flex flex-col">
             <div className="flex flex-col gap-4 p-2 h-full">
               <YoutubeImport 
-                onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
+                onCourseUpdate={handleImport}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <div className="space-y-2">
@@ -282,7 +279,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                 key={course.videoId}
                 chapters={course.chapters}
                 videoId={course.videoId}
-                onChaptersUpdate={(newChapters) => onCourseUpdate({ ...course, chapters: newChapters })}
+                onChaptersUpdate={handleChaptersUpdate}
                 selectedChapterId={selectedChapterId}
                 playingChapterId={playingChapterId}
                 onChapterSelect={handleChapterSelect}
@@ -457,7 +454,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
         <VideoSearchDialog
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
-          onCourseUpdate={(update) => onCourseUpdate({ ...course, ...update })}
+          onCourseUpdate={handleImport}
         />
 
         <ShareDialog
