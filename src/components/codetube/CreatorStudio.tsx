@@ -420,10 +420,12 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                     <div className="h-full overflow-y-auto">
                     {selectedChapter ? (
                         <ChapterEditor
-                        key={selectedChapter.id}
-                        chapter={selectedChapter}
-                        onUpdateChapter={handleUpdateChapter}
-                        courseTitle={course.title}
+                            key={selectedChapter.id}
+                            chapter={selectedChapter}
+                            onUpdateChapter={handleUpdateChapter}
+                            courseTitle={course.title}
+                            videoId={course.videoId}
+                            player={player}
                         />
                     ) : (
                         <div className="flex-grow flex h-full items-center justify-center rounded-lg border-2 border-dashed border-muted bg-background m-4">
@@ -463,3 +465,6 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
     </div>
   );
 }
+
+
+    

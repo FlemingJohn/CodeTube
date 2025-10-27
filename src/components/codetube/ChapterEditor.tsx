@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, FileText, Mic, Square } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, FileText, Mic, Square, Camera } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary, handleSpeechToText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,8 @@ interface ChapterEditorProps {
   chapter: Chapter;
   onUpdateChapter: (chapter: Chapter) => void;
   courseTitle: string;
+  videoId: string | null;
+  player: any;
 }
 
 const TONES = ['Explanatory', 'Concise', 'Beginner-Friendly', 'Technical', 'Formal'];
@@ -43,6 +45,16 @@ enum RecordingState {
 const FormattedText = ({ text }: { text: string }) => {
     const markdownToHtml = (markdown: string) => {
         let html = markdown
+            // Handle timestamped images: [![<timestamp>](<thumbnail_url>)](<video_url_with_time>)
+            .replace(/\[!\[(.*?)\]\((.*?)\)\]\((.*?)\)/g, (match, timestamp, thumbnailUrl, videoUrl) => {
+                return `<a href="${videoUrl}" target="_blank" rel="noopener noreferrer" class="block relative no-underline my-4 group">
+                            <img src="${thumbnailUrl}" alt="Video snapshot at ${timestamp}" class="rounded-md border w-full object-cover aspect-video" />
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-circle"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/></svg>
+                            </div>
+                            <div class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">${timestamp}</div>
+                        </a>`;
+            })
             // Bold
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             // Italic
@@ -67,7 +79,7 @@ const FormattedText = ({ text }: { text: string }) => {
     return (
         <div className="space-y-4 prose prose-sm dark:prose-invert max-w-none">
             {paragraphs.map((paragraph, pIndex) => (
-                 <p key={pIndex} dangerouslySetInnerHTML={{ __html: markdownToHtml(paragraph) }} />
+                 <div key={pIndex} dangerouslySetInnerHTML={{ __html: markdownToHtml(paragraph) }} />
             ))}
         </div>
     );
@@ -133,7 +145,7 @@ const languageOptions = [
     { value: '51', label: 'C#' },
 ];
 
-export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }: ChapterEditorProps) {
+export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, videoId, player }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
   const { settings } = useFocusMode();
@@ -221,6 +233,44 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
           textarea.setSelectionRange(newCursorPos, newCursorPos);
       }
     }, 0);
+  };
+
+  const onAddSnapshot = () => {
+    if (!player || typeof player.getCurrentTime !== 'function' || !videoId) {
+        toast({ variant: 'destructive', title: 'Video player not ready', description: 'Please wait for the video to load before taking a snapshot.' });
+        return;
+    }
+    const currentTime = Math.floor(player.getCurrentTime());
+    const hours = Math.floor(currentTime / 3600);
+    const minutes = Math.floor((currentTime % 3600) / 60);
+    const seconds = currentTime % 60;
+
+    const format = (n: number) => n.toString().padStart(2, '0');
+    const timestamp = `${hours > 0 ? format(hours)+':' : ''}${format(minutes)}:${format(seconds)}`;
+
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}&t=${currentTime}s`;
+    const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+
+    const markdownImage = `\n\n[![${timestamp}](${thumbnailUrl})](${videoUrl})\n\n`;
+    
+    const textarea = summaryTextareaRef.current;
+    if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const updatedValue = textarea.value.substring(0, start) + markdownImage + textarea.value.substring(end);
+        handleSummaryChange(updatedValue);
+
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + markdownImage.length, start + markdownImage.length);
+        }, 0);
+    } else {
+        // Fallback if ref isn't available for some reason
+        const currentSummary = localChapter.summary || '';
+        handleSummaryChange(currentSummary + markdownImage);
+    }
+
+    toast({ title: 'Snapshot Added!', description: `A clickable snapshot at ${timestamp} has been inserted into your notes.` });
   };
 
 
@@ -377,7 +427,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                 const serverResult = await handleProofreadText(originalText);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.proofreadText;
-            } else if (action === 'rewrite' || action === 'tone') {
+            } else if (action === 'rewrite' || 'tone') {
                 const serverResult = await handleRewriteText(originalText, context);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.rewrittenText;
@@ -593,6 +643,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
                             <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('italic')}><Italic className="h-4 w-4"/></Button>
                             <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('code')}><CodeIcon className="h-4 w-4"/></Button>
                             <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => applyMarkdown('list')}><List className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className='h-8 w-8' onClick={onAddSnapshot} disabled={!videoId}><Camera className="h-4 w-4"/></Button>
                         </div>
                     </div>
                     <Textarea
@@ -801,5 +852,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle }:
     </Card>
   );
 }
+
+    
 
     
