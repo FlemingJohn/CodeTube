@@ -100,7 +100,6 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
 }
 
 async function parseChaptersFromDescription(description: string, fullTranscript: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>): Promise<Chapter[]> {
-    const chapters: Chapter[] = [];
     const lines = (description || '').split('\n');
     const timestampRegex = /(?:(\d{1,2}:)?\d{1,2}:\d{2})/;
 
@@ -114,17 +113,16 @@ async function parseChaptersFromDescription(description: string, fullTranscript:
         return 0;
     };
 
-    let chapterData: { title: string; startTime: number; timestamp: string; }[] = [];
+    let chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
 
-    lines.forEach((line) => {
+    lines.forEach((line, index) => {
         const match = line.match(timestampRegex);
         if (match) {
             const timestamp = match[0];
-            // Look for title after the timestamp, removing extra characters
             const title = line.substring(line.indexOf(timestamp) + timestamp.length).replace(/^[\s\-–—)\]]+/, '').trim();
-
             if (title) {
                 chapterData.push({
+                    id: `${Date.now()}-${index}`,
                     title,
                     startTime: timestampToSeconds(timestamp),
                     timestamp,
@@ -133,11 +131,23 @@ async function parseChaptersFromDescription(description: string, fullTranscript:
         }
     });
 
-    // Sort by start time to ensure correct order
     chapterData.sort((a, b) => a.startTime - b.startTime);
 
+    let chapters: Chapter[] = [];
+    const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
+
     if (chapterData.length > 0) {
-        // Process chapters normally if they were found in the description
+        // Prepare data for single AI call
+        const chapterInfoForAi = chapterData.map(c => ({ id: c.id, title: c.title }));
+        const fullContextForAi = `Video Description:\n${description || 'No description provided.'}\n\nFull Transcript:\n${fullTranscriptText || 'No transcript available.'}`;
+
+        const codeSnippetsResult = await findCodeInTranscript({
+            transcript: fullContextForAi,
+            chapters: chapterInfoForAi,
+        });
+
+        const codeMap = new Map(codeSnippetsResult.chapterCodeSnippets.map(cs => [cs.chapterId, cs.code]));
+        
         for (const [index, currentChapter] of chapterData.entries()) {
             const nextChapter = chapterData[index + 1];
             const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration) / 1000 : Infinity;
@@ -148,50 +158,33 @@ async function parseChaptersFromDescription(description: string, fullTranscript:
                 .map(item => item.text)
                 .join(' ');
 
-            // Combine description and chapter transcript for better AI context
-            const fullContext = `Video Description:\n${description || 'No description provided.'}\n\nTranscript for this chapter:\n${chapterTranscript || 'No transcript for this segment.'}`;
-
-            let codeSnippet = '';
-            if (fullContext.trim()) {
-                const codeResult = await findCodeInTranscript({
-                    transcript: fullContext,
-                    chapterTitle: currentChapter.title,
-                });
-                codeSnippet = codeResult.code;
-            }
-
             chapters.push({
-                id: `${Date.now()}-${index}`,
+                id: currentChapter.id,
                 timestamp: currentChapter.timestamp,
                 title: currentChapter.title,
                 summary: '',
-                code: codeSnippet,
+                code: codeMap.get(currentChapter.id) || '',
                 codeExplanation: '',
-                transcript: fullContext,
+                transcript: chapterTranscript,
             });
         }
     } else if (fullTranscript.length > 0) {
-        // If NO chapters were found, but a transcript exists, treat the whole video as one chapter.
-        const fullTranscriptText = fullTranscript.map(item => item.text).join(' ');
-        const fullContext = `Video Description:\n${description || 'No description provided.'}\n\nTranscript:\n${fullTranscriptText}`;
-        
-        let codeSnippet = '';
-        if (fullContext.trim()) {
-            const codeResult = await findCodeInTranscript({
-                transcript: fullContext,
-                chapterTitle: 'Full Video Content',
-            });
-            codeSnippet = codeResult.code;
-        }
+        const chapterId = `${Date.now()}-0`;
+        const codeSnippetsResult = await findCodeInTranscript({
+            transcript: fullTranscriptText,
+            chapters: [{ id: chapterId, title: 'Full Video Content' }],
+        });
+
+        const codeSnippet = codeSnippetsResult.chapterCodeSnippets[0]?.code || '';
 
         chapters.push({
-            id: `${Date.now()}-0`,
+            id: chapterId,
             timestamp: '00:00',
             title: 'Full Video Content',
             summary: '',
             code: codeSnippet,
             codeExplanation: '',
-            transcript: fullContext,
+            transcript: fullTranscriptText,
         });
     }
     
@@ -246,6 +239,9 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
 
   } catch (error: any) {
     console.error('Error fetching from YouTube API:', error);
+    if (error.response?.data?.error?.message) {
+      return { error: error.response.data.error.message }
+    }
     if (error.message.includes('transcripts disabled')) {
          return { error: 'Transcripts are disabled for this video. Please choose another one.' };
     }

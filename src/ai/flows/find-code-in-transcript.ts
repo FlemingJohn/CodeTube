@@ -1,30 +1,36 @@
 'use server';
 
 /**
- * @fileOverview Extracts a relevant code snippet from a video transcript using AI.
+ * @fileOverview Extracts relevant code snippets from a video transcript for multiple chapters using a single AI call.
  *
- * - findCodeInTranscript - A function that handles the code extraction process.
- * - FindCodeInTranscriptInput - The input type for the findCodeInTranscript function.
- * - FindCodeInTranscriptOutput - The return type for the findCodeInTranscript function.
+ * - findCodeInTranscript - A function that handles the code extraction process for all chapters.
+ * - FindCodeInTranscriptInput - The input type for the function.
+ * - FindCodeInTranscriptOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const ChapterInfoSchema = z.object({
+  id: z.string().describe('The unique identifier for the chapter.'),
+  title: z.string().describe('The title of the chapter.'),
+});
+
 const FindCodeInTranscriptInputSchema = z.object({
-  transcript: z.string().describe('A snippet of a video transcript, which may also include the full video description.'),
-  chapterTitle: z.string().describe('The title of the chapter.'),
+  transcript: z.string().describe('The full video transcript and description text.'),
+  chapters: z.array(ChapterInfoSchema).describe('An array of chapters to find code for.'),
 });
 export type FindCodeInTranscriptInput = z.infer<
   typeof FindCodeInTranscriptInputSchema
 >;
 
+const ChapterCodeSchema = z.object({
+    chapterId: z.string().describe('The ID of the chapter this code belongs to.'),
+    code: z.string().describe('The most relevant code snippet for this chapter. Return only the code. If no code is found, return an empty string.'),
+});
+
 const FindCodeInTranscriptOutputSchema = z.object({
-  code: z
-    .string()
-    .describe(
-      'The most relevant code snippet found in the transcript. Return only the code.'
-    ),
+  chapterCodeSnippets: z.array(ChapterCodeSchema).describe('An array of objects, each containing a chapter ID and its corresponding code snippet.'),
 });
 export type FindCodeInTranscriptOutput = z.infer<
   typeof FindCodeInTranscriptOutputSchema
@@ -40,21 +46,26 @@ const prompt = ai.definePrompt({
   name: 'findCodeInTranscriptPrompt',
   input: {schema: FindCodeInTranscriptInputSchema},
   output: {schema: FindCodeInTranscriptOutputSchema},
-  prompt: `You are an expert programmer tasked with extracting code from a video's content.
+  prompt: `You are an expert programmer tasked with extracting code from a video's content for multiple chapters at once.
 
-  The user has provided you with the video's description and the transcript for a specific chapter titled: "{{chapterTitle}}".
-
-  Your task is to analyze all the provided text and extract the most relevant and complete code snippet related to the chapter title.
-  - First, check the video description for GitHub links or code blocks. This is often the best source.
-  - If no code is in the description, analyze the chapter transcript.
-  - Return your best guess for the most relevant code snippet.
-  - Only return the code itself. Do not include any explanations, surrounding text, or markdown formatting like \`\`\`.
-  - If you are absolutely certain no code is present in either the description or the transcript, return an empty string.
+  You have been provided with the full video content (description and transcript) and a list of chapters.
+  For each chapter in the provided list, your task is to:
+  1.  Analyze the full text content to find the most relevant and complete code snippet related to that specific chapter's title.
+  2.  Prioritize finding code in the video description first, especially if it contains GitHub links or formatted code blocks.
+  3.  If no relevant code is in the description for a chapter, analyze the transcript to find the code discussed during that chapter's timeframe.
+  4.  Return an array of objects. Each object must contain the original 'chapterId' and the 'code' you found for it.
+  5.  For the 'code' property, return only the code itself. Do not include any explanations, surrounding text, or markdown formatting like \`\`\`.
+  6.  If you are absolutely certain no code is present for a specific chapter, return an empty string for its 'code' property.
 
   Content to analyze:
   \`\`\`
   {{{transcript}}}
   \`\`\`
+
+  Chapters to find code for:
+  {{#each chapters}}
+  - Chapter ID: {{this.id}}, Title: "{{this.title}}"
+  {{/each}}
   `,
 });
 
@@ -65,8 +76,8 @@ const findCodeInTranscriptFlow = ai.defineFlow(
     outputSchema: FindCodeInTranscriptOutputSchema,
   },
   async input => {
-    if (!input.transcript) {
-      return {code: ''};
+    if (!input.transcript || input.chapters.length === 0) {
+      return { chapterCodeSnippets: [] };
     }
     const {output} = await prompt(input);
     return output!;

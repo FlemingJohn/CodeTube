@@ -37,40 +37,48 @@ export default function YoutubeImport({ onCourseUpdate, setSearchDialogOpen }: Y
     }
     
     startTransition(async () => {
-      const result = await getYoutubeChapters(videoId);
+      try {
+        const result = await getYoutubeChapters(videoId);
       
-      if (result.error) {
-        toast({
-          variant: 'destructive',
-          title: 'Error Importing Video',
-          description: result.error,
-        });
-      } else if (result.chapters && result.videoTitle) {
-        onCourseUpdate({
-          videoId: videoId,
-          chapters: result.chapters,
-          title: result.videoTitle,
-        });
-        
-        if (result.chapters.length > 0) {
+        if (result.error) {
           toast({
-            title: 'Video Imported!',
-            description: `"${result.videoTitle}" has been loaded.`,
+            variant: 'destructive',
+            title: 'Error Importing Video',
+            description: result.error,
           });
-        } else {
-          toast({
-            title: 'Video Imported',
-            description: `"${result.videoTitle}" has been loaded. We couldn't find chapters in the description.`,
+        } else if (result.chapters && result.videoTitle) {
+          onCourseUpdate({
+            videoId: videoId,
+            chapters: result.chapters,
+            title: result.videoTitle,
           });
-        }
-        
-        if (result.warning) {
+          
+          if (result.chapters.length > 0) {
             toast({
-                variant: 'default',
-                title: 'Note',
-                description: result.warning,
-            })
+              title: 'Video Imported!',
+              description: `"${result.videoTitle}" has been loaded.`,
+            });
+          } else {
+            toast({
+              title: 'Video Imported',
+              description: `"${result.videoTitle}" has been loaded. We couldn't find chapters in the description.`,
+            });
+          }
+          
+          if (result.warning) {
+              toast({
+                  variant: 'default',
+                  title: 'Note',
+                  description: result.warning,
+              })
+          }
         }
+      } catch(e: any) {
+          toast({
+            variant: 'destructive',
+            title: 'Error Importing Video',
+            description: e.message || "An unexpected error occurred."
+          });
       }
     });
   }
