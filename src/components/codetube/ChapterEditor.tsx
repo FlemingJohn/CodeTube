@@ -436,6 +436,11 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         toast({ variant: 'destructive', title: 'Nothing to edit', description: 'Please write some notes first.' });
         return;
       }
+       if (action === 'summarize' && !localChapter.transcript) {
+        toast({ variant: 'destructive', title: 'Missing Transcript', description: 'A chapter transcript is needed to generate a summary.' });
+        return;
+      }
+
 
       try {
         if (aiAvailable) {
@@ -451,7 +456,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                 const serverResult = await handleProofreadText(originalText);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.proofreadText;
-            } else if (action === 'rewrite' || 'tone') {
+            } else if (action === 'rewrite' || action === 'tone') {
                 const serverResult = await handleRewriteText(originalText, context);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.rewrittenText;
@@ -473,6 +478,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         if (result) {
             handleSummaryChange(result);
             toast({ title: 'AI Edit Successful', description: `Your text has been updated.` });
+        } else {
+            throw new Error("The AI didn't return a result.");
         }
       } catch (e: any) {
         toast({ variant: 'destructive', title: 'AI Task Failed', description: e.message });
@@ -639,7 +646,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent side="right" align="start">
                                             {TONES.map(tone => (
-                                                <DropdownMenuItem key={tone} onClick={() => handleAiEdit('tone', tone)}>
+                                                <DropdownMenuItem key={tone} onClick={()={() => handleAiEdit('tone', tone)}}>
                                                     {tone}
                                                 </DropdownMenuItem>
                                             ))}
@@ -656,7 +663,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 {LANGUAGES.map(lang => (
-                                    <DropdownMenuItem key={lang} onClick={() => handleAiEdit('translate', lang)}>
+                                    <DropdownMenuItem key={lang} onClick={()={() => handleAiEdit('translate', lang)}}>
                                         {lang}
                                     </DropdownMenuItem>
                                 ))}
