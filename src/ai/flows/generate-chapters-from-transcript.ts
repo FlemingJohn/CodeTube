@@ -14,6 +14,7 @@ import type { TranscriptEntry } from '@/lib/types';
 
 // Helper to convert HH:MM:SS or MM:SS to seconds
 const timestampToSeconds = (ts: string): number => {
+  if (!ts) return 0;
   const parts = ts.split(':').map(Number);
   let seconds = 0;
   if (parts.length === 3) {
@@ -72,7 +73,7 @@ const extractChaptersPrompt = ai.definePrompt({
     {{{description}}}
     \`\`\`
     
-    Return only the chapters with their timestamp and title.
+    Return only the chapters with their timestamp and title. If no chapters are found, return an empty array.
     `,
 });
 
@@ -90,10 +91,13 @@ export const generateChaptersFromTranscriptFlow = ai.defineFlow(
     // Step 2: Ensure there's at least a default chapter if none are found
     if (chapterTimes.length === 0 && transcript.length > 0) {
       chapterTimes.push({ timestamp: '0:00', title: 'Full Video Content' });
-    } else if (chapterTimes.length > 0 && timestampToSeconds(chapterTimes[0].timestamp) !== 0) {
-        // Add an "Introduction" chapter if the first chapter doesn't start at 0:00
-        chapterTimes.unshift({ timestamp: '0:00', title: 'Introduction' });
+    } else if (chapterTimes.length > 0) {
+        const firstTimestamp = chapterTimes[0]?.timestamp;
+        if (firstTimestamp && timestampToSeconds(firstTimestamp) > 0) {
+            chapterTimes.unshift({ timestamp: '0:00', title: 'Introduction' });
+        }
     }
+
 
     // Step 3: Convert timestamps to seconds and determine end times
     const chaptersWithDurations = chapterTimes

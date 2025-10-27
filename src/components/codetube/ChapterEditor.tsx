@@ -325,7 +325,10 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     });
   };
   
-  const chapterTranscriptText = Array.isArray(chapter.transcript) ? chapter.transcript.map(t => t.text).join(' ') : '';
+  const chapterTranscriptText = (Array.isArray(chapter.transcript) && chapter.transcript.length > 0) 
+  ? chapter.transcript.map(t => t.text).join(' ') 
+  : '';
+
 
   const handleAiGeneration = (action: 'summarize' | 'quiz') => {
     if (!chapterTranscriptText) {
@@ -609,7 +612,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !Array.isArray(chapter.transcript) || chapter.transcript.length === 0}>
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !chapterTranscriptText}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
                     {chapter.summary && (
@@ -847,7 +850,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                             size="sm"
                             variant="outline"
                             onClick={() => handleAiGeneration('quiz')}
-                            disabled={isAiGenerating || !Array.isArray(chapter.transcript) || chapter.transcript.length === 0}
+                            disabled={isAiGenerating || !chapterTranscriptText}
                         >
                             {isAiGenerating ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
