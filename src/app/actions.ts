@@ -147,16 +147,18 @@ async function parseChaptersFromDescription(description: string, fullTranscript:
         });
         const codeMap = new Map(codeSnippetsResult.chapterCodeSnippets.map(cs => [cs.chapterId, cs.code]));
         
+        const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration) / 1000 : 0;
+
         // Loop through chapters to assign transcripts
         for (const [index, currentChapter] of chapterData.entries()) {
             const nextChapter = chapterData[index + 1];
-            const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + fullTranscript[fullTranscript.length - 1].duration) / 1000 : Infinity;
             const endTime = nextChapter ? nextChapter.startTime : videoDuration;
 
             const chapterTranscript = fullTranscript
                 .filter(item => {
                     const itemTime = item.offset / 1000;
-                    return itemTime >= currentChapter.startTime && itemTime < endTime;
+                    // Ensure the itemTime is within the chapter's bounds [startTime, endTime)
+                    return itemTime >= currentChapter.startTime && (endTime === 0 || itemTime < endTime);
                 })
                 .map(item => item.text)
                 .join(' ');
