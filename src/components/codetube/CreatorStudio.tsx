@@ -45,7 +45,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 interface CreatorStudioProps {
     course: Course;
     onBackToDashboard: () => void;
-    onCourseUpdate: (updatedCourse: Course) => void;
+    onCourseUpdate: (updatedCourse: Partial<Course>) => void;
 }
 
 const timestampToSeconds = (ts: string) => {
@@ -228,11 +228,7 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
   }
 
   const handleCategoryChange = (category: CourseCategory) => {
-    onCourseUpdate({ ...course, category });
-  }
-
-  const handleImport = (update: Partial<Course>) => {
-    onCourseUpdate({ ...course, ...update });
+    onCourseUpdate({ category });
   }
   
   const showEditorPanel = settings.showNotes || settings.showCodeEditor || settings.showQuiz;
@@ -252,7 +248,7 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
           <SidebarContent className="flex-1 flex flex-col">
             <div className="flex flex-col gap-4 p-2 h-full">
               <YoutubeImport 
-                onCourseUpdate={handleImport}
+                onCourseUpdate={onCourseUpdate}
                 setSearchDialogOpen={setSearchDialogOpen}
               />
               <div className="space-y-2">
@@ -454,7 +450,7 @@ export default function CreatorStudio({ course, onBackToDashboard, onCourseUpdat
         <VideoSearchDialog
           isOpen={isSearchDialogOpen}
           setIsOpen={setSearchDialogOpen}
-          onCourseUpdate={handleImport}
+          onCourseUpdate={onCourseUpdate}
         />
 
         <ShareDialog

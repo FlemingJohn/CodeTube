@@ -74,9 +74,9 @@ export default function CreatorPage() {
     }
   };
   
-  const handleCourseUpdate = (updatedCourse: Course) => {
-    if (!user || !firestore) return;
-    updateCourse(firestore, user.uid, updatedCourse.id, updatedCourse);
+  const handleCourseUpdate = (courseUpdate: Partial<Course>) => {
+    if (!user || !firestore || !activeCourseId) return;
+    updateCourse(firestore, user.uid, activeCourseId, courseUpdate);
   }
 
   const activeCourse = courses?.find(c => c.id === activeCourseId);
