@@ -73,8 +73,9 @@ export default function CourseMentorPage() {
     });
   }
 
-  const handleGenerate = () => {
-    if (!topic) {
+  const handleGenerate = (searchTopic?: string) => {
+    const currentTopic = searchTopic || topic;
+    if (!currentTopic) {
       toast({
         variant: 'destructive',
         title: 'Please enter a topic to study.',
@@ -82,14 +83,14 @@ export default function CourseMentorPage() {
       return;
     }
 
-    addTopicToHistory(topic);
+    addTopicToHistory(currentTopic);
 
     startGenerationTransition(async () => {
       setLearningPlan(null);
       setComparisonResults({});
       setVideosToCompare({});
       try {
-        const result = await handleGenerateLearningPlan({ topic });
+        const result = await handleGenerateLearningPlan({ topic: currentTopic });
         if (result.error) {
           toast({
             variant: 'destructive',
@@ -279,14 +280,17 @@ export default function CourseMentorPage() {
                             </div>
                             <ScrollArea className="h-48">
                                 <div className="space-y-1 pr-2">
-                                    {recentTopics.map((topic, index) => (
+                                    {recentTopics.map((recentTopic, index) => (
                                         <Button 
                                             key={index}
                                             variant="ghost"
                                             className="w-full justify-start text-left h-auto"
-                                            onClick={() => { setTopic(topic); handleGenerate();}}
+                                            onClick={() => {
+                                                setTopic(recentTopic);
+                                                handleGenerate(recentTopic);
+                                            }}
                                         >
-                                            <span className="truncate flex-1">{topic}</span>
+                                            <span className="truncate flex-1">{recentTopic}</span>
                                             <ArrowRight className="h-4 w-4 ml-2" />
                                         </Button>
                                     ))}
@@ -332,7 +336,7 @@ export default function CourseMentorPage() {
                             {isImprovingPrompt ? <Loader2 className="animate-spin" /> : <Wand2 />}
                         </Button>
                     )}
-                    <Button onClick={handleGenerate} disabled={isGenerating}>
+                    <Button onClick={() => handleGenerate()} disabled={isGenerating}>
                         {isGenerating ? <Loader2 className="animate-spin mr-2"/> : <Search className="mr-2 h-4 w-4" />}
                         Generate Plan
                     </Button>
