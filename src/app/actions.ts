@@ -20,6 +20,7 @@ import { proofreadText } from '@/ai/flows/proofread-text';
 import { rewriteText } from '@/ai/flows/rewrite-text';
 import { writeText } from '@/ai/flows/write-text';
 import { generateLearningPlan, compareVideos } from '@/ai/flows/generate-learning-plan';
+import { generateChaptersFromTranscript } from '@/ai/flows/generate-chapters-from-transcript';
 
 import { Chapter, Course, TranscriptEntry } from '@/lib/types';
 import { z } from 'zod';
@@ -99,39 +100,6 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
-/**
- * Segments transcript entries into chapters.
- * @param transcriptEntries - The full list of transcript items.
- * @param chaptersFromDescription - The list of chapters with title and start times.
- * @returns An array of chapters with their corresponding transcript entries.
- */
-function parseChaptersFromDescription(
-    transcriptEntries: TranscriptEntry[],
-    chaptersFromDescription: { id: string; title: string; timestamp: string; startTime: number; endTime?: number }[]
-): Chapter[] {
-    const chapters: Chapter[] = chaptersFromDescription.map(chapterInfo => {
-        const { startTime, endTime = Infinity } = chapterInfo;
-        
-        // Filter transcript entries that fall within the chapter's time range.
-        const chapterTranscript = transcriptEntries.filter(entry => {
-            const entryStartSeconds = entry.offset / 1000;
-            return entryStartSeconds >= startTime && entryStartSeconds < endTime;
-        });
-        
-        return {
-            id: chapterInfo.id,
-            timestamp: chapterInfo.timestamp,
-            title: chapterInfo.title,
-            summary: '',
-            code: '',
-            codeExplanation: '',
-            transcript: chapterTranscript, // Always assign an array
-        };
-    });
-
-    return chapters;
-}
-
 
 export async function getYoutubeChapters(course: Course, videoId: string): Promise<{ course?: Course, error?: string, warning?: string }> {
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -157,84 +125,28 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
     }
     
     const videoTitle = video.snippet.title;
-    const description = video.snippet.description;
+    const description = video.snippet.description || '';
 
-    let transcriptResponse: TranscriptEntry[] = [];
+    let transcriptEntries: TranscriptEntry[] = [];
     let transcriptError = false;
     let transcriptWarning: string | undefined;
 
     try {
-      transcriptResponse = await YoutubeTranscript.fetchTranscript(videoId);
+      transcriptEntries = await YoutubeTranscript.fetchTranscript(videoId);
     } catch (e) {
       console.warn('Could not fetch transcript for video:', videoId, e);
       transcriptError = true;
     }
 
-    // 1. Parse timestamps and titles from description
-    const lines = (description || '').split('\n');
-    const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
-    let chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
+    if (transcriptError && transcriptEntries.length === 0) {
+      transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
+    }
 
-    const timestampToSeconds = (ts: string) => {
-        const parts = ts.split(':').map(Number).reverse();
-        let seconds = 0;
-        if (parts.length > 0) seconds += parts[0];
-        if (parts.length > 1) seconds += parts[1] * 60;
-        if (parts.length > 2) seconds += parts[2] * 3600;
-        return seconds;
-    };
-
-    lines.forEach((line, index) => {
-        const match = line.match(timestampRegex);
-        if (match) {
-            const timestamp = match[0];
-            const title = line.substring(line.indexOf(timestamp) + timestamp.length).replace(/^[\s\-–—)\]]+/, '').trim();
-            if (title) {
-                chapterData.push({
-                    id: `${Date.now()}-${index}`,
-                    title,
-                    startTime: timestampToSeconds(timestamp),
-                    timestamp,
-                });
-            }
-        }
+    // Use the new, reliable AI flow to generate chapters.
+    const { chapters } = await generateChaptersFromTranscript({
+      description,
+      transcript: transcriptEntries,
     });
-
-    if (chapterData.length > 0 && chapterData[0].startTime !== 0) {
-        chapterData.unshift({
-            id: `${Date.now()}-intro`,
-            title: "Introduction",
-            startTime: 0,
-            timestamp: "00:00",
-        });
-    }
-
-    chapterData.sort((a, b) => a.startTime - b.startTime);
-
-    if (chapterData.length === 0 && transcriptResponse.length > 0) {
-        chapterData.push({
-            id: `${Date.now()}-0`,
-            title: videoTitle || 'Full Video Content',
-            startTime: 0,
-            timestamp: '00:00',
-        });
-    }
-
-    // 2. Add end times to each chapter
-    const chaptersWithEndTimes = chapterData.map((chapter, index) => {
-        const nextChapter = chapterData[index + 1];
-        return {
-            ...chapter,
-            endTime: nextChapter ? nextChapter.startTime : Infinity,
-        };
-    });
-
-    // 3. Call the refactored parsing function
-    const chapters = parseChaptersFromDescription(transcriptResponse, chaptersWithEndTimes);
-
-    if (transcriptError && chapters.every(c => c.transcript.length === 0)) {
-        transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
-    }
 
     const updatedCourse: Course = {
       ...course,
