@@ -597,3 +597,5 @@ export async function handleCompareVideos(values: z.infer<typeof compareVideosSc
         return { error: e.message || 'Failed to compare videos.' };
     }
 }
+
+    

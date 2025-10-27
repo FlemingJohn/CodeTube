@@ -45,7 +45,13 @@ export function addCourse(firestore: Firestore, userId: string, courseData: Part
 
     // Also create the initial public copy non-blockingly
     const publicCourseDocRef = doc(firestore, 'courses', newCourseId);
-    setDocumentNonBlocking(publicCourseDocRef, newDocData, { merge: true });
+    const publicDataWithTimestamps = {
+        ...newDocData,
+        // Ensure timestamps are set for the public doc as well
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    };
+    setDocumentNonBlocking(publicCourseDocRef, publicDataWithTimestamps, { merge: true });
 
     return newCourseId;
 }
@@ -96,3 +102,5 @@ export function deleteCourse(firestore: Firestore, userId: string, courseId: str
     const publicCourseDocRef = doc(firestore, 'courses', courseId);
     deleteDocumentNonBlocking(publicCourseDocRef);
 }
+
+    
