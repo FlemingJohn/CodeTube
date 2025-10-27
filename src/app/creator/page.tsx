@@ -8,7 +8,7 @@ import CreatorStudio from '@/components/codetube/CreatorStudio';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { collection } from 'firebase/firestore';
+import { collection, doc } from 'firebase/firestore';
 import { addCourse, deleteCourse, updateCourse } from '@/lib/courses';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
@@ -74,9 +74,9 @@ export default function CreatorPage() {
     }
   };
   
-  const handleCourseUpdate = (courseUpdate: Partial<Course>) => {
+  const handleDebouncedCourseUpdate = (courseData: Partial<Course>) => {
     if (!user || !firestore || !activeCourseId) return;
-    updateCourse(firestore, user.uid, activeCourseId, courseUpdate);
+    updateCourse(firestore, user.uid, activeCourseId, courseData);
   }
 
   const activeCourse = courses?.find(c => c.id === activeCourseId);
@@ -95,9 +95,9 @@ export default function CreatorPage() {
   return (
     <CreatorStudio 
         key={activeCourse.id}
-        course={activeCourse}
+        initialCourse={activeCourse}
         onBackToDashboard={handleBackToDashboard}
-        onCourseUpdate={handleCourseUpdate}
+        onCourseUpdate={handleDebouncedCourseUpdate}
     />
   );
 }

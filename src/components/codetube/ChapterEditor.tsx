@@ -162,13 +162,13 @@ const languageOptions = [
 
 interface ChapterEditorProps {
   chapter: Chapter;
-  onUpdateChapter: (chapter: Chapter) => void;
+  onCourseUpdate: (updatedCourse: Partial<{ chapters: Chapter[] }>) => void;
   courseTitle: string;
   videoId: string | null;
   player: any;
 }
 
-export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, videoId, player }: ChapterEditorProps) {
+export default function ChapterEditor({ chapter, onCourseUpdate, courseTitle, videoId, player }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
   const { toast } = useToast();
   const { settings } = useFocusMode();
@@ -196,19 +196,19 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     const { name, value } = e.target;
     const updatedChapter = { ...localChapter, [name]: value };
     setLocalChapter(updatedChapter);
-    onUpdateChapter(updatedChapter);
+    onCourseUpdate({ chapters: [updatedChapter] }); // Propagate change up
   };
   
   const handleSummaryChange = (newSummary: string) => {
     const updatedChapter = { ...localChapter, summary: newSummary };
     setLocalChapter(updatedChapter);
-    onUpdateChapter(updatedChapter);
+    onCourseUpdate({ chapters: [updatedChapter] });
   }
 
   const handleCodeChange = (code: string) => {
     const updatedChapter = { ...localChapter, code: code };
     setLocalChapter(updatedChapter);
-    onUpdateChapter(updatedChapter);
+    onCourseUpdate({ chapters: [updatedChapter] });
   }
 
   const applyMarkdown = (syntax: 'bold' | 'italic' | 'code' | 'list') => {
@@ -324,7 +324,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
       } else if (result.explanation) {
         const updatedChapter = { ...localChapter, codeExplanation: result.explanation };
         setLocalChapter(updatedChapter);
-        onUpdateChapter(updatedChapter);
+        onCourseUpdate({ chapters: [updatedChapter] });
         toast({
           title: 'Code Explained',
           description: 'The AI-powered explanation has been generated.',
@@ -363,7 +363,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
           } else if (result.questions) {
             const updatedChapter = { ...localChapter, quiz: result.questions };
             setLocalChapter(updatedChapter);
-            onUpdateChapter(updatedChapter);
+            onCourseUpdate({ chapters: [updatedChapter] });
             toast({ title: 'Quiz Generated!', description: 'A new 5-question quiz has been added.' });
           }
         }
