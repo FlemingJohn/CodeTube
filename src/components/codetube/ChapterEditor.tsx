@@ -554,7 +554,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         </TooltipProvider>
     );
   }
-
+  
   const handleTimestampClick = (time: number) => {
     if (player && typeof player.seekTo === 'function') {
         player.seekTo(time);
@@ -888,3 +888,5 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     </Card>
   );
 }
+
+  

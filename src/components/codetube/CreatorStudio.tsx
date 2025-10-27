@@ -373,7 +373,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
                                       <RefreshCw className="mr-2"/> Regenerate
                                       </Button>
                                   )}
-                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending}>
+                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending || !selectedChapter.transcript}>
                                       {isInterviewPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
                                       Generate
                                   </Button>
@@ -468,3 +468,5 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
 
 
     
+
+  
