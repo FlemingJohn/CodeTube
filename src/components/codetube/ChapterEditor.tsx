@@ -324,9 +324,11 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
       }
     });
   };
+  
+  const chapterTranscriptText = chapter.transcript.map(t => t.text).join(' ');
 
   const handleAiGeneration = (action: 'summarize' | 'quiz') => {
-    if (!chapter.transcript) {
+    if (!chapterTranscriptText) {
       toast({ variant: 'destructive', title: 'Missing Transcript', description: 'A chapter transcript is needed for AI generation.' });
       return;
     }
@@ -335,9 +337,9 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
         if (action === 'summarize') {
           let summaryResult;
           if (aiAvailable) {
-            summaryResult = await summarize(chapter.transcript, chapter.title);
+            summaryResult = await summarize(chapterTranscriptText, chapter.title);
           } else {
-            const serverResult = await handleGenerateSummary({ transcript: chapter.transcript, chapterTitle: chapter.title });
+            const serverResult = await handleGenerateSummary({ transcript: chapterTranscriptText, chapterTitle: chapter.title });
             if (serverResult.error) throw new Error(serverResult.error);
             summaryResult = serverResult.summary;
           }
@@ -349,7 +351,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
           }
         } else if (action === 'quiz') {
           // Quiz generation always uses server-side AI for now due to complexity
-          const result = await handleGenerateQuiz({ transcript: chapter.transcript, chapterTitle: chapter.title });
+          const result = await handleGenerateQuiz({ transcript: chapterTranscriptText, chapterTitle: chapter.title });
           if (result.error) {
             throw new Error(result.error);
           } else if (result.questions) {
@@ -607,7 +609,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !chapter.transcript}>
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !chapterTranscriptText}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
                     {chapter.summary && (
@@ -845,7 +847,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                             size="sm"
                             variant="outline"
                             onClick={() => handleAiGeneration('quiz')}
-                            disabled={isAiGenerating || !chapter.transcript}
+                            disabled={isAiGenerating || !chapterTranscriptText}
                         >
                             {isAiGenerating ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

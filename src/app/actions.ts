@@ -21,7 +21,7 @@ import { rewriteText } from '@/ai/flows/rewrite-text';
 import { writeText } from '@/ai/flows/write-text';
 import { generateLearningPlan, compareVideos } from '@/ai/flows/generate-learning-plan';
 
-import { Chapter, Course } from '@/lib/types';
+import { Chapter, Course, TranscriptEntry } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { google } from 'googleapis';
@@ -99,15 +99,81 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
-async function parseChaptersFromDescription(
-    description: string, 
-    fullTranscriptItems: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>,
-    videoTitle: string
-): Promise<Chapter[]> {
+/**
+ * Segments transcript entries into chapters.
+ * @param transcriptEntries - The full list of transcript items.
+ * @param chaptersFromDescription - The list of chapters with title and start times.
+ * @returns An array of chapters with their corresponding transcript entries.
+ */
+function parseChaptersFromDescription(
+    transcriptEntries: TranscriptEntry[],
+    chaptersFromDescription: { id: string; title: string; timestamp: string; startTime: number; endTime?: number }[]
+): Chapter[] {
+    const chapters: Chapter[] = chaptersFromDescription.map(chapterInfo => {
+        const { startTime, endTime = Infinity } = chapterInfo;
+        
+        // Filter transcript entries that fall within the chapter's time range.
+        const chapterTranscript = transcriptEntries.filter(entry => {
+            const entryStartSeconds = entry.offset / 1000;
+            return entryStartSeconds >= startTime && entryStartSeconds < endTime;
+        });
+        
+        return {
+            id: chapterInfo.id,
+            timestamp: chapterInfo.timestamp,
+            title: chapterInfo.title,
+            summary: '',
+            code: '',
+            codeExplanation: '',
+            transcript: chapterTranscript,
+        };
+    });
+
+    return chapters;
+}
+
+
+export async function getYoutubeChapters(course: Course, videoId: string): Promise<{ course?: Course, error?: string, warning?: string }> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+
+  if (!apiKey) {
+    return { error: 'YouTube API key is not configured in environment variables.' };
+  }
+
+  try {
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: apiKey,
+    });
+    
+    const videoResponse = await youtube.videos.list({
+        part: ['snippet'],
+        id: [videoId],
+    });
+    
+    const video = videoResponse.data.items?.[0];
+    if (!video || !video.snippet) {
+      return { error: 'Video not found.' };
+    }
+    
+    const videoTitle = video.snippet.title;
+    const description = video.snippet.description;
+
+    let transcriptResponse: TranscriptEntry[] = [];
+    let transcriptError = false;
+    let transcriptWarning: string | undefined;
+
+    try {
+      transcriptResponse = await YoutubeTranscript.fetchTranscript(videoId);
+    } catch (e) {
+      console.warn('Could not fetch transcript for video:', videoId, e);
+      transcriptError = true;
+    }
+
+    // 1. Parse timestamps and titles from description
     const lines = (description || '').split('\n');
     const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
     let chapterData: { id: string; title: string; startTime: number; timestamp: string; }[] = [];
-    const fullTranscriptText = fullTranscriptItems.map(item => item.text).join(' ');
 
     const timestampToSeconds = (ts: string) => {
         const parts = ts.split(':').map(Number).reverse();
@@ -145,8 +211,7 @@ async function parseChaptersFromDescription(
 
     chapterData.sort((a, b) => a.startTime - b.startTime);
 
-    if (chapterData.length === 0 && fullTranscriptText) {
-        // No chapters found in description, treat the whole video as one chapter
+    if (chapterData.length === 0 && transcriptResponse.length > 0) {
         chapterData.push({
             id: `${Date.now()}-0`,
             title: videoTitle || 'Full Video Content',
@@ -155,97 +220,19 @@ async function parseChaptersFromDescription(
         });
     }
 
-    const finalChapters: Chapter[] = [];
-    
-    // This is the combined text that the AI will use to find code snippets.
-    const fullContextForAi = `Video Description:\n${description || 'No description provided.'}\n\nFull Transcript:\n${fullTranscriptText || 'No transcript available.'}`;
-
-    const chapterInfoForAi = chapterData.map(c => ({ id: c.id, title: c.title }));
-    
-    let codeMap = new Map<string, string>();
-    if (fullTranscriptText) {
-        try {
-            const codeSnippetsResult = await findCodeInTranscript({
-                transcript: fullContextForAi,
-                chapters: chapterInfoForAi,
-            });
-            codeMap = new Map(codeSnippetsResult.chapterCodeSnippets.map(cs => [cs.chapterId, cs.code]));
-        } catch (e) {
-            console.error("AI code finding failed, proceeding without code snippets.", e);
-        }
-    }
-    
-    for (let i = 0; i < chapterData.length; i++) {
-        const currentChapter = chapterData[i];
-        const nextChapter = chapterData[i + 1];
-        
-        // Convert chapter start times to milliseconds for accurate comparison
-        const startTimeMs = currentChapter.startTime * 1000;
-        const endTimeMs = nextChapter ? nextChapter.startTime * 1000 : Infinity;
-
-        // Filter transcript entries that fall within the chapter's time range
-        const chapterTranscriptItems = fullTranscriptItems.filter(item => {
-            // The 'offset' property from youtube-transcript is in milliseconds
-            return item.offset >= startTimeMs && item.offset < endTimeMs;
-        });
-
-        const chapterTranscriptText = chapterTranscriptItems.map(item => item.text).join(' ');
-
-        finalChapters.push({
-            id: currentChapter.id,
-            timestamp: currentChapter.timestamp,
-            title: currentChapter.title,
-            summary: '',
-            code: codeMap.get(currentChapter.id) || '',
-            codeExplanation: '',
-            transcript: chapterTranscriptText, 
-        });
-    }
-    
-    return finalChapters;
-}
-
-
-export async function getYoutubeChapters(course: Course, videoId: string): Promise<{ course?: Course, error?: string, warning?: string }> {
-  const apiKey = process.env.YOUTUBE_API_KEY;
-
-  if (!apiKey) {
-    return { error: 'YouTube API key is not configured in environment variables.' };
-  }
-
-  try {
-    const youtube = google.youtube({
-      version: 'v3',
-      auth: apiKey,
+    // 2. Add end times to each chapter
+    const chaptersWithEndTimes = chapterData.map((chapter, index) => {
+        const nextChapter = chapterData[index + 1];
+        return {
+            ...chapter,
+            endTime: nextChapter ? nextChapter.startTime : Infinity,
+        };
     });
-    
-    const videoResponse = await youtube.videos.list({
-        part: ['snippet'],
-        id: [videoId],
-    });
-    
-    const video = videoResponse.data.items?.[0];
-    if (!video || !video.snippet) {
-      return { error: 'Video not found.' };
-    }
-    
-    const videoTitle = video.snippet.title;
-    const description = video.snippet.description;
 
-    let transcriptResponse: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>> = [];
-    let transcriptError = false;
-    let transcriptWarning: string | undefined;
+    // 3. Call the refactored parsing function
+    const chapters = parseChaptersFromDescription(transcriptResponse, chaptersWithEndTimes);
 
-    try {
-      transcriptResponse = await YoutubeTranscript.fetchTranscript(videoId);
-    } catch (e) {
-      console.warn('Could not fetch transcript for video:', videoId, e);
-      transcriptError = true;
-    }
-
-    const chapters = await parseChaptersFromDescription(description || '', transcriptResponse, videoTitle || 'Untitled Video');
-
-    if (transcriptError && chapters.every(c => !c.transcript)) {
+    if (transcriptError && chapters.every(c => c.transcript.length === 0)) {
         transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
     }
 

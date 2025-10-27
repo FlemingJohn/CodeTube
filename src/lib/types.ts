@@ -1,4 +1,11 @@
 
+
+export type TranscriptEntry = {
+  text: string;
+  offset: number;
+  duration: number;
+};
+
 export type Quiz = {
   question: string;
   options: string[];
@@ -17,8 +24,7 @@ export type Chapter = {
   summary: string;
   code: string;
   codeExplanation: string;
-  // A placeholder for the actual transcript for AI summary generation
-  transcript: string;
+  transcript: TranscriptEntry[];
   quiz?: Quiz[];
   interviewQuestions?: InterviewQuestion[];
   thumbnail?: string;

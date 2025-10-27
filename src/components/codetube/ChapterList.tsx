@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Chapter } from '@/lib/types';
+import type { Chapter, TranscriptEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -34,7 +34,7 @@ export default function ChapterList({
       summary: '',
       code: '',
       codeExplanation: '',
-      transcript: 'This is a new chapter. Please add a transcript.',
+      transcript: [] as TranscriptEntry[],
     };
     setCourse(prev => prev ? ({ ...prev, chapters: [...prev.chapters, newChapter] }) : null);
     onChapterSelect(newChapter);
