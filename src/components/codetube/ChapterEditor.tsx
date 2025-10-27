@@ -23,17 +23,8 @@ import { useChromeAi } from '@/hooks/useChromeAi';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
 
-
-interface ChapterEditorProps {
-  chapter: Chapter;
-  onUpdateChapter: (chapter: Chapter) => void;
-  courseTitle: string;
-  videoId: string | null;
-  player: any;
-}
-
-const TONES = ['Explanatory', 'Concise', 'Beginner-Friendly', 'Technical', 'Formal'];
-const LANGUAGES = ['Spanish', 'French', 'German', 'Japanese', 'Mandarin'];
+const TONES = ['Explanatory', 'Concise', 'Formal', 'Casual', 'Persuasive'];
+const LANGUAGES = ['Spanish', 'French', 'German', 'Japanese', 'Chinese', 'Russian', 'Arabic'];
 
 enum RecordingState {
     Idle,
@@ -41,6 +32,7 @@ enum RecordingState {
     Recording,
     Transcribing,
 }
+
 
 const FormattedText = ({ text, onTimestampClick }: { text: string, onTimestampClick: (time: number) => void }) => {
     const markdownToHtml = (markdown: string) => {
@@ -167,6 +159,14 @@ const languageOptions = [
     { value: '60', label: 'Go' },
     { value: '51', label: 'C#' },
 ];
+
+interface ChapterEditorProps {
+  chapter: Chapter;
+  onUpdateChapter: (chapter: Chapter) => void;
+  courseTitle: string;
+  videoId: string | null;
+  player: any;
+}
 
 export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, videoId, player }: ChapterEditorProps) {
   const [localChapter, setLocalChapter] = useState(chapter);
@@ -561,7 +561,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         player.playVideo();
     }
   };
-  
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -644,7 +644,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent side="right" align="start">
                                             {TONES.map(tone => (
-                                                <DropdownMenuItem key={tone} onClick={()={() => handleAiEdit('tone', tone)}}>
+                                                <DropdownMenuItem key={tone} onClick={() => handleAiEdit('tone', tone)}>
                                                     {tone}
                                                 </DropdownMenuItem>
                                             ))}
@@ -661,7 +661,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 {LANGUAGES.map(lang => (
-                                    <DropdownMenuItem key={lang} onClick={()={() => handleAiEdit('translate', lang)}}>
+                                    <DropdownMenuItem key={lang} onClick={() => handleAiEdit('translate', lang)}>
                                         {lang}
                                     </DropdownMenuItem>
                                 ))}
