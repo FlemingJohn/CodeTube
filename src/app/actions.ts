@@ -125,7 +125,7 @@ function parseChaptersFromDescription(
             summary: '',
             code: '',
             codeExplanation: '',
-            transcript: chapterTranscript,
+            transcript: chapterTranscript, // Always assign an array
         };
     });
 

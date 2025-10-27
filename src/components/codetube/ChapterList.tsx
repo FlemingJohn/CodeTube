@@ -34,7 +34,7 @@ export default function ChapterList({
       summary: '',
       code: '',
       codeExplanation: '',
-      transcript: [] as TranscriptEntry[],
+      transcript: [],
     };
     setCourse(prev => prev ? ({ ...prev, chapters: [...prev.chapters, newChapter] }) : null);
     onChapterSelect(newChapter);

@@ -609,7 +609,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !chapterTranscriptText}>
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !Array.isArray(chapter.transcript) || chapter.transcript.length === 0}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
                     {chapter.summary && (
@@ -847,7 +847,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                             size="sm"
                             variant="outline"
                             onClick={() => handleAiGeneration('quiz')}
-                            disabled={isAiGenerating || !chapterTranscriptText}
+                            disabled={isAiGenerating || !Array.isArray(chapter.transcript) || chapter.transcript.length === 0}
                         >
                             {isAiGenerating ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -880,5 +880,3 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     </Card>
   );
 }
-
-    
