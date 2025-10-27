@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import { Course } from '@/lib/types';
 import CourseList from '@/components/codetube/CourseList';
 import CreatorStudio from '@/components/codetube/CreatorStudio';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { collection, doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import { addCourse, deleteCourse, updateCourse } from '@/lib/courses';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
