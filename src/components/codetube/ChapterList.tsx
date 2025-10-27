@@ -72,8 +72,8 @@ export default function ChapterList({
                     }
                   )}
               >
-                {chapter.thumbnail && (
-                   <Image src={chapter.thumbnail} alt={chapter.title} width={48} height={36} className="rounded-sm mr-2 object-cover aspect-video" />
+                {videoId && (
+                   <Image src={`https://i.ytimg.com/vi/${videoId}/default.jpg`} alt={chapter.title} width={48} height={36} className="rounded-sm mr-2 object-cover aspect-video" />
                 )}
                 <div className="truncate flex-1">
                   <p className="text-sm font-medium">{chapter.title}</p>

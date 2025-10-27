@@ -114,6 +114,10 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   }, []);
 
   useEffect(() => {
+    setCourse(initialCourse);
+  }, [initialCourse]);
+
+  useEffect(() => {
     if (course.chapters.length > 0) {
       if (!selectedChapterId || !course.chapters.some(c => c.id === selectedChapterId)) {
         setSelectedChapterId(course.chapters[0].id);
@@ -275,6 +279,7 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
               </div>
 
               <ChapterList
+                key={course.videoId}
                 chapters={course.chapters}
                 videoId={course.videoId}
                 onChaptersUpdate={(newChapters) => onCourseUpdate({ ...course, chapters: newChapters })}
