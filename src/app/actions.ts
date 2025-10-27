@@ -99,9 +99,13 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
-async function parseChaptersFromDescription(description: string, fullTranscript: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>): Promise<Chapter[]> {
+async function parseChaptersFromDescription(
+    description: string, 
+    fullTranscript: Awaited<ReturnType<typeof YoutubeTranscript.fetchTranscript>>,
+    videoTitle: string
+): Promise<Chapter[]> {
     const lines = (description || '').split('\n');
-    const timestampRegex = /(?:(\d{1,2}:)?\d{1,2}:\d{2})/;
+    const timestampRegex = /(\d{1,2}:)?\d{1,2}:\d{2}/;
     const chapters: Chapter[] = [];
     
     const timestampToSeconds = (ts: string) => {
@@ -134,10 +138,10 @@ async function parseChaptersFromDescription(description: string, fullTranscript:
     chapterData.sort((a, b) => a.startTime - b.startTime);
 
     if (chapterData.length === 0 && fullTranscript.length > 0) {
-        // No chapters found, treat the whole video as one chapter
+        // No chapters found in description, treat the whole video as one chapter
         chapterData.push({
             id: `${Date.now()}-0`,
-            title: 'Full Video Content',
+            title: videoTitle || 'Full Video Content',
             startTime: 0,
             timestamp: '00:00',
         });
@@ -148,21 +152,29 @@ async function parseChaptersFromDescription(description: string, fullTranscript:
         const fullContextForAi = `Video Description:\n${description || 'No description provided.'}\n\nFull Transcript:\n${fullTranscriptText || 'No transcript available.'}`;
 
         const chapterInfoForAi = chapterData.map(c => ({ id: c.id, title: c.title }));
-        const codeSnippetsResult = await findCodeInTranscript({
-            transcript: fullContextForAi,
-            chapters: chapterInfoForAi,
-        });
-        const codeMap = new Map(codeSnippetsResult.chapterCodeSnippets.map(cs => [cs.chapterId, cs.code]));
+        
+        let codeMap = new Map<string, string>();
+        try {
+            const codeSnippetsResult = await findCodeInTranscript({
+                transcript: fullContextForAi,
+                chapters: chapterInfoForAi,
+            });
+            codeMap = new Map(codeSnippetsResult.chapterCodeSnippets.map(cs => [cs.chapterId, cs.code]));
+        } catch (e) {
+            console.error("AI code finding failed, proceeding without code snippets.", e);
+        }
         
         const videoDuration = fullTranscript.length > 0 ? (fullTranscript[fullTranscript.length - 1].offset + (fullTranscript[fullTranscript.length - 1].duration || 0)) / 1000 : 0;
 
         for (const [index, currentChapter] of chapterData.entries()) {
             const nextChapter = chapterData[index + 1];
             const endTime = nextChapter ? nextChapter.startTime : videoDuration;
-
+            
             const chapterTranscript = fullTranscript
                 .filter(item => {
-                    const itemTime = item.offset / 1000;
+                    const itemTime = item.offset / 1000; // item.offset is in milliseconds
+                    // Include transcript parts that start at or after the chapter's start time,
+                    // and before the next chapter's start time (or end of video).
                     return itemTime >= currentChapter.startTime && (endTime === 0 || itemTime < endTime);
                 })
                 .map(item => item.text)
@@ -221,9 +233,9 @@ export async function getYoutubeChapters(videoId: string): Promise<{ chapters?: 
       transcriptError = true;
     }
 
-    const chapters = await parseChaptersFromDescription(description || '', transcriptResponse);
+    const chapters = await parseChaptersFromDescription(description || '', transcriptResponse, videoTitle || 'Untitled Video');
 
-    if (transcriptError && chapters.length === 0) {
+    if (transcriptError && chapters.every(c => !c.transcript)) {
         transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
     }
 
