@@ -50,7 +50,7 @@ export default function VideoSearchDialog({
         toast({
           variant: 'destructive',
           title: 'Search Failed',
-          description: result.error,
+          description: result.error.replace(/<[^>]*>?/gm, ''),
         });
         setSearchResults([]);
       } else if (result.videos) {
