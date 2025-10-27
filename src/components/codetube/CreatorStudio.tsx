@@ -107,6 +107,11 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   const [isShareDialogOpen, setShareDialogOpen] = useState(false);
   const [isInterviewPending, startInterviewTransition] = useTransition();
   const [player, setPlayer] = useState<any>(null);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     if (course.chapters.length > 0) {
@@ -119,10 +124,11 @@ export default function CreatorStudio({ course: initialCourse, onBackToDashboard
   }, [course.chapters, selectedChapterId]);
 
   useEffect(() => {
-    if (!initialCourse.videoId) {
+    // Only run this effect on the client after the component has mounted
+    if (hasMounted && !initialCourse.videoId) {
       setSearchDialogOpen(true);
     }
-  }, [initialCourse.videoId]);
+  }, [initialCourse.videoId, hasMounted]);
 
   const onCourseUpdate = (updatedCourse: Course) => {
     setCourse(updatedCourse);
