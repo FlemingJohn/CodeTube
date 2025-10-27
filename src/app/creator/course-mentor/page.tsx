@@ -45,7 +45,7 @@ export default function CourseMentorPage() {
   const [isGenerating, startGenerationTransition] = useTransition();
   const [isImporting, startImportTransition] = useTransition();
 
-  const [topic, setTopic] = useState('');
+  const [topic, setTopic] = useLocalStorage<string>('course-mentor-topic', '');
   const [learningPlan, setLearningPlan] = useState<LearningPlan | null>(null);
   const [recentTopics, setRecentTopics] = useLocalStorage<string[]>('course-mentor-history', []);
   
@@ -61,9 +61,10 @@ export default function CourseMentorPage() {
     if (topicFromQuery) {
         setTopic(topicFromQuery);
     }
-  }, [searchParams]);
+  }, [searchParams, setTopic]);
 
   const addTopicToHistory = (newTopic: string) => {
+    if (!newTopic) return;
     setRecentTopics(prev => {
         const lowerCaseTopic = newTopic.toLowerCase();
         const filtered = prev.filter(t => t.toLowerCase() !== lowerCaseTopic);
@@ -258,7 +259,7 @@ export default function CourseMentorPage() {
         </SidebarHeader>
         <SidebarContent>
             <div className="flex flex-col gap-4 p-2 h-full">
-                <div className="mt-auto space-y-4">
+                <div className="space-y-4">
                     <SidebarMenu>
                          <SidebarMenuItem>
                             <Link href="/creator" className='w-full'>
@@ -528,3 +529,5 @@ export default function CourseMentorPage() {
     </SidebarProvider>
   );
 }
+
+    
