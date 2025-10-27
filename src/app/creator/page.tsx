@@ -39,6 +39,11 @@ export default function CreatorPage() {
     }
   }, [areCoursesLoading, courses, activeCourseId, setActiveCourseId]);
 
+  const handleDebouncedCourseUpdate = useCallback((courseId: string, courseData: Partial<Course>) => {
+    if (!user || !firestore) return;
+    updateCourse(firestore, user.uid, courseId, courseData);
+  }, [user, firestore]);
+
   if (isUserLoading || !user || areCoursesLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -73,11 +78,6 @@ export default function CreatorPage() {
       setActiveCourseId(null);
     }
   };
-  
-  const handleDebouncedCourseUpdate = useCallback((courseId: string, courseData: Partial<Course>) => {
-    if (!user || !firestore) return;
-    updateCourse(firestore, user.uid, courseId, courseData);
-  }, [user, firestore]);
 
   const activeCourse = courses?.find(c => c.id === activeCourseId);
   
