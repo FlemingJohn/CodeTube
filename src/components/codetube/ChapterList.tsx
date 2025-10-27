@@ -3,7 +3,7 @@
 
 import type { Chapter } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Camera } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -48,16 +48,6 @@ export default function ChapterList({
     }
   };
 
-  const captureThumbnail = (chapterId: string) => {
-    if (!videoId) return;
-    const thumbnailUrl = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
-    const updatedChapters = chapters.map(c => 
-      c.id === chapterId ? { ...c, thumbnail: thumbnailUrl } : c
-    );
-    onChaptersUpdate(updatedChapters);
-  };
-
-
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -90,17 +80,6 @@ export default function ChapterList({
                   <p className="text-xs text-muted-foreground">{chapter.timestamp}</p>
                 </div>
                 <div className="flex items-center opacity-0 group-hover:opacity-100">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            captureThumbnail(chapter.id);
-                        }}
-                    >
-                        <Camera className="h-4 w-4" />
-                    </Button>
                     <Button
                         variant="ghost"
                         size="icon"
