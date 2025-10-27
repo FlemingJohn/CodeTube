@@ -20,7 +20,7 @@ function getYouTubeVideoId(url: string): string | null {
 }
 
 export default function YoutubeImport({ setSearchDialogOpen }: YoutubeImportProps) {
-  const { setCourse } = useCreatorStudio();
+  const { course, setCourse } = useCreatorStudio();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [youtubeUrl, setYoutubeUrl] = useState('');
@@ -47,12 +47,15 @@ export default function YoutubeImport({ setSearchDialogOpen }: YoutubeImportProp
             description: result.error,
           });
         } else if (result.chapters && result.videoTitle) {
-          setCourse(prev => ({
-            ...prev!,
+          // **CRITICAL FIX**: Pass the entire new course object to setCourse
+          // instead of using a functional update with a stale `prev` state.
+          const updatedCourse = {
+            ...course!,
             videoId: videoId,
             chapters: result.chapters,
             title: result.videoTitle,
-          }));
+          };
+          setCourse(updatedCourse);
           
           if (result.chapters.length > 0) {
             toast({
