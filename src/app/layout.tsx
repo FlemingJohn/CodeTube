@@ -74,35 +74,59 @@ const jsonLd = {
       'mainEntity': [
         {
           '@type': 'Question',
-          'name': 'Is CodeTube free to use?',
+          'name': 'What is CodeTube?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': 'Yes, CodeTube is free to use during our beta period. You can import videos, create courses, and export to GitHub without any cost. We may introduce premium features in the future.',
+            'text': 'CodeTube is a web application that transforms passive YouTube coding tutorials into structured, interactive learning experiences. It uses AI to generate notes, quizzes, and code snippets, helping you learn more effectively and build a portfolio-ready project from any video.',
           },
         },
         {
           '@type': 'Question',
-          'name': 'How does the AI summary work?',
+          'name': 'Who is CodeTube for?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': "Our AI, powered by Google's Gemini models, processes the transcript of your video chapter to generate a concise and accurate summary. It's designed to capture the key points and save you time.",
+            'text': 'CodeTube is for anyone who uses YouTube to learn technical skills. This includes students, junior developers trying to bridge the gap between tutorials and job-readiness, and working professionals who need to upskill quickly on new technologies.',
           },
         },
         {
           '@type': 'Question',
-          'name': 'Can I use any YouTube video?',
+          'name': 'How does the AI Course Mentor work?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': 'Yes, you can import any public YouTube video. For the best results with automatic chapter detection, ensure the video has timestamps listed in its description.',
+            'text': 'The Course Mentor is your personal AI learning guide. You give it a topic you want to learn, and it generates a comprehensive learning plan. This includes necessary prerequisites, key concepts to know, and a step-by-step roadmap with suggested YouTube videos for each stage.',
           },
         },
         {
           '@type': 'Question',
-          'name': 'Is my data secure?',
+          'name': 'What happens when I import a YouTube video?',
           'acceptedAnswer': {
             '@type': 'Answer',
-            'text': 'Absolutely. We use Firebase for authentication and database management, which provides industry-standard security for all user data. Your courses are private to your account until you choose to export them.',
+            'text': "When you import a video, CodeTube fetches its title, description, and transcript. It then analyzes the description to automatically detect time-stamped chapters. For each chapter, you can then use AI to generate summaries, find relevant code snippets, create quizzes, and generate interview questions.",
           },
+        },
+        {
+            '@type': 'Question',
+            'name': 'What is the "Practice Your Pitch" feature?',
+            'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': "This feature helps you prepare for job interviews. The AI analyzes your course content and generates a realistic behavioral interview question related to your project. You can then record your answer using your microphone. The app transcribes your speech and provides AI-powered feedback on your clarity, confidence, and the structure of your response.",
+            },
+        },
+        {
+            '@type': 'Question',
+            'name': 'What is "Hybrid AI" and why does CodeTube use it?',
+            'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': "Hybrid AI means we use both client-side (in your browser) and server-side AI. For tasks like proofreading or quick translations, we use Chrome's built-in AI for instant, offline-capable results. For more complex tasks like generating a learning plan or analyzing audio, we use powerful server-side models like Google's Gemini. This gives you the best of both worlds: speed and privacy for simple tasks, and power for complex ones.",
+            },
+        },
+        {
+            '@type': 'Question',
+            'name': 'Is my data secure?',
+            'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': 'Yes. We use Firebase Authentication and Firestore for secure user management and data storage. Your courses and personal information are private to your account. The "Export to GitHub" feature only runs when you explicitly use it, creating a public repository on your own GitHub account.',
+            },
         },
       ],
     },
@@ -119,7 +143,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>" />
+        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='red' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2 6 4 4'/%3E%3Cpath d='m18 6 4 4'/%3E%3Cpath d='m6 2 4 4'/%3E%3Cpath d='M14 2 10.33 5.67'/%3E%3Cpath d='M10 12 4.14 6.14'/%3E%3Cpath d='m14 12 5.86-5.86'/%3E%3Cpath d='M18 12h2'/%3E%3Cpath d='M4 12H2'/%3E%3Cpath d='M12 12v10'/%3E%3Cpath d='M6 12H2'/%3E%3Cpath d='m20 12-2 2'/%3E%3Cpath d='m4 12 2 2'/%3E%3Cpath d='m18 12-2-2'/%3E%3Cpath d='m6 12 2-2'/%3E%3C/svg%3E" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
