@@ -72,6 +72,8 @@ CodeTube transforms a simple video into a structured, interactive learning exper
   - **Server-side AI (Gemini Nano via Genkit / Firebase AI Logic)**: Handles advanced features like the Course Mentor roadmap, AI-generated quizzes, interview prep, and speech-to-text. Ensures full functionality for users on any device, including mobile, even if their browser doesn't support client-side AI.  
   - **Benefit**: Expands reach to more users, maintains consistent performance, and provides offline-first capabilities.
 
+The application is designed with a "Hybrid AI" strategy, which is a strength. It tries to use the fast, free, and private on-device Chrome AI when it's available. If it's not available (for example, if the user is on Firefox or Safari), it automatically falls back to using the powerful server-side Gemini AI. This ensures the feature works for all users. The problem was never in this fallback logic; it was in getting the necessary data to the logic in the first place.
+
 ---
 
 ## How CodeTube Differs from Existing Projects 🔍
