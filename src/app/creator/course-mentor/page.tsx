@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useRef, useEffect } from 'react';
+import { useState, useTransition, useRef, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, ArrowLeft, Youtube, Sparkles, Lightbulb, BookCopy, GitBranch, ChevronsRight, Award, Wand2, History, ArrowRight } from 'lucide-react';
@@ -36,7 +36,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarRail, SidebarTrigger } from '@/components/ui/sidebar';
 
 
-export default function CourseMentorPage() {
+function CourseMentorPageContent() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -534,4 +534,12 @@ export default function CourseMentorPage() {
   );
 }
 
+
+export default function CourseMentorPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>}>
+            <CourseMentorPageContent />
+        </Suspense>
+    )
+}
     
