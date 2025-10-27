@@ -173,8 +173,8 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
   const { toast } = useToast();
   const { settings } = useFocusMode();
   const [isAiEditing, startAiEditTransition] = useTransition();
+  const [isAiGenerating, startAiGenerationTransition] = useTransition();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
-  const [isQuizGenerationPending, startQuizGenerationTransition] = useTransition();
   const [isRunCodePending, startRunCodeTransition] = useTransition();
   const [isFixCodePending, startFixCodeTransition] = useTransition();
   const [recordingState, setRecordingState] = useState<RecordingState>(RecordingState.Idle);
@@ -333,37 +333,45 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
     });
   };
 
-  const onGenerateQuiz = () => {
+  const handleAiGeneration = (action: 'summarize' | 'quiz') => {
     if (!localChapter.transcript) {
-        toast({
-          variant: 'destructive',
-          title: 'Missing Chapter Transcript',
-          description: 'A transcript is required to generate a quiz.',
-        });
-        return;
-      }
-      startQuizGenerationTransition(async () => {
-        const result = await handleGenerateQuiz({
-          transcript: localChapter.transcript,
-          chapterTitle: localChapter.title,
-        });
-        if (result.error) {
-          toast({
-            variant: 'destructive',
-            title: 'Quiz Generation Failed',
-            description: result.error,
-          });
-        } else if (result.questions) {
-          const updatedChapter = { ...localChapter, quiz: result.questions };
-          setLocalChapter(updatedChapter);
-          onUpdateChapter(updatedChapter);
-          toast({
-            title: 'Quiz Generated!',
-            description: 'A new 5-question quiz has been added to this chapter.',
-          });
+      toast({ variant: 'destructive', title: 'Missing Transcript', description: 'A chapter transcript is needed for AI generation.' });
+      return;
+    }
+    startAiGenerationTransition(async () => {
+      try {
+        if (action === 'summarize') {
+          let summaryResult;
+          if (aiAvailable) {
+            summaryResult = await summarize(localChapter.transcript, localChapter.title);
+          } else {
+            const serverResult = await handleGenerateSummary({ transcript: localChapter.transcript, chapterTitle: localChapter.title });
+            if (serverResult.error) throw new Error(serverResult.error);
+            summaryResult = serverResult.summary;
+          }
+          if (summaryResult) {
+            handleSummaryChange(summaryResult);
+            toast({ title: 'Summary Generated!', description: `AI-powered notes have been added.` });
+          } else {
+            throw new Error("The AI didn't return a result.");
+          }
+        } else if (action === 'quiz') {
+          // Quiz generation always uses server-side AI for now due to complexity
+          const result = await handleGenerateQuiz({ transcript: localChapter.transcript, chapterTitle: localChapter.title });
+          if (result.error) {
+            throw new Error(result.error);
+          } else if (result.questions) {
+            const updatedChapter = { ...localChapter, quiz: result.questions };
+            setLocalChapter(updatedChapter);
+            onUpdateChapter(updatedChapter);
+            toast({ title: 'Quiz Generated!', description: 'A new 5-question quiz has been added.' });
+          }
         }
-      });
-  }
+      } catch (e: any) {
+        toast({ variant: 'destructive', title: 'AI Task Failed', description: e.message });
+      }
+    });
+  };
 
   const onRunCode = () => {
     if (!localChapter.code) {
@@ -434,7 +442,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
 
   const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
-  const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone' | 'translate' | 'summarize', context?: string) => {
+  const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone' | 'translate', context?: string) => {
     startAiEditTransition(async () => {
       let result;
       const originalText = localChapter.summary;
@@ -442,11 +450,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
         toast({ variant: 'destructive', title: 'Nothing to edit', description: 'Please write some notes first.' });
         return;
       }
-       if (action === 'summarize' && !localChapter.transcript) {
-        toast({ variant: 'destructive', title: 'Missing Transcript', description: 'A chapter transcript is needed to generate a summary.' });
-        return;
-      }
-
 
       try {
         if (aiAvailable) {
@@ -454,7 +457,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
             if (action === 'proofread') result = await proofread(originalText);
             else if (action === 'rewrite' || action === 'tone') result = await rewrite(originalText, context);
             else if (action === 'write') result = await write(`Write a brief summary for a video chapter titled: "${localChapter.title}"`);
-            else if (action === 'summarize') result = await summarize(localChapter.transcript, localChapter.title);
             else if (action === 'translate') result = await translate(originalText, context!);
         } else {
             // Fallback to server-side AI
@@ -470,10 +472,6 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                 const serverResult = await handleWriteText(`Write a brief summary for a video chapter titled: "${localChapter.title}"`);
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.writtenText;
-            } else if (action === 'summarize') {
-                const serverResult = await handleGenerateSummary({ transcript: localChapter.transcript, chapterTitle: localChapter.title });
-                if (serverResult.error) throw new Error(serverResult.error);
-                result = serverResult.summary;
             } else if (action === 'translate') {
                 const serverResult = await handleTranslateText(originalText, context!);
                 if (serverResult.error) throw new Error(serverResult.error);
@@ -617,7 +615,7 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiEdit('summarize')} disabled={isAiEditing || !localChapter.transcript || recordingState !== RecordingState.Idle}>
+                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !localChapter.transcript}>
                         <Type className="mr-2"/> Generate Summary
                      </AiEditButton>
                     {localChapter.summary && (
@@ -854,10 +852,10 @@ export default function ChapterEditor({ chapter, onUpdateChapter, courseTitle, v
                         <Button
                             size="sm"
                             variant="outline"
-                            onClick={onGenerateQuiz}
-                            disabled={isQuizGenerationPending || !localChapter.transcript}
+                            onClick={() => handleAiGeneration('quiz')}
+                            disabled={isAiGenerating || !localChapter.transcript}
                         >
-                            {isQuizGenerationPending ? (
+                            {isAiGenerating ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
                                 <Wand2 className="mr-2 h-4 w-4" />
