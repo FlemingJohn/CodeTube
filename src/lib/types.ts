@@ -24,7 +24,9 @@ export type Chapter = {
   summary: string;
   code: string;
   codeExplanation: string;
-  transcript: TranscriptEntry[]; // Kept for potential future use, but not populated by default
+  // This will be a string on the client, but might be an array during server processing.
+  // The server now sends the full transcript string to each chapter.
+  transcript: TranscriptEntry[] | string; 
   quiz?: Quiz[];
   interviewQuestions?: InterviewQuestion[];
   thumbnail?: string;

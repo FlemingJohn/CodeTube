@@ -396,8 +396,8 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
   const onGenerateQuiz = () => {
-    // The full transcript is now stored on the parent `course` object.
-    const fullTranscript = course?.chapters.flatMap(c => Array.isArray(c.transcript) ? c.transcript.map(t => t.text) : []).join(' ') || '';
+    // The full transcript is passed to the chapter from the server action.
+    const fullTranscript = typeof chapter.transcript === 'string' ? chapter.transcript : '';
 
     if (!fullTranscript) {
         toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a quiz.' });
@@ -419,9 +419,8 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   };
 
   const onGenerateSummary = () => {
-    // The full transcript is now stored on the parent `course` object.
-    // The AI is smart enough to find the relevant parts using the chapter title as context.
-    const fullTranscript = course?.chapters.flatMap(c => Array.isArray(c.transcript) ? c.transcript.map(t => t.text) : []).join(' ') || '';
+    // The full transcript is passed to the chapter from the server action.
+    const fullTranscript = typeof chapter.transcript === 'string' ? chapter.transcript : '';
 
     if (!fullTranscript) {
         toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a summary.' });
@@ -558,8 +557,6 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   
   if (!course) return null;
 
-  const fullCourseTranscript = course.chapters.flatMap(c => Array.isArray(c.transcript) ? c.transcript.map(t => t.text) : []).join(' ') || '';
-
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -603,7 +600,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                 </TabsList>
                 {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : (
                     !chapter.summary && (
-                        <AiEditButton size="sm" variant="outline" onClick={onGenerateSummary} disabled={isAiEditing || !fullCourseTranscript}>
+                        <AiEditButton size="sm" variant="outline" onClick={onGenerateSummary} disabled={isAiEditing || !chapter.transcript}>
                             <Wand2 className="mr-2"/> Generate Summary
                         </AiEditButton>
                     )
@@ -885,5 +882,3 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     </Card>
   );
 }
-
-    

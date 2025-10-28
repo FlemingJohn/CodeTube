@@ -200,7 +200,9 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
             summary: processed?.summary || '',
             code: processed?.code || '',
             codeExplanation: '',
-            transcript: [], // Transcript no longer needed on client
+            // We pass the full transcript text to each chapter for the client to use.
+            // This is slightly redundant but simplifies client-side logic immensely.
+            transcript: transcriptText, 
         };
     });
 
