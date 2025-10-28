@@ -708,7 +708,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                 <AccordionTrigger>
                     <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4" />
-                        View Chapter Transcript
+                        no transcipt showing
                     </div>
                 </AccordionTrigger>
                 <AccordionContent>
