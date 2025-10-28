@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useTransition, useEffect, useRef } from 'react';
-import type { Chapter, Quiz, TranscriptEntry } from '@/lib/types';
+import type { Chapter, Quiz } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -398,7 +398,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   const onGenerateQuiz = () => {
     const courseContent = course?.chapters.map(c => `Chapter: ${c.title}\nSummary: ${c.summary}`).join('\n\n') || '';
     if (!courseContent) {
-        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a quiz.' });
+        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'Please generate summaries for chapters first.' });
         return;
     }
 
@@ -418,13 +418,13 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
 
   const onGenerateSummary = () => {
     const courseContent = course?.chapters.map(c => `Chapter: ${c.title}\nSummary: ${c.summary}`).join('\n\n') || '';
-     if (!courseContent) {
-        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a summary.' });
+    if (!course?.chapters.some(c => c.transcript)) {
+        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The course transcript is not available.' });
         return;
     }
     
     startAiEditTransition(async () => {
-        const result = await handleGenerateSummary({ transcript: courseContent, chapterTitle: chapter.title });
+        const result = await handleGenerateSummary({ transcript: course.chapters[0].transcript as string, chapterTitle: chapter.title });
         if (result.error) {
             toast({ variant: 'destructive', title: 'AI Task Failed', description: result.error });
         } else if (result.summary) {
@@ -878,3 +878,5 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     </Card>
   );
 }
+
+    
