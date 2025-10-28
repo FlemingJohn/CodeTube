@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, Mic, Square, Camera } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, Mic, Square, Camera, FileText } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary, handleSpeechToText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
