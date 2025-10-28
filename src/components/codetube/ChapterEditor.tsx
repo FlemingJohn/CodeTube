@@ -166,7 +166,7 @@ interface ChapterEditorProps {
   chapter: Chapter;
 }
 
-export default function ChapterEditor({ chapter }: ChapterEditorProps) {
+function ChapterEditor({ chapter }: ChapterEditorProps) {
   const { course, setCourse, player } = useCreatorStudio();
   const { toast } = useToast();
   const { settings } = useFocusMode();
@@ -417,9 +417,9 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   };
 
   const onGenerateSummary = () => {
-    const courseContent = course?.chapters.map(c => `Chapter: ${c.title}\nTranscript: ${c.transcript}`).join('\n\n') || '';
+    const courseContent = course?.chapters.map(c => `Chapter: ${c.title}\nSummary: ${c.summary}`).join('\n\n') || '';
     if (!courseContent) {
-        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The course transcript is not available.' });
+        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'Please add content to chapters first.' });
         return;
     }
     
@@ -879,6 +879,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   );
 }
 
+export default React.memo(ChapterEditor);
     
 
     
