@@ -1,14 +1,13 @@
-
 'use client';
 
 import React, { useState, useTransition, useEffect, useRef } from 'react';
-import type { Chapter, Quiz } from '@/lib/types';
+import type { Chapter, Quiz, TranscriptEntry } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, FileText, Mic, Square, Camera } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, Mic, Square, Camera } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary, handleSpeechToText } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -23,6 +22,7 @@ import { useChromeAi } from '@/hooks/useChromeAi';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
 import { useCreatorStudio } from '@/hooks/use-creator-studio';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 const TONES = ['Explanatory', 'Concise', 'Formal', 'Casual', 'Persuasive'];
 const LANGUAGES = ['Spanish', 'French', 'German', 'Japanese', 'Chinese', 'Russian', 'Arabic'];
@@ -702,6 +702,36 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
             </TabsContent>
         </Tabs>
         )}
+
+        <Accordion type="single" collapsible>
+            <AccordionItem value="transcript">
+                <AccordionTrigger>
+                    <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        View Chapter Transcript
+                    </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                    <ScrollArea className="h-64 border rounded-md">
+                        <div className="p-4 text-sm">
+                            {Array.isArray(chapter.transcript) && chapter.transcript.length > 0 ? (
+                                chapter.transcript.map((entry: TranscriptEntry, index: number) => (
+                                    <p
+                                        key={index}
+                                        className="cursor-pointer hover:bg-muted p-1 rounded"
+                                        onClick={() => handleTimestampClick(entry.offset / 1000)}
+                                    >
+                                        {entry.text}
+                                    </p>
+                                ))
+                            ) : (
+                                <p className="text-muted-foreground">No transcript available for this chapter.</p>
+                            )}
+                        </div>
+                    </ScrollArea>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
 
         {settings.showCodeEditor && (
           <>
