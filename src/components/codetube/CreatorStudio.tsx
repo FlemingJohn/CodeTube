@@ -14,14 +14,14 @@ import {
   SidebarMenuButton
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, BookUser, RefreshCw, History } from 'lucide-react';
+import { ArrowLeft, Github, LogOut, Sparkles, Loader2, Tag, Bot, Share2, BookUser, RefreshCw, History, FileText } from 'lucide-react';
 import Header from './Header';
 import YoutubeImport from './YoutubeImport';
 import ChapterList from './ChapterList';
 import ChapterEditor from './ChapterEditor';
 import GithubExportDialog from './GithubExportDialog';
 import ShareDialog from './ShareDialog';
-import type { Chapter, Course, CourseCategory } from '@/lib/types';
+import type { Chapter, Course, CourseCategory, TranscriptEntry } from '@/lib/types';
 import { COURSE_CATEGORIES } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -172,13 +172,14 @@ function CreatorStudioInner({ onBackToDashboard }: { onBackToDashboard: () => vo
 
 
   const onGenerateInterviewQuestions = (replace: boolean = false) => {
-    if (!selectedChapter || !selectedChapter.transcript) {
+    if (!selectedChapter || !Array.isArray(selectedChapter.transcript) || selectedChapter.transcript.length === 0) {
         toast({ variant: 'destructive', title: 'Missing context', description: 'This chapter needs a transcript to generate questions.' });
         return;
     }
     startInterviewTransition(async () => {
+        const transcriptText = selectedChapter.transcript.map(t => t.text).join(' ');
         const result = await handleGenerateInterviewQuestions({
-            transcript: selectedChapter.transcript,
+            transcript: transcriptText,
             chapterTitle: selectedChapter.title,
         });
 
@@ -368,7 +369,7 @@ function CreatorStudioInner({ onBackToDashboard }: { onBackToDashboard: () => vo
                                       <RefreshCw className="mr-2"/> Regenerate
                                       </Button>
                                   )}
-                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending || !selectedChapter.transcript}>
+                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending || !selectedChapter.transcript || selectedChapter.transcript.length === 0}>
                                       {isInterviewPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
                                       Generate
                                   </Button>

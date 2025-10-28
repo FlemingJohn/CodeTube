@@ -113,34 +113,32 @@ export const generateChaptersFromTranscriptFlow = ai.defineFlow(
       }))
       .sort((a, b) => a.startTime - b.startTime);
 
-    // Step 4: Use a merge-style algorithm to assign transcript entries to chapters.
+    // Step 4: Correctly implement the merge algorithm to assign transcript entries.
     if (transcript.length > 0 && sortedChapters.length > 0) {
         let transcriptIndex = 0;
         for (let i = 0; i < sortedChapters.length; i++) {
             const currentChapter = sortedChapters[i];
-            const endTime = (i + 1 < sortedChapters.length) ? sortedChapters[i + 1].startTime : Infinity;
+            const nextChapter = sortedChapters[i + 1];
+            const endTime = nextChapter ? nextChapter.startTime : Infinity;
 
             while (transcriptIndex < transcript.length) {
                 const entry = transcript[transcriptIndex];
                 const entryStartTimeSeconds = entry.offset / 1000;
 
+                // If the current entry starts after or at the end time of this chapter,
+                // it belongs to a future chapter. Break the inner loop.
                 if (entryStartTimeSeconds >= endTime) {
-                    // This entry belongs to the next chapter, so break the inner loop
-                    // and let the outer loop advance to the next chapter.
                     break;
                 }
 
+                // If the entry starts within this chapter's time range, add it.
                 if (entryStartTimeSeconds >= currentChapter.startTime) {
-                    // This entry belongs to the current chapter.
                     currentChapter.transcript.push(entry);
                 }
                 
-                // Always advance the transcript index.
+                // Always advance to the next transcript entry.
                 transcriptIndex++;
             }
-            // Reset transcriptIndex for the next chapter search if we don't want to consume entries
-            // But for a single-pass merge, we don't reset it. The issue was how we advanced it.
-            // The logic above is corrected to process each transcript entry once.
         }
     }
 

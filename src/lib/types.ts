@@ -2,8 +2,8 @@
 
 export type TranscriptEntry = {
   text: string;
-  offset: number;
-  duration: number;
+  offset: number; // in milliseconds
+  duration: number; // in milliseconds
 };
 
 export type Quiz = {

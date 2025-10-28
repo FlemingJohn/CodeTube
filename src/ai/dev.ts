@@ -22,6 +22,3 @@ import '@/ai/flows/rewrite-text';
 import '@/ai/flows/write-text';
 import '@/ai/flows/generate-learning-plan';
 import '@/ai/flows/generate-chapters-from-transcript';
-
-
-
