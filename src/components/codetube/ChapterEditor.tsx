@@ -396,9 +396,11 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
   const onGenerateQuiz = () => {
-    const fullTranscript = course?.chapters.flatMap(c => c.transcript.map(t => t.text)).join(' ') || '';
+    // The full transcript is now stored on the parent `course` object.
+    const fullTranscript = course?.chapters.flatMap(c => Array.isArray(c.transcript) ? c.transcript.map(t => t.text) : []).join(' ') || '';
+
     if (!fullTranscript) {
-        toast({ variant: 'destructive', title: 'Missing Transcript', description: 'The full video transcript is not available to generate a quiz.' });
+        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a quiz.' });
         return;
     }
 
@@ -417,13 +419,17 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   };
 
   const onGenerateSummary = () => {
-    const chapterTranscriptText = chapter.transcript.map(t => t.text).join(' ');
-    if (!chapterTranscriptText) {
-        toast({ variant: 'destructive', title: 'Missing Transcript', description: 'This chapter has no transcript data to summarize.' });
+    // The full transcript is now stored on the parent `course` object.
+    // The AI is smart enough to find the relevant parts using the chapter title as context.
+    const fullTranscript = course?.chapters.flatMap(c => Array.isArray(c.transcript) ? c.transcript.map(t => t.text) : []).join(' ') || '';
+
+    if (!fullTranscript) {
+        toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a summary.' });
         return;
     }
+
     startAiEditTransition(async () => {
-        const result = await handleGenerateSummary({ transcript: chapterTranscriptText, chapterTitle: chapter.title });
+        const result = await handleGenerateSummary({ transcript: fullTranscript, chapterTitle: chapter.title });
         if (result.error) {
             toast({ variant: 'destructive', title: 'AI Task Failed', description: result.error });
         } else if (result.summary) {
@@ -552,7 +558,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   
   if (!course) return null;
 
-  const chapterTranscriptText = chapter.transcript.map(t => t.text).join(' ');
+  const fullCourseTranscript = course.chapters.flatMap(c => Array.isArray(c.transcript) ? c.transcript.map(t => t.text) : []).join(' ') || '';
 
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
@@ -597,7 +603,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                 </TabsList>
                 {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : (
                     !chapter.summary && (
-                        <AiEditButton size="sm" variant="outline" onClick={onGenerateSummary} disabled={isAiEditing || !chapterTranscriptText}>
+                        <AiEditButton size="sm" variant="outline" onClick={onGenerateSummary} disabled={isAiEditing || !fullCourseTranscript}>
                             <Wand2 className="mr-2"/> Generate Summary
                         </AiEditButton>
                     )
@@ -879,3 +885,5 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     </Card>
   );
 }
+
+    
