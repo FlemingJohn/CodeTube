@@ -93,47 +93,52 @@ export const generateChaptersFromTranscriptFlow = ai.defineFlow(
       chapterTimes.push({ timestamp: '0:00', title: 'Full Video Content' });
     } else if (chapterTimes.length > 0) {
         const firstTimestamp = chapterTimes[0]?.timestamp;
+        // Ensure there's an intro chapter if the first real chapter doesn't start at 0:00
         if (firstTimestamp && timestampToSeconds(firstTimestamp) > 0) {
             chapterTimes.unshift({ timestamp: '0:00', title: 'Introduction' });
         }
     }
 
-
-    // Step 3: Convert timestamps to seconds and determine end times
-    const chaptersWithDurations = chapterTimes
+    // Step 3: Convert timestamps to seconds and create chapter shells.
+    const sortedChapters = chapterTimes
       .map((chap, index) => ({
-        ...chap,
-        startTime: timestampToSeconds(chap.timestamp),
-      }))
-      .sort((a, b) => a.startTime - b.startTime)
-      .map((chap, index, arr) => {
-        const nextChap = arr[index + 1];
-        const endTime = nextChap ? nextChap.startTime : Infinity;
-        return {
-          ...chap,
-          endTime,
-        };
-      });
-
-    // Step 4: Segment the transcript for each chapter
-    const finalChapters = chaptersWithDurations.map((chap, index) => {
-      const chapterTranscript: TranscriptEntry[] = transcript.filter(entry => {
-        const entryStartSeconds = entry.offset / 1000;
-        return entryStartSeconds >= chap.startTime && entryStartSeconds < chap.endTime;
-      });
-
-      return {
         id: `${Date.now()}-${index}`,
-        title: chap.title,
         timestamp: chap.timestamp,
-        transcript: chapterTranscript,
+        title: chap.title,
+        startTime: timestampToSeconds(chap.timestamp),
+        transcript: [] as TranscriptEntry[],
         summary: '',
         code: '',
         codeExplanation: '',
-      };
-    });
+      }))
+      .sort((a, b) => a.startTime - b.startTime);
 
-    return { chapters: finalChapters };
+    // Step 4: Use a merge-style algorithm to assign transcript entries to chapters.
+    let transcriptIndex = 0;
+    for (let i = 0; i < sortedChapters.length; i++) {
+        const currentChapter = sortedChapters[i];
+        // The end time of the current chapter is the start time of the next, or Infinity if it's the last chapter.
+        const endTime = (i + 1 < sortedChapters.length) ? sortedChapters[i + 1].startTime : Infinity;
+
+        // Walk through the transcript until we find an entry that's past the current chapter's end time.
+        while (transcriptIndex < transcript.length) {
+            const transcriptEntry = transcript[transcriptIndex];
+            const entryStartSeconds = transcriptEntry.offset / 1000;
+
+            if (entryStartSeconds < endTime) {
+                // If the entry starts before the current chapter's end time, it belongs to this chapter.
+                if (entryStartSeconds >= currentChapter.startTime) {
+                    currentChapter.transcript.push(transcriptEntry);
+                }
+                transcriptIndex++; // Move to the next transcript entry.
+            } else {
+                // This transcript entry belongs to a future chapter, so we break the inner loop.
+                break;
+            }
+        }
+    }
+
+    return { chapters: sortedChapters };
   }
 );
 
