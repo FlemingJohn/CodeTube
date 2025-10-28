@@ -40,6 +40,14 @@ export function CreatorStudioProvider({ children, initialCourse, onCourseUpdate 
             onCourseUpdate(course);
         }
     }, [course, onCourseUpdate]);
+    
+    // This effect ensures that if the initialCourse prop changes from the outside,
+    // our internal state is updated to reflect it. This is important for when
+    // the user switches between courses in the main dashboard.
+    useEffect(() => {
+      setCourse(initialCourse);
+    }, [initialCourse]);
+
 
     return (
         <CreatorStudioContext.Provider value={{ course, setCourse, player, setPlayer }}>

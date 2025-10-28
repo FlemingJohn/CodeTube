@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, Mic, Square, Camera } from 'lucide-react';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, Mic, Square, Camera, FileText } from 'lucide-react';
 import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary, handleSpeechToText, handleGenerateInterviewQuestions } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -174,6 +174,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isRunCodePending, startRunCodeTransition] = useTransition();
   const [isFixCodePending, startFixCodeTransition] = useTransition();
+  const [isQuizPending, startQuizTransition] = useTransition();
   const [recordingState, setRecordingState] = useState<RecordingState>(RecordingState.Idle);
   const [codeOutput, setCodeOutput] = useState<RunCodeOutput | null>(null);
   const [fixExplanation, setFixExplanation] = useState<string | null>(null);
@@ -394,6 +395,44 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
 
   const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
+  const onGenerateQuiz = () => {
+    const fullTranscript = course?.chapters.flatMap(c => c.transcript.map(t => t.text)).join(' ') || '';
+    if (!fullTranscript) {
+        toast({ variant: 'destructive', title: 'Missing Transcript', description: 'The full video transcript is not available to generate a quiz.' });
+        return;
+    }
+
+    startQuizTransition(async () => {
+        const result = await handleGenerateQuiz({
+            courseContent: fullTranscript,
+            chapterTitle: chapter.title,
+        });
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'Error', description: result.error });
+        } else if (result.questions) {
+            handleUpdateChapter({ ...chapter, quiz: result.questions });
+            toast({ title: 'Quiz Generated!', description: 'A new quiz has been added to this chapter.' });
+        }
+    });
+  };
+
+  const onGenerateSummary = () => {
+    const chapterTranscriptText = chapter.transcript.map(t => t.text).join(' ');
+    if (!chapterTranscriptText) {
+        toast({ variant: 'destructive', title: 'Missing Transcript', description: 'This chapter has no transcript data to summarize.' });
+        return;
+    }
+    startAiEditTransition(async () => {
+        const result = await handleGenerateSummary({ transcript: chapterTranscriptText, chapterTitle: chapter.title });
+        if (result.error) {
+            toast({ variant: 'destructive', title: 'AI Task Failed', description: result.error });
+        } else if (result.summary) {
+            handleSummaryChange(result.summary);
+            toast({ title: 'AI Edit Successful', description: `Your text has been updated.` });
+        }
+    })
+  }
+
   const handleAiEdit = (action: 'proofread' | 'rewrite' | 'write' | 'tone' | 'translate', context?: string) => {
     startAiEditTransition(async () => {
       let result;
@@ -421,9 +460,8 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                 if (serverResult.error) throw new Error(serverResult.error);
                 result = serverResult.rewrittenText;
             } else if (action === 'write') {
-                const serverResult = await handleWriteText(`Write a brief summary for a video chapter titled: "${chapter.title}"`);
-                if (serverResult.error) throw new Error(serverResult.error);
-                result = serverResult.writtenText;
+                onGenerateSummary();
+                return;
             } else if (action === 'translate') {
                 const serverResult = await handleTranslateText(originalText, context!);
                 if (serverResult.error) throw new Error(serverResult.error);
@@ -434,7 +472,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
         if (result) {
             handleSummaryChange(result);
             toast({ title: 'AI Edit Successful', description: `Your text has been updated.` });
-        } else {
+        } else if (action !== 'write') { // write is handled separately
             throw new Error("The AI didn't return a result.");
         }
       } catch (e: any) {
@@ -514,6 +552,8 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   
   if (!course) return null;
 
+  const chapterTranscriptText = chapter.transcript.map(t => t.text).join(' ');
+
   return (
     <Card className="h-full border-0 md:border shadow-none md:shadow-sm">
       <CardHeader>
@@ -555,7 +595,13 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                     <TabsTrigger value="edit" className='h-6'>Edit</TabsTrigger>
                     <TabsTrigger value="preview" className='h-6'>Preview</TabsTrigger>
                 </TabsList>
-                {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : null}
+                {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : (
+                    !chapter.summary && (
+                        <AiEditButton size="sm" variant="outline" onClick={onGenerateSummary} disabled={isAiEditing || !chapterTranscriptText}>
+                            <Wand2 className="mr-2"/> Generate Summary
+                        </AiEditButton>
+                    )
+                )}
                     {recordingState === RecordingState.Recording ? (
                         <Button size="sm" variant="destructive" onClick={stopRecording}>
                             <Square className="mr-2"/> Stop Recording
@@ -792,6 +838,43 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
           </>
         )}
 
+        {settings.showQuiz && (
+            <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                        <HelpCircle className="h-4 w-4" />
+                        Knowledge Check
+                    </Label>
+                    <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={onGenerateQuiz} 
+                        disabled={isQuizPending}
+                    >
+                        {isQuizPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Wand2 className="mr-2 h-4 w-4" />}
+                        {chapter.quiz && chapter.quiz.length > 0 ? 'Regenerate' : 'Generate'} Quiz
+                    </Button>
+                </div>
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        {isQuizPending && (!chapter.quiz || chapter.quiz.length === 0) ? (
+                            <div className="text-center text-muted-foreground p-4">
+                                <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2"/>
+                                Generating quiz...
+                            </div>
+                        ) : chapter.quiz && chapter.quiz.length > 0 ? (
+                            chapter.quiz.map((q, index) => (
+                                <QuizCard key={index} quiz={q} index={index} />
+                            ))
+                        ) : (
+                            <div className="text-center text-muted-foreground p-4">
+                                Click "Generate Quiz" to test your knowledge on this chapter.
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        )}
       </CardContent>
     </Card>
   );
