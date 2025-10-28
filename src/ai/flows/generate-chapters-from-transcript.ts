@@ -127,12 +127,12 @@ export const generateChaptersFromTranscriptFlow = ai.defineFlow(
 
             if (entryStartSeconds < endTime) {
                 // If the entry starts before the current chapter's end time, it belongs to this chapter.
-                if (entryStartSeconds >= currentChapter.startTime) {
-                    currentChapter.transcript.push(transcriptEntry);
-                }
+                // We only need to check if it belongs, since the outer loop ensures we are in the right chapter timeframe.
+                currentChapter.transcript.push(transcriptEntry);
                 transcriptIndex++; // Move to the next transcript entry.
             } else {
-                // This transcript entry belongs to a future chapter, so we break the inner loop.
+                // This transcript entry belongs to a future chapter, so we break the inner loop
+                // and the outer loop will advance to the next chapter.
                 break;
             }
         }
