@@ -459,18 +459,6 @@ function CreatorStudioInner({ onBackToDashboard }: { onBackToDashboard: () => vo
 
 
 export default function CreatorStudio(props: CreatorStudioProps) {
-  const isInitialMount = React.useRef(true);
-  
-  // This effect hook is used to sync the local state with the prop changes.
-  // It's a common pattern when dealing with props that can change over time.
-  useEffect(() => {
-    if (isInitialMount.current) {
-        isInitialMount.current = false;
-        return;
-    }
-    props.onCourseUpdate(props.initialCourse);
-  }, [props.initialCourse, props.onCourseUpdate]);
-
   return (
     <CreatorStudioProvider {...props}>
         <CreatorStudioInner onBackToDashboard={props.onBackToDashboard} />

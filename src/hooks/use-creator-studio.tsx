@@ -23,30 +23,25 @@ export function CreatorStudioProvider({ children, initialCourse, onCourseUpdate 
     const [course, setCourse] = useState<Course | null>(initialCourse);
     const [player, setPlayer] = useState<any | null>(null);
 
-    // This ref helps us avoid sending updates for the initial render.
     const isInitialMount = useRef(true);
 
-    // This effect listens for changes in the local 'course' state
-    // and calls the onCourseUpdate prop to persist changes to the database.
     useEffect(() => {
-        // We skip the very first render to avoid a redundant update.
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
         }
-
-        // When the course state changes, we call the persistence function.
         if (course) {
             onCourseUpdate(course);
         }
     }, [course, onCourseUpdate]);
     
-    // This effect ensures that if the initialCourse prop changes from the outside,
-    // our internal state is updated to reflect it. This is important for when
-    // the user switches between courses in the main dashboard.
+    // This effect synchronizes the internal state only when the course ID changes.
+    // This prevents the component from re-rendering on every content update.
     useEffect(() => {
-      setCourse(initialCourse);
-    }, [initialCourse]);
+      if (initialCourse && course?.id !== initialCourse.id) {
+          setCourse(initialCourse);
+      }
+    }, [initialCourse, course?.id]);
 
 
     return (
