@@ -114,29 +114,36 @@ export const generateChaptersFromTranscriptFlow = ai.defineFlow(
       .sort((a, b) => a.startTime - b.startTime);
 
     // Step 4: Use a merge-style algorithm to assign transcript entries to chapters.
-    let transcriptIndex = 0;
-    for (let i = 0; i < sortedChapters.length; i++) {
-        const currentChapter = sortedChapters[i];
-        // The end time of the current chapter is the start time of the next, or Infinity if it's the last chapter.
-        const endTime = (i + 1 < sortedChapters.length) ? sortedChapters[i + 1].startTime : Infinity;
+    if (transcript.length > 0 && sortedChapters.length > 0) {
+        let transcriptIndex = 0;
+        for (let i = 0; i < sortedChapters.length; i++) {
+            const currentChapter = sortedChapters[i];
+            const endTime = (i + 1 < sortedChapters.length) ? sortedChapters[i + 1].startTime : Infinity;
 
-        // Walk through the transcript until we find an entry that's past the current chapter's end time.
-        while (transcriptIndex < transcript.length) {
-            const transcriptEntry = transcript[transcriptIndex];
-            const entryStartSeconds = transcriptEntry.offset / 1000;
+            while (transcriptIndex < transcript.length) {
+                const entry = transcript[transcriptIndex];
+                const entryStartTimeSeconds = entry.offset / 1000;
 
-            if (entryStartSeconds < endTime) {
-                // If the entry starts before the current chapter's end time, it belongs to this chapter.
-                // We only need to check if it belongs, since the outer loop ensures we are in the right chapter timeframe.
-                currentChapter.transcript.push(transcriptEntry);
-                transcriptIndex++; // Move to the next transcript entry.
-            } else {
-                // This transcript entry belongs to a future chapter, so we break the inner loop
-                // and the outer loop will advance to the next chapter.
-                break;
+                if (entryStartTimeSeconds >= endTime) {
+                    // This entry belongs to the next chapter, so break the inner loop
+                    // and let the outer loop advance to the next chapter.
+                    break;
+                }
+
+                if (entryStartTimeSeconds >= currentChapter.startTime) {
+                    // This entry belongs to the current chapter.
+                    currentChapter.transcript.push(entry);
+                }
+                
+                // Always advance the transcript index.
+                transcriptIndex++;
             }
+            // Reset transcriptIndex for the next chapter search if we don't want to consume entries
+            // But for a single-pass merge, we don't reset it. The issue was how we advanced it.
+            // The logic above is corrected to process each transcript entry once.
         }
     }
+
 
     return { chapters: sortedChapters };
   }
