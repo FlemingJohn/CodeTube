@@ -30,7 +30,8 @@ CodeTube transforms a simple video into a structured, interactive learning exper
 - **AI-Powered Notes & Summaries 📝**: Generate editable summaries or dictate notes via speech-to-text.
 - **Timestamped Video Snapshots 📸**: Insert clickable snapshots of the video into your notes, creating visual bookmarks.
 - **Interactive Quizzes & Interview Prep ❓💼**: Reinforce learning and practice job interview questions.
-- **Focus Mode 🎯**: Toggle workspace sections for distraction-free learning.
+- **Focus Mode 🎯**: Customize your workspace by toggling UI elements to eliminate distractions and concentrate on what matters.
+- **Practice Your Pitch 🎤**: Respond to an AI-generated interview scenario using your voice and receive instant, AI-powered feedback on your answer and delivery.
 - **AI Writing Tools ✍️**: Proofread, rewrite, and translate notes.
 - **Code Snippet Execution 💻**: Run code directly in chapters.
 - **Export to GitHub 📂**: Push full course content to a repository with one click.
@@ -58,8 +59,8 @@ CodeTube transforms a simple video into a structured, interactive learning exper
 | Course Mentor / Learning Plan Generator 🧭 | ❌ | ✅ Gemini Nano | Generates roadmap, prerequisites, key concepts, video suggestions |
 | Interactive Quizzes ❓ | ✅ Prompt, Writer, Rewriter, Built-in AI | ✅ Gemini Nano | Generate multiple-choice questions |
 | Interview Prep Generator 💼 | ✅ Prompt, Writer, Rewriter, Built-in AI | ✅ Gemini Nano | Technical interview questions |
-| Speech-to-Text Notes 🎤 | ❌ | ✅ Gemini Nano | Convert spoken notes into text |
-| Focus Mode 🎯 | ✅ Built-in AI | ❌ | Customize workspace UI |
+| Practice Your Pitch 🎤 | ❌ | ✅ Gemini Nano | Speech-to-text transcription and AI feedback on user's answer |
+| Focus Mode 🎯 | ✅ Built-in AI | ❌ | Customize workspace UI (client-side state management) |
 | Code Snippet Execution 💻 | ❌ | ✅ Judge0 API | Run code directly |
 | Export to GitHub 📂 | ❌ | ✅ GitHub API | Push course content |
 | Proofreading / Rewriting Notes ✍️ | ✅ Proofreader, Rewriter, Writer, Built-in AI | ✅ Gemini Nano | Grammar correction, content rewriting |
