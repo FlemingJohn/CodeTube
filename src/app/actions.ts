@@ -26,7 +26,6 @@ import { Chapter, Course, TranscriptEntry } from '@/lib/types';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { google } from 'googleapis';
-import { YoutubeTranscript } from 'youtube-transcript';
 import { config } from 'dotenv';
 
 
@@ -100,6 +99,45 @@ export async function handleSuggestImprovements(values: z.infer<typeof suggestIm
   }
 }
 
+function parseSrtTimestamp(ts: string): number {
+    const [h, m, s] = ts.split(':');
+    const [sec, ms] = s.split(',');
+    return parseInt(h) * 3600000 + parseInt(m) * 60000 + parseInt(sec) * 1000 + parseInt(ms);
+}
+
+
+function parseSrtToTranscript(srt: string): TranscriptEntry[] {
+    const lines = srt.trim().split(/\r?\n/);
+    const entries: TranscriptEntry[] = [];
+    let i = 0;
+    while (i < lines.length) {
+        // Skip sequence number
+        i++;
+        
+        // Timecodes
+        if (!lines[i]) break;
+        const [start, end] = lines[i].split(' --> ');
+        const offset = parseSrtTimestamp(start);
+        const duration = parseSrtTimestamp(end) - offset;
+        i++;
+
+        // Text
+        let text = '';
+        while (lines[i] && lines[i].trim() !== '') {
+            text += lines[i] + ' ';
+            i++;
+        }
+        
+        entries.push({ text: text.trim(), offset, duration });
+
+        // Skip empty line between entries
+        while (lines[i] === '' || lines[i] === undefined) {
+            i++;
+        }
+    }
+    return entries;
+}
+
 
 export async function getYoutubeChapters(course: Course, videoId: string): Promise<{ course?: Course, error?: string, warning?: string }> {
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -107,13 +145,13 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
   if (!apiKey) {
     return { error: 'YouTube API key is not configured in environment variables.' };
   }
+  
+  const youtube = google.youtube({
+    version: 'v3',
+    auth: apiKey,
+  });
 
   try {
-    const youtube = google.youtube({
-      version: 'v3',
-      auth: apiKey,
-    });
-    
     const videoResponse = await youtube.videos.list({
         part: ['snippet'],
         id: [videoId],
@@ -128,21 +166,38 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
     const description = video.snippet.description || '';
 
     let transcriptEntries: TranscriptEntry[] = [];
-    let transcriptError = false;
     let transcriptWarning: string | undefined;
 
     try {
-      transcriptEntries = await YoutubeTranscript.fetchTranscript(videoId);
-    } catch (e) {
-      console.warn('Could not fetch transcript for video:', videoId, e);
-      transcriptError = true;
+        const captionsListResponse = await youtube.captions.list({
+            part: ['snippet'],
+            videoId: videoId,
+        });
+
+        // Find an English caption track
+        const captionTrack = captionsListResponse.data.items?.find(item => item.snippet?.language === 'en');
+        
+        if (captionTrack && captionTrack.id) {
+            const captionDownloadResponse = await youtube.captions.download({
+                id: captionTrack.id,
+                tfmt: 'srt' // Request SRT format
+            });
+
+            if (typeof captionDownloadResponse.data === 'string') {
+                transcriptEntries = parseSrtToTranscript(captionDownloadResponse.data);
+            }
+        }
+
+        if (transcriptEntries.length === 0) {
+            transcriptWarning = "Could not find an English transcript for this video. AI features will be limited.";
+        }
+    } catch (e: any) {
+        console.warn('Could not fetch transcript for video:', videoId, e.message);
+        transcriptWarning = "Could not fetch transcript for this video. AI features may be limited.";
     }
 
-    if (transcriptError && transcriptEntries.length === 0) {
-      transcriptWarning = "Could not get a transcript for this video. AI features will be limited.";
-    }
 
-    // Use the new, reliable AI flow to generate chapters.
+    // Use the reliable AI flow to generate chapters from the description.
     const { chapters } = await generateChaptersFromTranscript({
       description,
       transcript: transcriptEntries,
@@ -520,3 +575,5 @@ export async function handleCompareVideos(values: z.infer<typeof compareVideosSc
         return { error: e.message || 'Failed to compare videos.' };
     }
 }
+
+    
