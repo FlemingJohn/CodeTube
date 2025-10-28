@@ -4,7 +4,7 @@
 import { generateChapterSummary } from '@/ai/flows/generate-chapter-summary';
 import { suggestLandingPageImprovements } from '@/ai/flows/suggest-landing-page-improvements';
 import { explainCode } from '@/ai/flows/explain-code';
-import { findCodeInTranscript } from '@/ai/flows/find-code-in-transcript';
+import { processChapters } from '@/ai/flows/process-chapters';
 import { youtubeSearch } from '@/ai/flows/youtube-search';
 import { generateQuiz } from '@/ai/flows/generate-quiz';
 import { generateInterviewQuestions } from '@/ai/flows/generate-interview-questions';
@@ -106,36 +106,20 @@ function parseSrtTimestamp(ts: string): number {
 }
 
 
-function parseSrtToTranscript(srt: string): TranscriptEntry[] {
+function parseSrtToTranscript(srt: string): string {
     const lines = srt.trim().split(/\r?\n/);
-    const entries: TranscriptEntry[] = [];
-    let i = 0;
-    while (i < lines.length) {
-        // Skip sequence number
-        i++;
-        
-        // Timecodes
-        if (!lines[i]) break;
-        const [start, end] = lines[i].split(' --> ');
-        const offset = parseSrtTimestamp(start);
-        const duration = parseSrtTimestamp(end) - offset;
-        i++;
-
-        // Text
-        let text = '';
-        while (lines[i] && lines[i].trim() !== '') {
-            text += lines[i] + ' ';
-            i++;
+    let fullTranscript = '';
+    for (let i = 0; i < lines.length; i++) {
+        // Skip sequence number and timestamp
+        if (!isNaN(parseInt(lines[i])) && lines[i+1]?.includes('-->')) {
+            i += 1;
+            continue;
         }
-        
-        entries.push({ text: text.trim(), offset, duration });
-
-        // Skip empty line between entries
-        while (lines[i] === '' || lines[i] === undefined) {
-            i++;
+        if (lines[i] && !lines[i].includes('-->')) {
+          fullTranscript += lines[i] + ' ';
         }
     }
-    return entries;
+    return fullTranscript.trim();
 }
 
 
@@ -152,6 +136,7 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
   });
 
   try {
+    // 1. Get Video Details (Title, Description)
     const videoResponse = await youtube.videos.list({
         part: ['snippet'],
         id: [videoId],
@@ -165,7 +150,8 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
     const videoTitle = video.snippet.title;
     const description = video.snippet.description || '';
 
-    let transcriptEntries: TranscriptEntry[] = [];
+    // 2. Get Transcript
+    let transcriptText: string = '';
     let transcriptWarning: string | undefined;
 
     try {
@@ -174,21 +160,20 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
             videoId: videoId,
         });
 
-        // Find an English caption track
         const captionTrack = captionsListResponse.data.items?.find(item => item.snippet?.language === 'en');
         
         if (captionTrack && captionTrack.id) {
             const captionDownloadResponse = await youtube.captions.download({
                 id: captionTrack.id,
-                tfmt: 'srt' // Request SRT format
+                tfmt: 'srt'
             });
 
             if (typeof captionDownloadResponse.data === 'string') {
-                transcriptEntries = parseSrtToTranscript(captionDownloadResponse.data);
+                transcriptText = parseSrtToTranscript(captionDownloadResponse.data);
             }
         }
 
-        if (transcriptEntries.length === 0) {
+        if (!transcriptText) {
             transcriptWarning = "Could not find an English transcript for this video. AI features will be limited.";
         }
     } catch (e: any) {
@@ -196,18 +181,34 @@ export async function getYoutubeChapters(course: Course, videoId: string): Promi
         transcriptWarning = "Could not fetch transcript for this video. AI features may be limited.";
     }
 
+    // 3. Get Chapter Structure from Description
+    const { chapters: chapterStructure } = await generateChaptersFromTranscript({ description });
 
-    // Use the reliable AI flow to generate chapters from the description.
-    const { chapters } = await generateChaptersFromTranscript({
-      description,
-      transcript: transcriptEntries,
+    // 4. Process all chapters at once with the full transcript context
+    const chapterInfoForProcessing = chapterStructure.map(c => ({ id: c.timestamp, title: c.title }));
+    const processedChaptersResult = await processChapters({
+      transcript: transcriptText,
+      chapters: chapterInfoForProcessing,
+    });
+    
+    const finalChapters: Chapter[] = chapterStructure.map((chap, index) => {
+        const processed = processedChaptersResult.processedChapters.find(p => p.chapterId === chap.timestamp);
+        return {
+            id: `${Date.now()}-${index}`,
+            timestamp: chap.timestamp,
+            title: chap.title,
+            summary: processed?.summary || '',
+            code: processed?.code || '',
+            codeExplanation: '',
+            transcript: [], // Transcript no longer needed on client
+        };
     });
 
     const updatedCourse: Course = {
       ...course,
       videoId,
       title: videoTitle || course.title,
-      chapters,
+      chapters: finalChapters,
     };
 
     return { course: updatedCourse, warning: transcriptWarning };
@@ -346,7 +347,7 @@ export async function handleYoutubeSearch(values: z.infer<typeof youtubeSearchSc
 }
 
 const generateQuizSchema = z.object({
-    transcript: z.string(),
+    courseContent: z.string(),
     chapterTitle: z.string(),
 });
 
@@ -367,7 +368,7 @@ export async function handleGenerateQuiz(values: z.infer<typeof generateQuizSche
 }
 
 const generateInterviewQuestionsSchema = z.object({
-    transcript: z.string(),
+    courseContent: z.string(),
     chapterTitle: z.string(),
 });
 

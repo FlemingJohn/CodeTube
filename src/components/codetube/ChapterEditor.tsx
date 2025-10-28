@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, Mic, Square, Camera, FileText } from 'lucide-react';
-import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary, handleSpeechToText } from '@/app/actions';
+import { Loader2, Wand2, Bot, HelpCircle, CheckCircle2, XCircle, Play, ShieldAlert, CaseUpper, Book, Pilcrow, Type, Bold, Italic, List, Code as CodeIcon, Eye, Info, Cloud, Languages, Mic, Square, Camera } from 'lucide-react';
+import { handleExplainCode, handleGenerateQuiz, handleRunCode, handleFixCodeError, handleProofreadText, handleRewriteText, handleWriteText, handleTranslateText, handleGenerateSummary, handleSpeechToText, handleGenerateInterviewQuestions } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useChromeAi } from '@/hooks/useChromeAi';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { useFocusMode } from '@/hooks/use-focus-mode.tsx';
 import { useCreatorStudio } from '@/hooks/use-creator-studio';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
@@ -171,7 +171,6 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   const { toast } = useToast();
   const { settings } = useFocusMode();
   const [isAiEditing, startAiEditTransition] = useTransition();
-  const [isAiGenerating, startAiGenerationTransition] = useTransition();
   const [isCodeExplanationPending, startCodeExplanationTransition] = useTransition();
   const [isRunCodePending, startRunCodeTransition] = useTransition();
   const [isFixCodePending, startFixCodeTransition] = useTransition();
@@ -180,7 +179,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   const [fixExplanation, setFixExplanation] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('63'); // Default to JavaScript
   const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const { aiAvailable, proofread, rewrite, write, summarize, translate } = useChromeAi();
+  const { aiAvailable, proofread, rewrite, write, translate } = useChromeAi();
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -326,49 +325,6 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
     });
   };
   
-  const chapterTranscriptText = (Array.isArray(chapter.transcript) && chapter.transcript.length > 0) 
-  ? chapter.transcript.map(t => t.text).join(' ') 
-  : '';
-
-
-  const handleAiGeneration = (action: 'summarize' | 'quiz') => {
-    if (!chapterTranscriptText) {
-      toast({ variant: 'destructive', title: 'Missing Transcript', description: 'A chapter transcript is needed for AI generation.' });
-      return;
-    }
-    startAiGenerationTransition(async () => {
-      try {
-        if (action === 'summarize') {
-          let summaryResult;
-          if (aiAvailable) {
-            summaryResult = await summarize(chapterTranscriptText, chapter.title);
-          } else {
-            const serverResult = await handleGenerateSummary({ transcript: chapterTranscriptText, chapterTitle: chapter.title });
-            if (serverResult.error) throw new Error(serverResult.error);
-            summaryResult = serverResult.summary;
-          }
-          if (summaryResult) {
-            handleSummaryChange(summaryResult);
-            toast({ title: 'Summary Generated!', description: `AI-powered notes have been added.` });
-          } else {
-            throw new Error("The AI didn't return a result.");
-          }
-        } else if (action === 'quiz') {
-          // Quiz generation always uses server-side AI for now due to complexity
-          const result = await handleGenerateQuiz({ transcript: chapterTranscriptText, chapterTitle: chapter.title });
-          if (result.error) {
-            throw new Error(result.error);
-          } else if (result.questions) {
-            handleUpdateChapter({ ...chapter, quiz: result.questions });
-            toast({ title: 'Quiz Generated!', description: 'A new 5-question quiz has been added.' });
-          }
-        }
-      } catch (e: any) {
-        toast({ variant: 'destructive', title: 'AI Task Failed', description: e.message });
-      }
-    });
-  };
-
   const onRunCode = () => {
     if (!chapter.code) {
       toast({
@@ -613,9 +569,6 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                             Record Note
                         </Button>
                     )}
-                     <AiEditButton size="sm" variant="ghost" onClick={() => handleAiGeneration('summarize')} disabled={isAiGenerating || !chapterTranscriptText}>
-                        <Type className="mr-2"/> Generate Summary
-                     </AiEditButton>
                     {chapter.summary && (
                         <>
                         <Popover>
@@ -684,7 +637,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                         ref={summaryTextareaRef}
                         value={chapter.summary}
                         onChange={e => handleSummaryChange(e.target.value)}
-                        placeholder="Write your notes here, or use the AI tools to generate them."
+                        placeholder="Your AI-generated summary will appear here. You can also write your own notes."
                         rows={6}
                         className="text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
@@ -755,7 +708,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                 name="code"
                 value={chapter.code}
                 onChange={handleChange}
-                placeholder="Click 'Find Code' to get a snippet from the transcript, or paste your own."
+                placeholder="Your AI-generated code snippet will appear here. You can also paste your own."
                 rows={8}
                 className="font-code text-sm"
               />
@@ -837,47 +790,6 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                </div>
             )}
           </>
-        )}
-
-        {settings.showQuiz && (
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <Label className="flex items-center gap-2 text-lg font-headline">
-                        <HelpCircle className="h-5 w-5" />
-                        Knowledge Check
-                    </Label>
-                    <div className="flex items-center gap-4">
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleAiGeneration('quiz')}
-                            disabled={isAiGenerating || !chapterTranscriptText}
-                        >
-                            {isAiGenerating ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <Wand2 className="mr-2 h-4 w-4" />
-                            )}
-                            Generate Quiz
-                        </Button>
-                    </div>
-                </div>
-
-                {chapter.quiz && chapter.quiz.length > 0 ? (
-                    <ScrollArea className="h-96 pr-4">
-                        <div className="space-y-4">
-                            {chapter.quiz.map((q, index) => (
-                                <QuizCard key={index} quiz={q} index={index} />
-                            ))}
-                        </div>
-                    </ScrollArea>
-                ) : (
-                    <div className="text-center text-sm text-muted-foreground py-8 border-2 border-dashed rounded-lg">
-                        <p>No quiz for this chapter yet.</p>
-                        <p>Click "Generate Quiz" to create one.</p>
-                    </div>
-                )}
-            </div>
         )}
 
       </CardContent>

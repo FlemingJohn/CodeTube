@@ -24,7 +24,7 @@ export type Chapter = {
   summary: string;
   code: string;
   codeExplanation: string;
-  transcript: TranscriptEntry[];
+  transcript: TranscriptEntry[]; // Kept for potential future use, but not populated by default
   quiz?: Quiz[];
   interviewQuestions?: InterviewQuestion[];
   thumbnail?: string;

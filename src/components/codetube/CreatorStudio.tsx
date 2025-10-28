@@ -172,14 +172,14 @@ function CreatorStudioInner({ onBackToDashboard }: { onBackToDashboard: () => vo
 
 
   const onGenerateInterviewQuestions = (replace: boolean = false) => {
-    if (!selectedChapter || !Array.isArray(selectedChapter.transcript) || selectedChapter.transcript.length === 0) {
-        toast({ variant: 'destructive', title: 'Missing context', description: 'This chapter needs a transcript to generate questions.' });
+    if (!selectedChapter) {
+        toast({ variant: 'destructive', title: 'Missing context', description: 'A chapter must be selected.' });
         return;
     }
     startInterviewTransition(async () => {
-        const transcriptText = selectedChapter.transcript.map(t => t.text).join(' ');
+        const courseContent = course?.chapters.map(c => `Chapter: ${c.title}\nSummary: ${c.summary}`).join('\n\n') || '';
         const result = await handleGenerateInterviewQuestions({
-            transcript: transcriptText,
+            courseContent: courseContent,
             chapterTitle: selectedChapter.title,
         });
 
@@ -369,7 +369,7 @@ function CreatorStudioInner({ onBackToDashboard }: { onBackToDashboard: () => vo
                                       <RefreshCw className="mr-2"/> Regenerate
                                       </Button>
                                   )}
-                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending || !selectedChapter.transcript || selectedChapter.transcript.length === 0}>
+                                  <Button size="sm" onClick={() => onGenerateInterviewQuestions(false)} disabled={isInterviewPending}>
                                       {isInterviewPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Sparkles className="mr-2"/>}
                                       Generate
                                   </Button>
