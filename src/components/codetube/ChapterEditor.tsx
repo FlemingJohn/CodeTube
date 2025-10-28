@@ -396,17 +396,15 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   const hasError = codeOutput && (codeOutput.status.id > 3 || codeOutput.stderr || codeOutput.compile_output);
 
   const onGenerateQuiz = () => {
-    // The full transcript is passed to the chapter from the server action.
-    const fullTranscript = typeof chapter.transcript === 'string' ? chapter.transcript : '';
-
-    if (!fullTranscript) {
+    const courseContent = course?.chapters.map(c => `Chapter: ${c.title}\nSummary: ${c.summary}`).join('\n\n') || '';
+    if (!courseContent) {
         toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a quiz.' });
         return;
     }
 
     startQuizTransition(async () => {
         const result = await handleGenerateQuiz({
-            courseContent: fullTranscript,
+            courseContent: courseContent,
             chapterTitle: chapter.title,
         });
         if (result.error) {
@@ -419,16 +417,14 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
   };
 
   const onGenerateSummary = () => {
-    // The full transcript is passed to the chapter from the server action.
-    const fullTranscript = typeof chapter.transcript === 'string' ? chapter.transcript : '';
-
-    if (!fullTranscript) {
+    const courseContent = course?.chapters.map(c => `Chapter: ${c.title}\nSummary: ${c.summary}`).join('\n\n') || '';
+     if (!courseContent) {
         toast({ variant: 'destructive', title: 'Missing Course Content', description: 'The full course content is not available to generate a summary.' });
         return;
     }
-
+    
     startAiEditTransition(async () => {
-        const result = await handleGenerateSummary({ transcript: fullTranscript, chapterTitle: chapter.title });
+        const result = await handleGenerateSummary({ transcript: courseContent, chapterTitle: chapter.title });
         if (result.error) {
             toast({ variant: 'destructive', title: 'AI Task Failed', description: result.error });
         } else if (result.summary) {
@@ -600,7 +596,7 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
                 </TabsList>
                 {isAiEditing ? <Loader2 className="h-4 w-4 animate-spin"/> : (
                     !chapter.summary && (
-                        <AiEditButton size="sm" variant="outline" onClick={onGenerateSummary} disabled={isAiEditing || !chapter.transcript}>
+                        <AiEditButton size="sm" variant="outline" onClick={onGenerateSummary} disabled={isAiEditing}>
                             <Wand2 className="mr-2"/> Generate Summary
                         </AiEditButton>
                     )
