@@ -703,36 +703,6 @@ export default function ChapterEditor({ chapter }: ChapterEditorProps) {
         </Tabs>
         )}
 
-        <Accordion type="single" collapsible>
-            <AccordionItem value="transcript">
-                <AccordionTrigger>
-                    <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        no transcipt showing
-                    </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                    <ScrollArea className="h-64 border rounded-md">
-                        <div className="p-4 text-sm">
-                            {Array.isArray(chapter.transcript) && chapter.transcript.length > 0 ? (
-                                chapter.transcript.map((entry: TranscriptEntry, index: number) => (
-                                    <p
-                                        key={index}
-                                        className="cursor-pointer hover:bg-muted p-1 rounded"
-                                        onClick={() => handleTimestampClick(entry.offset / 1000)}
-                                    >
-                                        {entry.text}
-                                    </p>
-                                ))
-                            ) : (
-                                <p className="text-muted-foreground">No transcript available for this chapter.</p>
-                            )}
-                        </div>
-                    </ScrollArea>
-                </AccordionContent>
-            </AccordionItem>
-        </Accordion>
-
         {settings.showCodeEditor && (
           <>
             <div className="space-y-2">
